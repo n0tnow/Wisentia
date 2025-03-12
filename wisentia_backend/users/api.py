@@ -154,3 +154,36 @@ def login_user(request):
         "user": user[0],
         "token": token
     })
+
+
+# users/api.py dosyasına eklenecek yeni fonksiyonlar
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_wallet_address(request):
+    """Kullanıcının cüzdan adresini günceller"""
+    user_id = request.user.id
+    data = request.data
+    
+    if 'wallet_address' not in data:
+        return Response({"error": "Cüzdan adresi gerekli"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Ethereum cüzdan adresi formatını doğrula (0x ile başlayan 42 karakter)
+    wallet_address = data['wallet_address']
+    if not wallet_address.startswith('0x') or len(wallet_address) != 42:
+        return Response({"error": "Geçersiz cüzdan adresi formatı"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Kullanıcı cüzdan adresini güncelle
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE Users
+                SET WalletAddress = %s
+                WHERE UserID = %s
+            """, [wallet_address, user_id])
+        
+        return Response({"message": "Cüzdan adresi başarıyla güncellendi"})
+    except Exception as e:
+        print(f"Cüzdan adresi güncelleme hatası: {e}")
+        return Response({"error": "Cüzdan adresi güncellenirken bir hata oluştu"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
