@@ -1,0 +1,378 @@
+-- Wisentia Eğitim Platformu Veritabanı Oluşturma
+CREATE DATABASE WisentiaDB;
+GO
+
+USE WisentiaDB;
+GO
+
+-- Kullanıcılar Tablosu
+CREATE TABLE Users (
+    UserID INT PRIMARY KEY IDENTITY(1,1),
+    Username NVARCHAR(50) NOT NULL UNIQUE,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    PasswordHash NVARCHAR(255) NOT NULL,
+    WalletAddress NVARCHAR(100) UNIQUE,
+    JoinDate DATETIME NOT NULL DEFAULT GETDATE(),
+    LastLogin DATETIME,
+    UserRole NVARCHAR(20) NOT NULL DEFAULT 'regular', -- 'admin', 'regular'
+    ProfileImage NVARCHAR(255),
+    ThemePreference NVARCHAR(20) DEFAULT 'light', -- 'light', 'dark'
+    TotalPoints INT DEFAULT 0,
+    IsActive BIT DEFAULT 1
+);
+
+-- Kurslar Tablosu
+CREATE TABLE Courses (
+    CourseID INT PRIMARY KEY IDENTITY(1,1),
+    Title NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(MAX),
+    Category NVARCHAR(50) NOT NULL,
+    Difficulty NVARCHAR(20) NOT NULL, -- 'beginner', 'intermediate', 'advanced'
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedDate DATETIME,
+    IsActive BIT DEFAULT 1,
+    ThumbnailURL NVARCHAR(255),
+    CreatedBy INT FOREIGN KEY REFERENCES Users(UserID)
+);
+
+-- Kurs Videoları Tablosu
+CREATE TABLE CourseVideos (
+    VideoID INT PRIMARY KEY IDENTITY(1,1),
+    CourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    YouTubeVideoID NVARCHAR(20) NOT NULL,
+    Title NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(MAX),
+    Duration INT, -- in seconds
+    OrderInCourse INT NOT NULL,
+    CONSTRAINT UQ_Video_Course_Order UNIQUE(CourseID, OrderInCourse)
+);
+
+-- Sınavlar Tablosu
+CREATE TABLE Quizzes (
+    QuizID INT PRIMARY KEY IDENTITY(1,1),
+    VideoID INT FOREIGN KEY REFERENCES CourseVideos(VideoID),
+    Title NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(MAX),
+    PassingScore INT NOT NULL,
+    IsActive BIT DEFAULT 1
+);
+
+-- Sınav Soruları Tablosu
+CREATE TABLE QuizQuestions (
+    QuestionID INT PRIMARY KEY IDENTITY(1,1),
+    QuizID INT FOREIGN KEY REFERENCES Quizzes(QuizID),
+    QuestionText NVARCHAR(MAX) NOT NULL,
+    QuestionType NVARCHAR(20) NOT NULL, -- 'multiple_choice', 'true_false', 'short_answer'
+    OrderInQuiz INT NOT NULL
+);
+
+-- Soru Cevapları Tablosu
+CREATE TABLE QuestionOptions (
+    OptionID INT PRIMARY KEY IDENTITY(1,1),
+    QuestionID INT FOREIGN KEY REFERENCES QuizQuestions(QuestionID),
+    OptionText NVARCHAR(255) NOT NULL,
+    IsCorrect BIT NOT NULL,
+    OrderInQuestion INT NOT NULL
+);
+
+-- NFT Tipleri Tablosu
+CREATE TABLE NFTTypes (
+    NFTTypeID INT PRIMARY KEY IDENTITY(1,1),
+    TypeName NVARCHAR(50) NOT NULL UNIQUE, -- 'achievement', 'subscription', 'quest_reward', 'course_completion'
+    Description NVARCHAR(255)
+);
+
+-- NFT'ler Tablosu
+CREATE TABLE NFTs (
+    NFTID INT PRIMARY KEY IDENTITY(1,1),
+    NFTTypeID INT FOREIGN KEY REFERENCES NFTTypes(NFTTypeID),
+    Title NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(MAX),
+    ImageURI NVARCHAR(255),
+    BlockchainMetadata NVARCHAR(MAX), -- JSON data can be stored here
+    TradeValue INT NOT NULL, -- Value for trading purposes
+    SubscriptionDays INT, -- For subscription NFTs, NULL otherwise
+    IsActive BIT DEFAULT 1
+);
+
+-- Kullanıcı NFT'leri Tablosu
+CREATE TABLE UserNFTs (
+    UserNFTID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    NFTID INT FOREIGN KEY REFERENCES NFTs(NFTID),
+    AcquisitionDate DATETIME NOT NULL DEFAULT GETDATE(),
+    ExpiryDate DATETIME, -- For subscription NFTs, NULL otherwise
+    TransactionHash NVARCHAR(100), -- Blockchain transaction hash
+    IsMinted BIT DEFAULT 0,
+    CONSTRAINT UQ_User_NFT UNIQUE(UserID, NFTID)
+);
+
+-- NFT Takasları Tablosu
+CREATE TABLE NFTTrades (
+    TradeID INT PRIMARY KEY IDENTITY(1,1),
+    OfferUserID INT FOREIGN KEY REFERENCES Users(UserID),
+    TargetNFTID INT FOREIGN KEY REFERENCES NFTs(NFTID),
+    TradeStatus NVARCHAR(20) NOT NULL, -- 'pending', 'completed', 'rejected'
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE(),
+    CompletionDate DATETIME
+);
+
+-- NFT Takas Detayları Tablosu
+CREATE TABLE NFTTradeDetails (
+    TradeDetailID INT PRIMARY KEY IDENTITY(1,1),
+    TradeID INT FOREIGN KEY REFERENCES NFTTrades(TradeID),
+    OfferedUserNFTID INT FOREIGN KEY REFERENCES UserNFTs(UserNFTID)
+);
+
+-- Görevler (Quests) Tablosu
+CREATE TABLE Quests (
+    QuestID INT PRIMARY KEY IDENTITY(1,1),
+    Title NVARCHAR(100) NOT NULL,
+    Description NVARCHAR(MAX),
+    RequiredPoints INT NOT NULL,
+    RewardNFTID INT FOREIGN KEY REFERENCES NFTs(NFTID),
+    RewardPoints INT NOT NULL DEFAULT 0,
+    DifficultyLevel NVARCHAR(20) NOT NULL, -- 'easy', 'medium', 'hard'
+    IsActive BIT DEFAULT 1,
+    IsAIGenerated BIT DEFAULT 0,
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE(),
+    StartDate DATETIME,
+    EndDate DATETIME
+);
+
+-- Görev Koşulları Tablosu
+CREATE TABLE QuestConditions (
+    ConditionID INT PRIMARY KEY IDENTITY(1,1),
+    QuestID INT FOREIGN KEY REFERENCES Quests(QuestID),
+    ConditionType NVARCHAR(50) NOT NULL, -- 'course_completion', 'quiz_score', 'watch_videos', etc.
+    TargetID INT, -- CourseID, QuizID, etc. depending on ConditionType
+    TargetValue INT, -- Required score, number of videos, etc.
+    Description NVARCHAR(MAX)
+);
+
+-- Kullanıcı Görev İlerlemesi Tablosu
+CREATE TABLE UserQuestProgress (
+    ProgressID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    QuestID INT FOREIGN KEY REFERENCES Quests(QuestID),
+    CurrentProgress INT DEFAULT 0, -- Current progress toward completion
+    IsCompleted BIT DEFAULT 0,
+    CompletionDate DATETIME,
+    RewardClaimed BIT DEFAULT 0,
+    CONSTRAINT UQ_User_Quest_Progress UNIQUE(UserID, QuestID)
+);
+
+-- Kullanıcı Kurs İlerlemesi Tablosu
+CREATE TABLE UserCourseProgress (
+    ProgressID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    CourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    LastVideoID INT FOREIGN KEY REFERENCES CourseVideos(VideoID),
+    CompletionPercentage DECIMAL(5,2) DEFAULT 0.00,
+    LastAccessDate DATETIME,
+    IsCompleted BIT DEFAULT 0,
+    CompletionDate DATETIME,
+    CONSTRAINT UQ_User_Course_Progress UNIQUE(UserID, CourseID)
+);
+
+-- Kullanıcı Video İzleme Tablosu
+CREATE TABLE UserVideoViews (
+    ViewID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    VideoID INT FOREIGN KEY REFERENCES CourseVideos(VideoID),
+    ViewDate DATETIME NOT NULL DEFAULT GETDATE(),
+    WatchedPercentage DECIMAL(5,2) DEFAULT 0.00,
+    IsCompleted BIT DEFAULT 0,
+    CompletionDate DATETIME,
+    EarnedPoints INT DEFAULT 0,
+    CONSTRAINT UQ_User_Video_View UNIQUE(UserID, VideoID)
+);
+
+-- Kullanıcı Sınav Denemeleri Tablosu
+CREATE TABLE UserQuizAttempts (
+    AttemptID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    QuizID INT FOREIGN KEY REFERENCES Quizzes(QuizID),
+    Score INT NOT NULL,
+    MaxScore INT NOT NULL,
+    AttemptDate DATETIME NOT NULL DEFAULT GETDATE(),
+    Passed BIT NOT NULL,
+    EarnedPoints INT DEFAULT 0
+);
+
+-- Kullanıcı Cevapları Tablosu
+CREATE TABLE UserQuizAnswers (
+    AnswerID INT PRIMARY KEY IDENTITY(1,1),
+    AttemptID INT FOREIGN KEY REFERENCES UserQuizAttempts(AttemptID),
+    QuestionID INT FOREIGN KEY REFERENCES QuizQuestions(QuestionID),
+    SelectedOptionID INT FOREIGN KEY REFERENCES QuestionOptions(OptionID),
+    TextAnswer NVARCHAR(MAX), -- For short answer questions
+    IsCorrect BIT NOT NULL
+);
+
+-- Topluluk Gönderileri Tablosu
+CREATE TABLE CommunityPosts (
+    PostID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    Title NVARCHAR(100) NOT NULL,
+    Content NVARCHAR(MAX) NOT NULL,
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE(),
+    Category NVARCHAR(50) NOT NULL,
+    PointsCost INT DEFAULT 0,
+    Likes INT DEFAULT 0,
+    Views INT DEFAULT 0,
+    IsActive BIT DEFAULT 1
+);
+
+-- Topluluk Yorumları Tablosu
+CREATE TABLE CommunityComments (
+    CommentID INT PRIMARY KEY IDENTITY(1,1),
+    PostID INT FOREIGN KEY REFERENCES CommunityPosts(PostID),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    Content NVARCHAR(MAX) NOT NULL,
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE(),
+    ParentCommentID INT FOREIGN KEY REFERENCES CommunityComments(CommentID),
+    Likes INT DEFAULT 0,
+    IsActive BIT DEFAULT 1
+);
+
+-- Post ve Yorum Beğenileri Tablosu
+CREATE TABLE UserLikes (
+    LikeID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    PostID INT FOREIGN KEY REFERENCES CommunityPosts(PostID),
+    CommentID INT FOREIGN KEY REFERENCES CommunityComments(CommentID),
+    LikeDate DATETIME NOT NULL DEFAULT GETDATE(),
+    -- Bir like ya bir post'a ya da bir comment'e olabilir
+    CONSTRAINT CK_Like_Target CHECK ((PostID IS NULL AND CommentID IS NOT NULL) OR (PostID IS NOT NULL AND CommentID IS NULL)),
+    CONSTRAINT UQ_User_Post_Like UNIQUE(UserID, PostID),
+    CONSTRAINT UQ_User_Comment_Like UNIQUE(UserID, CommentID)
+);
+
+-- *** AI İLE İLGİLİ TABLOLAR ***
+
+-- AI Önerileri Tablosu
+CREATE TABLE AIRecommendations (
+    RecommendationID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    RecommendationType NVARCHAR(50) NOT NULL, -- 'course', 'quest', 'community'
+    TargetID INT, -- CourseID, QuestID, etc. depending on RecommendationType
+    RecommendationReason NVARCHAR(MAX),
+    Confidence DECIMAL(5,2), -- AI's confidence in this recommendation
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE(),
+    IsViewed BIT DEFAULT 0,
+    IsDismissed BIT DEFAULT 0
+);
+
+-- AI Kullanıcı Analiz Tablosu
+CREATE TABLE AIUserAnalytics (
+    AnalysisID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    LearningStyle NVARCHAR(50), -- 'visual', 'auditory', 'reading', 'kinesthetic'
+    InterestCategories NVARCHAR(MAX), -- JSON array of categories
+    StrengthAreas NVARCHAR(MAX), -- JSON array of strength areas
+    WeaknessAreas NVARCHAR(MAX), -- JSON array of weakness areas
+    EngagementLevel DECIMAL(5,2), -- 0-100 scale
+    LastUpdated DATETIME NOT NULL DEFAULT GETDATE()
+);
+
+-- AI Chatbot Konuşma Tablosu
+CREATE TABLE ChatSessions (
+    SessionID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    StartTime DATETIME NOT NULL DEFAULT GETDATE(),
+    EndTime DATETIME,
+    IsActive BIT DEFAULT 1
+);
+
+-- Chatbot Mesajları Tablosu
+CREATE TABLE ChatMessages (
+    MessageID INT PRIMARY KEY IDENTITY(1,1),
+    SessionID INT FOREIGN KEY REFERENCES ChatSessions(SessionID),
+    SenderType NVARCHAR(10) NOT NULL, -- 'user' or 'ai'
+    MessageContent NVARCHAR(MAX) NOT NULL,
+    Timestamp DATETIME NOT NULL DEFAULT GETDATE(),
+    RelatedCourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    RelatedQuestID INT FOREIGN KEY REFERENCES Quests(QuestID)
+);
+
+-- AI Tarafından Oluşturulan İçerik Tablosu
+CREATE TABLE AIGeneratedContent (
+    ContentID INT PRIMARY KEY IDENTITY(1,1),
+    ContentType NVARCHAR(50) NOT NULL, -- 'quest', 'quiz_question', 'recommendation'
+    Content NVARCHAR(MAX) NOT NULL,
+    GenerationParams NVARCHAR(MAX), -- JSON with parameters used for generation
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE(),
+    ApprovalStatus NVARCHAR(20) DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+    ApprovalDate DATETIME,
+    ApprovedBy INT FOREIGN KEY REFERENCES Users(UserID)
+);
+
+-- Abonelik Planları Tablosu
+CREATE TABLE SubscriptionPlans (
+    PlanID INT PRIMARY KEY IDENTITY(1,1),
+    PlanName NVARCHAR(50) NOT NULL,
+    Description NVARCHAR(MAX),
+    DurationDays INT NOT NULL,
+    Price DECIMAL(10,2) NOT NULL,
+    NFTID INT FOREIGN KEY REFERENCES NFTs(NFTID), -- Associated NFT for this plan
+    Features NVARCHAR(MAX), -- JSON array of features
+    IsActive BIT DEFAULT 1
+);
+
+-- Kullanıcı Abonelikleri Tablosu
+CREATE TABLE UserSubscriptions (
+    SubscriptionID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    PlanID INT FOREIGN KEY REFERENCES SubscriptionPlans(PlanID),
+    StartDate DATETIME NOT NULL DEFAULT GETDATE(),
+    EndDate DATETIME NOT NULL,
+    IsActive BIT DEFAULT 1,
+    PaymentTransactionID NVARCHAR(100),
+    PaymentMethod NVARCHAR(50),
+    AutoRenew BIT DEFAULT 0
+);
+
+-- İşlem Logları Tablosu
+CREATE TABLE ActivityLogs (
+    LogID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    ActivityType NVARCHAR(50) NOT NULL, -- 'login', 'course_start', 'quiz_completion', etc.
+    Description NVARCHAR(MAX),
+    Timestamp DATETIME NOT NULL DEFAULT GETDATE(),
+    IPAddress NVARCHAR(50),
+    UserAgent NVARCHAR(255)
+);
+
+-- Bildirimler Tablosu
+CREATE TABLE Notifications (
+    NotificationID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT FOREIGN KEY REFERENCES Users(UserID),
+    Title NVARCHAR(100) NOT NULL,
+    Message NVARCHAR(MAX) NOT NULL,
+    NotificationType NVARCHAR(50) NOT NULL, -- 'system', 'achievement', 'reminder', etc.
+    RelatedEntityID INT, -- Can be CourseID, QuestID, etc.
+    IsRead BIT DEFAULT 0,
+    IsDismissed BIT DEFAULT 0,
+    CreationDate DATETIME NOT NULL DEFAULT GETDATE()
+);
+
+-- Sistem Ayarları Tablosu
+CREATE TABLE SystemSettings (
+    SettingID INT PRIMARY KEY IDENTITY(1,1),
+    SettingKey NVARCHAR(50) NOT NULL UNIQUE,
+    SettingValue NVARCHAR(MAX),
+    Description NVARCHAR(255),
+    LastUpdated DATETIME NOT NULL DEFAULT GETDATE(),
+    UpdatedBy INT FOREIGN KEY REFERENCES Users(UserID)
+);
+
+-- Örnek veri ekleme
+INSERT INTO NFTTypes (TypeName, Description)
+VALUES 
+    ('achievement', 'Earned through completing specific achievements'),
+    ('subscription', 'Provides access to premium features for a period'),
+    ('quest_reward', 'Earned by completing quests'),
+    ('course_completion', 'Earned by completing courses');
+
+-- Ek verileri burada ekleyebilirsiniz
