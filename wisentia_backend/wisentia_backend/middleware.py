@@ -59,3 +59,21 @@ class RateLimitHeaderMiddleware:
                     response['X-RateLimit-Reset'] = status['reset']
         
         return response
+
+
+class FixUserMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # User nesnesinin oluşturulmasını sağla (eğer mevcut değilse)
+        if hasattr(request, 'user') and hasattr(request.user, 'UserID'):
+            # UserID varsa, pk özelliğini UserID ile aynı yap
+            request.user.pk = request.user.UserID
+            request.user.id = request.user.UserID
+        elif hasattr(request, 'user') and hasattr(request.user, 'id'):
+            # id varsa (ve UserID yoksa), pk özelliğini id ile aynı yap
+            request.user.pk = request.user.id
+            
+        response = self.get_response(request)
+        return response

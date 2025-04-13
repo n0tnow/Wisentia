@@ -179,8 +179,25 @@ const ParticleBackground = () => {
 };
 
 // Optimize edilmiş arka plan
+// Optimize edilmiş arka plan
 const AnimatedBackground = () => {
   const theme = useTheme();
+  const [elements, setElements] = useState([]);
+  
+  useEffect(() => {
+    // Client tarafında rastgele elementleri oluştur
+    const newElements = Array(5).fill(0).map((_, index) => ({
+      key: index,
+      width: Math.random() * 250 + 150,
+      height: Math.random() * 250 + 150,
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      opacity: 0.04 + Math.random() * 0.03,
+      animationIndex: index % 3
+    }));
+    
+    setElements(newElements);
+  }, []);
   
   return (
     <Box
@@ -195,24 +212,23 @@ const AnimatedBackground = () => {
         pointerEvents: 'none'
       }}
     >
-      {/* Sadece 5 element */}
-      {[...Array(5)].map((_, index) => (
+      {elements.map((element) => (
         <Box
-          key={index}
+          key={element.key}
           sx={{
             position: 'absolute',
-            width: `${Math.random() * 250 + 150}px`,
-            height: `${Math.random() * 250 + 150}px`,
+            width: `${element.width}px`,
+            height: `${element.height}px`,
             borderRadius: '50%',
             background: theme => `radial-gradient(circle, ${alpha(
-              index % 2 === 0 ? theme.palette.primary.light : 
+              element.key % 2 === 0 ? theme.palette.primary.light : 
               theme.palette.secondary.light, 
-              0.04 + Math.random() * 0.03
+              element.opacity
             )} 0%, rgba(255,255,255,0) 70%)`,
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
+            top: `${element.top}%`,
+            left: `${element.left}%`,
             filter: 'blur(8px)',
-            animation: `float${index % 3} ${12 + Math.random() * 10}s infinite linear`,
+            animation: `float${element.animationIndex} ${12 + Math.random() * 10}s infinite linear`,
             '@keyframes float0': {
               '0%': { transform: 'translate(0, 0) scale(1)' },
               '50%': { transform: 'translate(50px, -30px) scale(1.03)' },

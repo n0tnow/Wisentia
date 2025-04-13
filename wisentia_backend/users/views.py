@@ -12,8 +12,11 @@ import datetime
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.decorators import throttle_classes
-from .throttling import AuthenticationThrottle
+from .throttling import AuthenticationThrottle, CustomUserRateThrottle, SensitiveOperationsThrottle
 import time
+from django.http import JsonResponse
+import json
+from django.contrib.auth import logout
 
 logger = logging.getLogger('wisentia')
 
@@ -41,44 +44,43 @@ logger = logging.getLogger('wisentia')
     },
     operation_description="Kullanıcı girişi yapar ve JWT token döndürür"
 )
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@throttle_classes([AuthenticationThrottle])
+@throttle_classes([AuthenticationThrottle])  # Throttling aktifleştirildi
 def login(request):
-    """Kullanıcı girişi için API endpoint'i"""
+
     email = request.data.get('email')
     password = request.data.get('password')
-    
+
     if not email or not password:
         return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Şifreyi hashle
+
     password_hash = hashlib.sha256(password.encode()).hexdigest()
-    
+
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT UserID, Username, Email, UserRole, IsActive
             FROM Users
             WHERE Email = %s AND PasswordHash = %s
         """, [email, password_hash])
-        
+
         user_data = cursor.fetchone()
-        
+
         if not user_data:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
         user_id, username, email, user_role, is_active = user_data
-        
+
         if not is_active:
             return Response({'error': 'Account is inactive'}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        # Son giriş zamanını güncelle
+
         cursor.execute("UPDATE Users SET LastLogin = GETDATE() WHERE UserID = %s", [user_id])
-        
-        # JWT token oluştur
+
         tokens = generate_token(user_id)
-        
-        return Response({
+
+        # JSON response oluştur
+        response = JsonResponse({
             'user': {
                 'id': user_id,
                 'username': username,
@@ -88,9 +90,26 @@ def login(request):
             'tokens': tokens
         })
 
+        # 🔥 COOKIE'yi burada set ediyoruz
+        response.set_cookie(
+            key='user',
+            value=json.dumps({
+                'id': user_id,
+                'username': username,
+                'role': user_role
+            }),
+            httponly=False,
+            secure=False,              # ✅ HTTPS olmadığı için False olmalı
+            samesite='Lax',           # ✅ Third-party cookie'ler için şart
+            path='/'
+        )
+
+
+        return response
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@throttle_classes([AuthenticationThrottle])
+@throttle_classes([AuthenticationThrottle])  # Throttling aktifleştirildi
 def register(request):
     try:
         username = request.data.get('username')
@@ -193,6 +212,7 @@ def register(request):
 # Ekstra API endpoint'leri ekleyin
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([CustomUserRateThrottle])
 def check_username(request):
     username = request.data.get('username')
     
@@ -207,6 +227,7 @@ def check_username(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([CustomUserRateThrottle])
 def check_email(request):
     email = request.data.get('email')
     
@@ -221,6 +242,7 @@ def check_email(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthenticationThrottle])
 def refresh_token(request):
     """Token yenileme için API endpoint'i"""
     refresh_token = request.data.get('refresh_token')
@@ -268,6 +290,7 @@ def refresh_token(request):
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([CustomUserRateThrottle])
 def get_user_profile(request):
     """Kullanıcı profilini getirmek için API endpoint'i"""
     user_id = request.user.id
@@ -302,6 +325,7 @@ def get_user_profile(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([SensitiveOperationsThrottle])
 def update_profile(request):
     """Kullanıcı profil güncellemesi için API endpoint'i"""
     user_id = request.user.id
@@ -372,6 +396,7 @@ def update_profile(request):
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([SensitiveOperationsThrottle])
 def change_password(request):
     """Kullanıcı şifre değiştirme için API endpoint'i"""
     user_id = request.user.id
@@ -408,6 +433,7 @@ def change_password(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthenticationThrottle])
 def request_password_reset(request):
     """Şifre sıfırlama isteği oluşturur"""
     email = request.data.get('email')
@@ -463,6 +489,7 @@ def request_password_reset(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([SensitiveOperationsThrottle])
 def reset_password(request):
     """Şifre sıfırlama işlemini gerçekleştirir"""
     token = request.data.get('token')
@@ -525,3 +552,10 @@ def reset_password(request):
     except Exception as e:
         logger.error(f"Password reset error: {str(e)}", exc_info=True)
         return Response({'error': 'Failed to reset password'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    logout(request)
+    return Response({'detail': 'Successfully logged out'})

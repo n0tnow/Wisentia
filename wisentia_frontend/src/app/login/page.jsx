@@ -185,29 +185,26 @@ export default function LoginPage() {
       authChecked,
       redirectInProgress
     });
-  }, []);
+  }, 
+  []);
   
   // Kullanıcının kimlik durumunu kontrol et ve yönlendir
   // useEffect İÇİNDE
-useEffect(() => {
-  // Auth yüklenmemişse veya redirect zaten başlamışsa, işlem yapma
-  if (authLoading || redirectInProgress) {
-    return;
-  }
+  useEffect(() => {
+    console.log('Login page mounted', {
+      redirectPath,
+      authLoading,
+      authChecked,
+      redirectInProgress,
+    });
 
-  // Auth kontrolü tamamlandıysa ve kullanıcı giriş yapmışsa
-  if (authChecked && isAuthenticated()) {
-    console.log('User is authenticated, redirecting to:', redirectTarget);
-    
-    // Redirect bayrağını ayarla
-    setRedirectInProgress(true);
-    
-    // router.push yerine window.location kullan
-    setTimeout(() => {
-      window.location.href = redirectTarget;
-    }, 200);
-  }
-}, [isAuthenticated, authChecked, authLoading, redirectInProgress, redirectTarget]);
+    // Eğer auth kontrolü tamamlanmışsa ve kullanıcı giriş yapmışsa yönlendir
+    if (!authLoading && authChecked && isAuthenticated() && !redirectInProgress) {
+      setRedirectInProgress(true);
+      router.replace(redirectPath); // BURADA KAL
+    }
+  }, [authLoading, authChecked, redirectInProgress, redirectPath]);
+  
 
   // Login function - manual login attempt
   const handleLogin = async (e) => {
