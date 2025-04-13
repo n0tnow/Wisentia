@@ -13,40 +13,18 @@ export default function ProtectedLayout({ children, requireAuth = true }) {
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    if (!requireAuth) {
-      setIsAuthorized(true);
-      return;
-    }
-    // Auth kontrolü için kapsamlı log
-    console.log('ProtectedLayout auth check:', {
-      isLoading,
-      authChecked,
-      pathname,
-      isAuth: isAuthenticated(),
-      requireAuth
-    });
-    
-    // Kimlik doğrulama yüklenene kadar bekle
-    if (isLoading || !authChecked) {
-      return;
-    }
-    
-    // Koruma kapalıysa veya kullanıcı giriş yapmışsa erişime izin ver
+    if (isLoading || !authChecked || redirecting) return;
+  
     if (!requireAuth || isAuthenticated()) {
-      console.log('Access granted to', pathname);
       setIsAuthorized(true);
       return;
     }
-    
-    // Yetkisiz ve yönlendirme başlamamışsa yönlendir
-    if (requireAuth && !isAuthenticated() && !redirecting) {
-      console.log('Unauthorized access, redirecting to login from', pathname);
-      setRedirecting(true);
-      
-      // Mevcut sayfayı redirect parametresi olarak ekle
-      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+  
+    if (!isAuthenticated()) {
+      return null; // middleware zaten yönlendirecek
     }
   }, [isAuthenticated, isLoading, authChecked, pathname, router, requireAuth, redirecting]);
+  
 
   // Yükleme durumunda yükleme göstergesi göster
   if (isLoading || !authChecked) {

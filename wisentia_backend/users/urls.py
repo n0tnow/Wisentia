@@ -14,4 +14,5 @@ urlpatterns = [
     # Yeni eklenen endpoint'ler
     path('check-username/', views.check_username, name='check-username'),
     path('check-email/', views.check_email, name='check-email'),
+    path('logout/', views.logout_view, name='logout'),
 ]

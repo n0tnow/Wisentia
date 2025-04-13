@@ -52,8 +52,9 @@ export default function Header({ isLandingPage = false }) {
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { user, logout, isAuthenticated } = useAuth();
-  
+  const { user, logout } = useAuth();
+  const userIsAuthenticated = !!user; // user varsa true, yoksa false
+
   const [scrolled, setScrolled] = useState(false);
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -122,17 +123,25 @@ export default function Header({ isLandingPage = false }) {
 
   // Star sparkle animation component
   const StarSparkles = () => {
-    // Generate random stars that will twinkle
-    const stars = [...Array(20)].map((_, i) => ({
-      id: i,
-      size: Math.random() * 3 + 1,
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      delay: Math.random() * 5,
-      duration: 1 + Math.random() * 3,
-      intensity: 0.3 + Math.random() * 0.7
-    }));
-
+    // useState ile başlangıçta boş bir dizi oluştur
+    const [stars, setStars] = useState([]);
+    
+    // useEffect ile component mount olduktan sonra yıldızları oluştur
+    useEffect(() => {
+      // Yıldızları client tarafında oluştur
+      const generatedStars = [...Array(20)].map((_, i) => ({
+        id: i,
+        size: Math.random() * 3 + 1,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        delay: Math.random() * 5,
+        duration: 1 + Math.random() * 3,
+        intensity: 0.3 + Math.random() * 0.7
+      }));
+      
+      setStars(generatedStars);
+    }, []); // Sadece bir kez çalışsın
+    
     return (
       <Box
         sx={{
@@ -147,52 +156,58 @@ export default function Header({ isLandingPage = false }) {
         }}
       >
         {stars.map((star) => (
-        <Box
-          key={star.id}
-          sx={{
-            position: 'absolute',
-            width: star.size,
-            height: star.size,
-            backgroundColor: 'white',
-            borderRadius: '50%',
-            top: star.top,
-            left: star.left,
-            opacity: 0,
-            boxShadow: '0 0 5px 1px rgba(255,255,255,0.5)',
-            animation: `buttonStar ${star.duration}s ${star.delay}s infinite`,
-            '@keyframes buttonStar': {
-              '0%': { 
-                opacity: 0,
-                transform: 'translateY(0) scale(0)'
-              },
-              '50%': { 
-                opacity: 0.8,
-                transform: 'translateY(-5px) scale(1.2)'
-              },
-              '100%': { 
-                opacity: 0,
-                transform: 'translateY(-10px) scale(0)'
+          <Box
+            key={star.id}
+            sx={{
+              position: 'absolute',
+              width: star.size,
+              height: star.size,
+              backgroundColor: 'white',
+              borderRadius: '50%',
+              top: star.top,
+              left: star.left,
+              opacity: 0,
+              boxShadow: '0 0 5px 1px rgba(255,255,255,0.5)',
+              animation: `buttonStar ${star.duration}s ${star.delay}s infinite`,
+              '@keyframes buttonStar': {
+                '0%': { 
+                  opacity: 0,
+                  transform: 'translateY(0) scale(0)'
+                },
+                '50%': { 
+                  opacity: 0.8,
+                  transform: 'translateY(-5px) scale(1.2)'
+                },
+                '100%': { 
+                  opacity: 0,
+                  transform: 'translateY(-10px) scale(0)'
+                }
               }
-            }
-          }}
-        />
-      ))}
-    </Box>
-  );
-};
+            }}
+          />
+        ))}
+      </Box>
+    );
+  };
 
   // Button hover stars effect
   const ButtonStars = () => {
-    // Generate random stars that will appear when hovering over sign up button
-    const stars = [...Array(10)].map((_, i) => ({
-      id: i,
-      size: Math.random() * 2 + 1,
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      delay: Math.random() * 0.5,
-      duration: 0.5 + Math.random() * 1
-    }));
-
+    const [stars, setStars] = useState([]);
+    
+    useEffect(() => {
+      // Generate random stars that will appear when hovering over sign up button
+      const generatedStars = [...Array(10)].map((_, i) => ({
+        id: i,
+        size: Math.random() * 2 + 1,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        delay: Math.random() * 0.5,
+        duration: 0.5 + Math.random() * 1
+      }));
+      
+      setStars(generatedStars);
+    }, []);
+  
     return (
       <Box
         sx={{
@@ -279,7 +294,7 @@ export default function Header({ isLandingPage = false }) {
       </Box>
       <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
       
-      {isAuthenticated && (
+      {userIsAuthenticated && (
         <Box sx={{ p: 2 }}>
           <Box 
             sx={{ 
@@ -341,7 +356,7 @@ export default function Header({ isLandingPage = false }) {
       <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)', my: 2 }} />
       
       <List>
-        {isAuthenticated ? (
+        {userIsAuthenticated ? (
           <>
             <ListItem disablePadding>
               <ListItemButton
@@ -644,7 +659,7 @@ export default function Header({ isLandingPage = false }) {
               </IconButton>
               
               {/* Notifications - only visible when authenticated */}
-              {isAuthenticated && !isMobile && (
+              {userIsAuthenticated && !isMobile && (
                 <Box sx={{ ml: 1 }}>
                   <Tooltip title="Notifications">
                     <IconButton 
@@ -669,7 +684,7 @@ export default function Header({ isLandingPage = false }) {
               
               {/* User Account or Auth Buttons */}
               <Box sx={{ ml: 1 }}>
-                {isAuthenticated ? (
+                {userIsAuthenticated ? (
                   <>
                     <IconButton
                       size="large"

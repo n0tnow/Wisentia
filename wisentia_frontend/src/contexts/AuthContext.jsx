@@ -36,10 +36,17 @@ const http = {
       const response = await fetch(`${API_BASE_URL}${url}`, {
         method: 'GET',
         headers,
+        credentials: 'include', // Her zaman cookie'leri gönder/al
         ...options
       });
       
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Error parsing JSON response:', jsonError);
+        data = {};
+      }
       
       if (!response.ok) {
         return {
@@ -81,6 +88,7 @@ const http = {
         method: 'POST',
         headers,
         body: JSON.stringify(data),
+        credentials: 'include', // Her zaman cookie'leri gönder/al
         ...options
       });
       
@@ -135,20 +143,31 @@ const authService = {
         console.log('API Response - user:', data.user);
         console.log('API Response - tokens structure:', data.tokens);
         
-        // Tokenları ve kullanıcı bilgilerini localStorage'a kaydet
-        if (data.tokens && typeof data.tokens === 'object') {
-          localStorage.setItem('access_token', data.tokens.access);
-          if (data.tokens.refresh) {
-            localStorage.setItem('refresh_token', data.tokens.refresh);
+        try {
+          // Tokenları ve kullanıcı bilgilerini localStorage'a kaydet
+          if (data.tokens && typeof data.tokens === 'object') {
+            localStorage.setItem('access_token', data.tokens.access);
+            if (data.tokens.refresh) {
+              localStorage.setItem('refresh_token', data.tokens.refresh);
+            }
+          } else if (data.token) {
+            localStorage.setItem('access_token', data.token);
           }
-        } else if (data.token) {
-          localStorage.setItem('access_token', data.token);
+          
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
         }
-        
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Profile API'sini çağırarak cookie'lerin kaydedilmesini sağla
+        try {
+          await http.get('/auth/profile/');
+        } catch (profileError) {
+          console.log('Profile fetch after login failed, but continuing:', profileError);
         }
-        
+
         return {
           success: true,
           user: data.user,
@@ -190,18 +209,29 @@ const authService = {
           };
         }
 
-        // Kullanıcı ve token bilgilerini kaydet
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
+        try {
+          // Kullanıcı ve token bilgilerini kaydet
+          if (data.user) {
+            localStorage.setItem('user', JSON.stringify(data.user));
+          }
+          
+          if (data.tokens) {
+            if (data.tokens.access) {
+              localStorage.setItem('access_token', data.tokens.access);
+            }
+            if (data.tokens.refresh) {
+              localStorage.setItem('refresh_token', data.tokens.refresh);
+            }
+          }
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
         }
         
-        if (data.tokens) {
-          if (data.tokens.access) {
-            localStorage.setItem('access_token', data.tokens.access);
-          }
-          if (data.tokens.refresh) {
-            localStorage.setItem('refresh_token', data.tokens.refresh);
-          }
+        // Profile API'sini çağırarak cookie'lerin kaydedilmesini sağla
+        try {
+          await http.get('/auth/profile/');
+        } catch (profileError) {
+          console.log('Profile fetch after register failed, but continuing:', profileError);
         }
         
         return {
@@ -216,10 +246,20 @@ const authService = {
           result.response && 
           result.response.status === 201) {
         // Veritabanına kaydoldu ama hatalı yanıt döndü
+        const tempUser = { id: Date.now(), ...userData };
+        const tempToken = 'temp_token_' + Date.now();
+        
+        try {
+          localStorage.setItem('user', JSON.stringify(tempUser));
+          localStorage.setItem('access_token', tempToken);
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
+        }
+        
         return {
           success: true,
-          user: { id: Date.now(), ...userData }, // Geçici kullanıcı nesnesi
-          tokens: { access: 'temp_token_' + Date.now() } // Geçici token
+          user: tempUser,
+          tokens: { access: tempToken }
         };
       }
       
@@ -236,13 +276,19 @@ const authService = {
       if (error.message && error.message.includes('NetworkError')) {
         console.log('Network error but registration might have succeeded');
         const tempUser = { id: Date.now(), ...userData };
-        localStorage.setItem('user', JSON.stringify(tempUser));
-        localStorage.setItem('access_token', 'temp_token_' + Date.now());
+        const tempToken = 'temp_token_' + Date.now();
+        
+        try {
+          localStorage.setItem('user', JSON.stringify(tempUser));
+          localStorage.setItem('access_token', tempToken);
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
+        }
         
         return {
           success: true,
           user: tempUser,
-          tokens: { access: 'temp_token_' + Date.now() }
+          tokens: { access: tempToken }
         };
       }
       
@@ -255,9 +301,21 @@ const authService = {
 
   // Çıkış yapma
   logout: () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+    try {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      
+      // Sunucudan çıkış yapmayı dene (isteğe bağlı)
+      fetch(`${API_BASE_URL}/auth/logout/`, {
+        method: 'POST',
+        credentials: 'include'
+      }).catch(err => {
+        console.log('Logout API call failed, but continuing:', err);
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   },
 
   // Kullanıcı profil bilgilerini getir
@@ -303,9 +361,13 @@ const authService = {
       if (result.success) {
         const { data } = result;
         
-        localStorage.setItem('access_token', data.access);
-        if (data.refresh) {
-          localStorage.setItem('refresh_token', data.refresh);
+        try {
+          localStorage.setItem('access_token', data.access);
+          if (data.refresh) {
+            localStorage.setItem('refresh_token', data.refresh);
+          }
+        } catch (storageError) {
+          console.error('Error saving to localStorage:', storageError);
         }
         
         return {
@@ -357,7 +419,7 @@ export function AuthProvider({ children }) {
 
   // Sayfa yüklendiğinde localStorage'dan kullanıcı bilgilerini al
   useEffect(() => {
-    const loadUserFromStorage = () => {
+    const loadUserFromStorage = async () => {
       try {
         setIsLoading(true);
         
@@ -370,6 +432,16 @@ export function AuthProvider({ children }) {
           const userData = JSON.parse(userStr);
           setUser(userData);
           console.log('User data loaded from localStorage successfully');
+          
+          // Opsiyonel: Profile bilgilerini sunucudan taze olarak al
+          try {
+            const profileResult = await authService.getProfile();
+            if (profileResult.success) {
+              console.log('Profile refreshed from server');
+            }
+          } catch (profileError) {
+            console.log('Profile refresh failed, but continuing with localStorage data');
+          }
         } else {
           console.log('No valid user data found in localStorage');
           setUser(null);
@@ -396,6 +468,7 @@ export function AuthProvider({ children }) {
       
       if (result.success) {
         setUser(result.user);
+        setAuthChecked(true);
         return result;
       } else {
         setAuthError(result.error);
@@ -421,21 +494,9 @@ export function AuthProvider({ children }) {
       console.log("Registration API result:", result);
       
       if (result.success) {
-        // Kullanıcı ve token bilgilerini direkt localStorage'a kaydet
         if (result.user) {
-          console.log("Saving user data:", result.user);
-          localStorage.setItem('user', JSON.stringify(result.user));
           setUser(result.user);
-        }
-        
-        if (result.tokens) {
-          console.log("Saving tokens");
-          if (result.tokens.access) {
-            localStorage.setItem('access_token', result.tokens.access);
-          }
-          if (result.tokens.refresh) {
-            localStorage.setItem('refresh_token', result.tokens.refresh);
-          }
+          setAuthChecked(true);
         }
         
         return result;
@@ -454,10 +515,15 @@ export function AuthProvider({ children }) {
             role: 'regular'
           };
           
-          localStorage.setItem('user', JSON.stringify(tempUser));
-          localStorage.setItem('access_token', 'temp_token_' + Date.now());
+          try {
+            localStorage.setItem('user', JSON.stringify(tempUser));
+            localStorage.setItem('access_token', 'temp_token_' + Date.now());
+          } catch (storageError) {
+            console.error('Error saving to localStorage:', storageError);
+          }
           
           setUser(tempUser);
+          setAuthChecked(true);
           
           return {
             success: true,
@@ -481,11 +547,16 @@ export function AuthProvider({ children }) {
         role: 'regular'
       };
       
-      localStorage.setItem('user', JSON.stringify(tempUser));
-      const tempToken = 'temp_token_' + Date.now();
-      localStorage.setItem('access_token', tempToken);
+      try {
+        localStorage.setItem('user', JSON.stringify(tempUser));
+        const tempToken = 'temp_token_' + Date.now();
+        localStorage.setItem('access_token', tempToken);
+      } catch (storageError) {
+        console.error('Error saving to localStorage:', storageError);
+      }
       
       setUser(tempUser);
+      setAuthChecked(true);
       
       return {
         success: true,
@@ -499,15 +570,46 @@ export function AuthProvider({ children }) {
   };
 
   // Çıkış fonksiyonu
-  const logout = () => {
-    authService.logout();
+const logout = async () => {
+  try {
+    // Token ve header'ları doğru şekilde ayarla
+    const token = localStorage.getItem('access_token');
+    
+    // API isteğinde kimlik doğrulama başlığını gönder
+    const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      credentials: 'include',
+    });
+    
+    console.log('Logout response:', response.status);
+    
+    // State ve localStorage temizle
     setUser(null);
     
-    // Tarayıcıyı anasayfaya yönlendir (router kullanımındaki sorunları önlemek için)
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
-    }
-  };
+    // LocalStorage temizle
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    
+    // Sayfayı tamamen yenile - bu önemli!
+    window.location.href = '/';
+  } catch (error) {
+    console.error('Logout error:', error);
+    
+    // Hata durumunda bile state ve localStorage'ı temizle
+    setUser(null);
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    
+    // Sayfayı tamamen yenile
+    window.location.href = '/';
+  }
+};
 
   // Kimlik doğrulama kontrolü
   const isAuthenticated = () => {
@@ -525,7 +627,8 @@ export function AuthProvider({ children }) {
     logout,
     isAuthenticated,
     refreshToken: authService.refreshToken,
-    getProfile: authService.getProfile
+    getProfile: authService.getProfile,
+    updateUser: (userData) => setUser(userData)
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

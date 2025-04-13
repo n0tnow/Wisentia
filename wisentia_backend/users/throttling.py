@@ -5,18 +5,26 @@ from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 class AuthenticationThrottle(AnonRateThrottle):
     scope = 'auth'
 
-class SensitiveOperationsThrottle(UserRateThrottle):
-    scope = 'sensitive'
+# Ana UserRateThrottle sınıfımızı özelleştirelim
+class CustomUserRateThrottle(UserRateThrottle):
+    scope = 'user'
     
-    # Özel get_cache_key metodu ekleyin
+    
     def get_cache_key(self, request, view):
-        # Django User modeli yerine doğrudan request.user.id kullan
+        # Özel kullanıcı modeli kullanıyoruz, Django User modeli değil
         if hasattr(request, 'user') and hasattr(request.user, 'id'):
             ident = request.user.id
+        elif hasattr(request, 'user') and hasattr(request.user, 'UserID'):
+            ident = request.user.UserID
         else:
+            # Kullanıcı kimliği bulunamadıysa, IP'ye göre throttle uygula
             ident = self.get_ident(request)
             
         return self.cache_format % {
             'scope': self.scope,
             'ident': ident
         }
+
+class SensitiveOperationsThrottle(CustomUserRateThrottle):
+    scope = 'sensitive'
+    # CustomUserRateThrottle'dan miras aldığımız için get_cache_key metodunu tekrar tanımlamamıza gerek yok

@@ -123,23 +123,177 @@ export default function DashboardPage() {
       setError(null);
       
       try {
-        // Get user statistics
-        await fetchUserStats();
+        console.log("Loading dashboard with mock data");
         
-        // Get learning progress
-        await fetchLearningProgress();
+        // Mock stats veri
+        const mockStats = {
+          completedCourses: 5,
+          completedVideos: 32,
+          completedQuests: 8,
+          earnedNFTs: 4,
+          totalPoints: 1450,
+          streakDays: 7
+        };
+        setStats(mockStats);
         
-        // Get time statistics
-        await fetchTimeSpent();
+        // Mock learning progress veri
+        const mockLearningProgress = {
+          ongoingCourses: [
+            {
+              CourseID: 1,
+              Title: "Blockchain Fundamentals",
+              CompletionPercentage: 65,
+              LastAccessDate: new Date().toISOString(),
+              Category: "Blockchain",
+              Difficulty: "intermediate",
+              ThumbnailURL: null
+            },
+            {
+              CourseID: 2,
+              Title: "Web3 Development",
+              CompletionPercentage: 30,
+              LastAccessDate: new Date().toISOString(),
+              Category: "Development",
+              Difficulty: "advanced",
+              ThumbnailURL: null
+            }
+          ],
+          completedCourses: [
+            {
+              CourseID: 3,
+              Title: "Crypto Basics",
+              CompletionDate: new Date(Date.now() - 7*24*60*60*1000).toISOString(),
+              Category: "Cryptocurrency",
+              Difficulty: "beginner",
+              Rating: 4.5,
+              ThumbnailURL: null
+            }
+          ],
+          ongoingQuests: [
+            {
+              QuestID: 1,
+              Title: "Blockchain Explorer",
+              DifficultyLevel: "medium",
+              CurrentProgress: 70,
+              RequiredPoints: 100
+            },
+            {
+              QuestID: 2,
+              Title: "Smart Contract Master",
+              DifficultyLevel: "hard",
+              CurrentProgress: 30,
+              RequiredPoints: 150
+            }
+          ],
+          categoryStats: {
+            "Blockchain": 3,
+            "Development": 2,
+            "Cryptocurrency": 1,
+            "Web3": 2
+          }
+        };
+        setLearningProgress(mockLearningProgress);
         
-        // Get activity summary
-        await fetchActivitySummary();
+        // Mock time spent veri
+        const mockTimeSpent = {
+          totalHours: 45,
+          lastWeekHours: 8,
+          dailyAverage: 1.2,
+          weekdayDistribution: {
+            "Monday": 2.5,
+            "Tuesday": 1.5,
+            "Wednesday": 1.8,
+            "Thursday": 2.0,
+            "Friday": 1.2,
+            "Saturday": 3.5,
+            "Sunday": 2.0
+          }
+        };
+        setTimeSpent(mockTimeSpent);
         
-        // If subscription is active, get AI recommendations and analytics
+        // Mock activity summary 
+        const mockActivitySummary = {
+          recentActivities: [
+            {
+              id: 1,
+              type: "course_completion",
+              description: "Completed 'Crypto Basics' course",
+              timestamp: new Date(Date.now() - 2*24*60*60*1000).toISOString(),
+              points: 200
+            },
+            {
+              id: 2,
+              type: "quest_progress",
+              description: "Made progress on 'Blockchain Explorer' quest",
+              timestamp: new Date(Date.now() - 1*24*60*60*1000).toISOString(),
+              points: 50
+            },
+            {
+              id: 3,
+              type: "video_watched",
+              description: "Watched 'Smart Contract Introduction'",
+              timestamp: new Date(Date.now() - 12*60*60*1000).toISOString(),
+              points: 10
+            }
+          ],
+          monthlyPointsEarned: 350,
+          weeklyPointsEarned: 120
+        };
+        setActivitySummary(mockActivitySummary);
+        
+        // Mock AI recommendations (premium content)
         if (subscriptionActive) {
-          await fetchAiRecommendations();
-          await fetchAiAnalytics();
+          const mockAiRecommendations = [
+            {
+              RecommendationID: 1,
+              RecommendationType: "course",
+              TargetID: 4,
+              RecommendationReason: "Based on your interest in blockchain",
+              Confidence: 0.85,
+              target: {
+                title: "Smart Contract Development",
+                category: "Development",
+                difficulty: "advanced",
+                thumbnailURL: null
+              }
+            },
+            {
+              RecommendationID: 2,
+              RecommendationType: "course",
+              TargetID: 5,
+              RecommendationReason: "Popular among users with similar learning patterns",
+              Confidence: 0.78,
+              target: {
+                title: "NFT Marketplace Creation",
+                category: "Blockchain",
+                difficulty: "intermediate",
+                thumbnailURL: null
+              }
+            },
+            {
+              RecommendationID: 3,
+              RecommendationType: "course",
+              TargetID: 6,
+              RecommendationReason: "Complements your completed courses",
+              Confidence: 0.92,
+              target: {
+                title: "Web3 Authentication",
+                category: "Development",
+                difficulty: "intermediate",
+                thumbnailURL: null
+              }
+            }
+          ];
+          setAiRecommendations(mockAiRecommendations);
+          
+          const mockAiAnalytics = {
+            learningStyle: "Visual",
+            strengthAreas: JSON.stringify(["Blockchain Concepts", "Cryptocurrency Fundamentals", "DApp Development"]),
+            weaknessAreas: JSON.stringify(["Smart Contract Security", "Solidity Advanced Features", "Cross-chain Technology"])
+          };
+          setAiAnalytics(mockAiAnalytics);
         }
+        
       } catch (err) {
         console.error("Error loading dashboard data:", err);
         setError("Failed to load data. Please try again later.");
@@ -154,20 +308,39 @@ export default function DashboardPage() {
   // API call functions
   const fetchUserStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/user-stats/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      // Backend API'ye erişmeye çalış
+      try {
+        const response = await fetch(`${API_BASE_URL}/analytics/user-stats/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        const data = await response.json();
+        setStats(data);
+      } catch (apiError) {
+        console.error("User stats API error:", apiError);
+        
+        // Mock veri kullan
+        console.log("Using mock user stats data");
+        const mockStats = {
+          completedCourses: 5,
+          completedVideos: 32,
+          completedQuests: 8,
+          earnedNFTs: 4,
+          totalPoints: 1450,
+          streakDays: 7
+        };
+        
+        setStats(mockStats);
       }
-      
-      const data = await response.json();
-      setStats(data);
     } catch (error) {
       console.error("Error fetching user statistics:", error);
       throw error;
@@ -176,20 +349,84 @@ export default function DashboardPage() {
   
   const fetchLearningProgress = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/learning-progress/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      try {
+        const response = await fetch(`${API_BASE_URL}/analytics/learning-progress/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        const data = await response.json();
+        setLearningProgress(data);
+      } catch (apiError) {
+        console.error("Learning progress API error:", apiError);
+        
+        // Mock veri
+        const mockLearningProgress = {
+          ongoingCourses: [
+            {
+              CourseID: 1,
+              Title: "Blockchain Fundamentals",
+              CompletionPercentage: 65,
+              LastAccessDate: new Date().toISOString(),
+              Category: "Blockchain",
+              Difficulty: "intermediate",
+              ThumbnailURL: null
+            },
+            {
+              CourseID: 2,
+              Title: "Web3 Development",
+              CompletionPercentage: 30,
+              LastAccessDate: new Date().toISOString(),
+              Category: "Development",
+              Difficulty: "advanced",
+              ThumbnailURL: null
+            }
+          ],
+          completedCourses: [
+            {
+              CourseID: 3,
+              Title: "Crypto Basics",
+              CompletionDate: new Date(Date.now() - 7*24*60*60*1000).toISOString(),
+              Category: "Cryptocurrency",
+              Difficulty: "beginner",
+              Rating: 4.5,
+              ThumbnailURL: null
+            }
+          ],
+          ongoingQuests: [
+            {
+              QuestID: 1,
+              Title: "Blockchain Explorer",
+              DifficultyLevel: "medium",
+              CurrentProgress: 70,
+              RequiredPoints: 100
+            },
+            {
+              QuestID: 2,
+              Title: "Smart Contract Master",
+              DifficultyLevel: "hard",
+              CurrentProgress: 30,
+              RequiredPoints: 150
+            }
+          ],
+          categoryStats: {
+            "Blockchain": 3,
+            "Development": 2,
+            "Cryptocurrency": 1,
+            "Web3": 2
+          }
+        };
+        
+        setLearningProgress(mockLearningProgress);
       }
-      
-      const data = await response.json();
-      setLearningProgress(data);
     } catch (error) {
       console.error("Error fetching learning progress:", error);
       throw error;
@@ -198,20 +435,43 @@ export default function DashboardPage() {
   
   const fetchTimeSpent = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/analytics/time-spent/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      try {
+        const response = await fetch(`${API_BASE_URL}/analytics/time-spent/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        const data = await response.json();
+        setTimeSpent(data);
+      } catch (apiError) {
+        console.error("Time spent API error:", apiError);
+        
+        // Mock veri
+        const mockTimeSpent = {
+          totalHours: 45,
+          lastWeekHours: 8,
+          dailyAverage: 1.2,
+          weekdayDistribution: {
+            "Monday": 2.5,
+            "Tuesday": 1.5,
+            "Wednesday": 1.8,
+            "Thursday": 2.0,
+            "Friday": 1.2,
+            "Saturday": 3.5,
+            "Sunday": 2.0
+          }
+        };
+        
+        setTimeSpent(mockTimeSpent);
       }
-      
-      const data = await response.json();
-      setTimeSpent(data);
     } catch (error) {
       console.error("Error fetching time statistics:", error);
       throw error;

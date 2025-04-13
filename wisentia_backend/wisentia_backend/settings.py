@@ -51,9 +51,10 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'wisentia_backend.middleware.FixUserMiddleware',  # Yeni eklenen middleware
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'wisentia_backend.middleware.APIExceptionMiddleware',  # Yeni middleware
+    'wisentia_backend.middleware.APIExceptionMiddleware',
     'wisentia_backend.middleware.RateLimitHeaderMiddleware',
 ]
 
@@ -151,25 +152,28 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    # Rate limiting ayarları ekleniyor
+    # Rate limiting ayarları
     'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+        'users.throttling.CustomUserRateThrottle',  # Özel throttling sınıfımızı kullanıyoruz
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/hour',            # Anonim kullanıcılar için saatte 60 istek
         'user': '1000/hour',          # Kayıtlı kullanıcılar için saatte 1000 istek
         'auth': '20/minute',          # Kimlik doğrulama istekleri için dakikada 20 istek
         'sensitive': '30/minute',     # Hassas işlemler için dakikada 30 istek
     },
     'DEFAULT_RENDERER_CLASSES': (
-        'users.utils.CustomJSONRenderer',  # Burada "users" kısmını kendi uygulama adınızla değiştirin
+        'users.utils.CustomJSONRenderer',
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
 }
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True  # Geliştirme ortamında
+CORS_ALLOW_CREDENTIALS = True
+
+SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SECURE = False
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js frontend
 ]

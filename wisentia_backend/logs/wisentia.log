@@ -1333,3 +1333,1899 @@ INFO 2025-04-09 02:32:38,082 basehttp 128204 133960 "POST /api/auth/login/ HTTP/
 INFO 2025-04-09 04:24:42,230 basehttp 128204 11960 "POST /api/auth/login/ HTTP/1.1" 200 492
 INFO 2025-04-09 18:22:03,450 autoreload 32792 8844 Watching for file changes with StatReloader
 INFO 2025-04-09 18:22:57,275 autoreload 36888 33736 Watching for file changes with StatReloader
+INFO 2025-04-10 01:05:25,533 autoreload 36888 33736 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 01:05:26,762 autoreload 32872 31936 Watching for file changes with StatReloader
+INFO 2025-04-10 01:05:36,753 autoreload 32872 31936 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 01:05:37,691 autoreload 42772 42776 Watching for file changes with StatReloader
+INFO 2025-04-10 01:05:49,995 autoreload 42772 42776 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 01:05:51,120 autoreload 40616 38756 Watching for file changes with StatReloader
+INFO 2025-04-10 01:07:34,972 autoreload 40616 38756 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 01:07:35,960 autoreload 33312 32592 Watching for file changes with StatReloader
+INFO 2025-04-10 01:07:39,934 autoreload 33312 32592 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 01:07:40,909 autoreload 18844 39900 Watching for file changes with StatReloader
+INFO 2025-04-10 01:07:46,235 autoreload 18844 39900 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 01:07:47,263 autoreload 32872 42432 Watching for file changes with StatReloader
+INFO 2025-04-10 04:49:09,240 basehttp 32872 17404 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-10 04:49:09,287 basehttp 32872 17404 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-10 05:07:10,212 autoreload 32872 42432 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:07:11,357 autoreload 42032 42200 Watching for file changes with StatReloader
+INFO 2025-04-10 05:07:36,641 autoreload 43404 34448 Watching for file changes with StatReloader
+INFO 2025-04-10 05:10:39,534 autoreload 43404 34448 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:10:40,442 autoreload 37724 43088 Watching for file changes with StatReloader
+INFO 2025-04-10 05:11:21,406 autoreload 37724 43088 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:11:22,357 autoreload 41532 7316 Watching for file changes with StatReloader
+INFO 2025-04-10 05:11:30,887 autoreload 41532 7316 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:11:31,816 autoreload 37716 17220 Watching for file changes with StatReloader
+INFO 2025-04-10 05:11:42,449 autoreload 37716 17220 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:11:43,398 autoreload 42208 41476 Watching for file changes with StatReloader
+INFO 2025-04-10 05:16:21,481 autoreload 42208 41476 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-10 05:16:22,348 autoreload 41776 41440 Watching for file changes with StatReloader
+INFO 2025-04-10 05:22:58,010 autoreload 41776 41440 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:22:58,848 autoreload 3432 44608 Watching for file changes with StatReloader
+INFO 2025-04-10 05:23:04,715 autoreload 3432 44608 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:23:05,522 autoreload 32620 44528 Watching for file changes with StatReloader
+INFO 2025-04-10 05:23:09,169 autoreload 32620 44528 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:23:10,132 autoreload 41272 44944 Watching for file changes with StatReloader
+INFO 2025-04-10 05:23:29,680 autoreload 41272 44944 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-10 05:23:30,558 autoreload 44968 41728 Watching for file changes with StatReloader
+INFO 2025-04-10 05:24:28,606 autoreload 36056 36828 Watching for file changes with StatReloader
+INFO 2025-04-10 05:25:02,084 autoreload 42964 36208 Watching for file changes with StatReloader
+INFO 2025-04-10 05:25:39,365 basehttp 42964 29288 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-10 05:32:07,555 basehttp 42964 41104 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-10 05:36:48,661 autoreload 42964 36208 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:36:49,503 autoreload 44928 44912 Watching for file changes with StatReloader
+INFO 2025-04-10 05:37:58,123 basehttp 44928 40160 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-10 05:37:58,158 basehttp 44928 40160 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-10 05:39:59,870 autoreload 44928 44912 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 05:40:00,764 autoreload 44520 14776 Watching for file changes with StatReloader
+INFO 2025-04-10 05:43:51,121 basehttp 44520 44884 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-10 05:43:51,154 basehttp 44520 44884 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-10 05:58:27,504 basehttp 44520 45388 "OPTIONS /api/analytics/user-stats/ HTTP/1.1" 200 0
+INFO 2025-04-10 05:58:27,504 basehttp 44520 44844 "OPTIONS /api/analytics/user-stats/ HTTP/1.1" 200 0
+ERROR 2025-04-10 05:58:27,517 middleware 44520 44844 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 05:58:27,517 middleware 44520 44844 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 05:58:27,519 log 44520 44844 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 05:58:27,519 basehttp 44520 44844 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 05:58:27,523 middleware 44520 44844 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 05:58:27,524 middleware 44520 44844 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 05:58:27,525 log 44520 44844 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 05:58:27,525 basehttp 44520 44844 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+INFO 2025-04-10 06:03:35,140 autoreload 44520 14776 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-10 06:03:36,158 autoreload 27868 46044 Watching for file changes with StatReloader
+INFO 2025-04-10 12:36:06,108 basehttp 27868 31128 "GET /api/auth/profile HTTP/1.1" 301 0
+WARNING 2025-04-10 12:36:06,139 log 27868 46828 Forbidden: /api/auth/profile/
+WARNING 2025-04-10 12:36:06,141 basehttp 27868 46828 "GET /api/auth/profile/ HTTP/1.1" 403 5286
+INFO 2025-04-10 12:36:06,467 basehttp 27868 29464 "GET /static/rest_framework/js/jquery-3.7.1.min.js HTTP/1.1" 200 87533
+INFO 2025-04-10 12:36:06,469 basehttp 27868 29464 "GET /static/rest_framework/js/csrf.js HTTP/1.1" 200 1793
+INFO 2025-04-10 12:36:06,472 basehttp 27868 8440 "GET /static/rest_framework/css/bootstrap-tweaks.css HTTP/1.1" 200 3426
+INFO 2025-04-10 12:36:06,474 basehttp 27868 29464 "GET /static/rest_framework/js/bootstrap.min.js HTTP/1.1" 200 39680
+INFO 2025-04-10 12:36:06,476 basehttp 27868 46188 "GET /static/rest_framework/css/prettify.css HTTP/1.1" 200 817
+INFO 2025-04-10 12:36:06,478 basehttp 27868 8440 "GET /static/rest_framework/js/prettify-min.js HTTP/1.1" 200 13632
+INFO 2025-04-10 12:36:06,480 basehttp 27868 29464 "GET /static/rest_framework/js/default.js HTTP/1.1" 200 1268
+INFO 2025-04-10 12:36:06,481 basehttp 27868 49988 "GET /static/rest_framework/js/ajax-form.js HTTP/1.1" 200 3796
+INFO 2025-04-10 12:36:06,481 basehttp 27868 23348 "GET /static/rest_framework/css/default.css HTTP/1.1" 200 1152
+INFO 2025-04-10 12:36:06,482 basehttp 27868 46188 "GET /static/rest_framework/js/load-ajax-form.js HTTP/1.1" 200 59
+INFO 2025-04-10 12:36:06,484 basehttp 27868 46828 "GET /static/rest_framework/css/bootstrap.min.css HTTP/1.1" 200 121457
+INFO 2025-04-10 12:36:06,498 basehttp 27868 46828 "GET /static/rest_framework/img/grid.png HTTP/1.1" 200 1458
+WARNING 2025-04-10 12:36:07,237 log 27868 46828 Not Found: /favicon.ico
+WARNING 2025-04-10 12:36:07,239 basehttp 27868 46828 "GET /favicon.ico HTTP/1.1" 404 4131
+INFO 2025-04-10 13:16:46,702 autoreload 48028 50120 Watching for file changes with StatReloader
+INFO 2025-04-10 13:18:29,398 basehttp 48028 44840 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-10 13:18:29,428 basehttp 48028 44840 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-10 13:32:31,224 basehttp 48028 24804 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-10 13:32:31,225 basehttp 48028 43080 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+ERROR 2025-04-10 13:32:31,547 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:32:31,547 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:32:31,548 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:32:31,548 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:32:31,552 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:32:31,553 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:32:31,553 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:32:31,555 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+WARNING 2025-04-10 13:32:31,608 log 48028 43080 Forbidden: /api/auth/profile/
+WARNING 2025-04-10 13:32:31,609 basehttp 48028 43080 "GET /api/auth/profile/ HTTP/1.1" 403 58
+ERROR 2025-04-10 13:34:07,256 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:34:07,256 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:34:07,257 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:34:07,257 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:34:07,263 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:34:07,264 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:34:07,265 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:34:07,265 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:34:07,446 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:34:07,446 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:34:07,447 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:34:07,447 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:35:32,780 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:35:32,780 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:35:32,781 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:35:32,782 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:35:32,787 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:35:32,788 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:35:32,788 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:35:32,789 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:35:33,008 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:35:33,009 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:35:33,009 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:35:33,011 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+INFO 2025-04-10 13:36:39,358 basehttp 48028 43080 "OPTIONS /api/analytics/user-stats/ HTTP/1.1" 200 0
+INFO 2025-04-10 13:36:39,359 basehttp 48028 24804 "OPTIONS /api/analytics/user-stats/ HTTP/1.1" 200 0
+ERROR 2025-04-10 13:36:39,367 middleware 48028 24804 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:36:39,367 middleware 48028 24804 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:36:39,368 log 48028 24804 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 13:36:39,368 basehttp 48028 24804 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:36:39,374 middleware 48028 24804 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:36:39,375 middleware 48028 24804 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:36:39,376 log 48028 24804 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 13:36:39,376 basehttp 48028 24804 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:37:14,138 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:37:14,138 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:37:14,139 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:37:14,140 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:37:14,145 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:37:14,146 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:37:14,146 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:37:14,147 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+INFO 2025-04-10 13:39:14,942 basehttp 48028 24804 "OPTIONS /api/analytics/user-stats/ HTTP/1.1" 200 0
+ERROR 2025-04-10 13:39:14,955 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:14,955 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:14,956 log 48028 37496 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 13:39:14,956 basehttp 48028 37496 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:14,965 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:14,965 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+INFO 2025-04-10 13:39:14,965 basehttp 48028 24804 "OPTIONS /api/analytics/learning-progress/ HTTP/1.1" 200 0
+ERROR 2025-04-10 13:39:14,968 log 48028 37496 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 13:39:14,969 basehttp 48028 37496 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:14,979 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:14,979 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:14,980 log 48028 37496 Internal Server Error: /api/analytics/learning-progress/
+ERROR 2025-04-10 13:39:14,982 basehttp 48028 37496 "GET /api/analytics/learning-progress/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:14,997 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:14,997 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:14,998 log 48028 37496 Internal Server Error: /api/analytics/learning-progress/
+ERROR 2025-04-10 13:39:14,999 basehttp 48028 37496 "GET /api/analytics/learning-progress/ HTTP/1.1" 500 2326
+INFO 2025-04-10 13:39:15,011 basehttp 48028 24804 "OPTIONS /api/analytics/time-spent/ HTTP/1.1" 200 0
+ERROR 2025-04-10 13:39:15,019 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:15,019 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:15,021 log 48028 37496 Internal Server Error: /api/analytics/time-spent/
+ERROR 2025-04-10 13:39:15,022 basehttp 48028 37496 "GET /api/analytics/time-spent/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:15,029 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:15,029 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:15,030 log 48028 37496 Internal Server Error: /api/analytics/time-spent/
+ERROR 2025-04-10 13:39:15,031 basehttp 48028 37496 "GET /api/analytics/time-spent/ HTTP/1.1" 500 2326
+INFO 2025-04-10 13:39:15,037 basehttp 48028 24804 "OPTIONS /api/analytics/user-activity-summary/ HTTP/1.1" 200 0
+ERROR 2025-04-10 13:39:15,043 middleware 48028 24804 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:15,044 middleware 48028 24804 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:15,045 log 48028 24804 Internal Server Error: /api/analytics/user-activity-summary/
+ERROR 2025-04-10 13:39:15,045 basehttp 48028 24804 "GET /api/analytics/user-activity-summary/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:15,053 middleware 48028 24804 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:15,053 middleware 48028 24804 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:15,054 log 48028 24804 Internal Server Error: /api/analytics/user-activity-summary/
+ERROR 2025-04-10 13:39:15,055 basehttp 48028 24804 "GET /api/analytics/user-activity-summary/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:18,306 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:18,307 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:18,307 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:39:18,308 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:18,713 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:18,714 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:18,715 log 48028 37496 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 13:39:18,715 basehttp 48028 37496 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:18,731 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:18,732 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:18,732 log 48028 37496 Internal Server Error: /api/analytics/learning-progress/
+ERROR 2025-04-10 13:39:18,733 basehttp 48028 37496 "GET /api/analytics/learning-progress/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:18,746 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:18,746 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:18,747 log 48028 37496 Internal Server Error: /api/analytics/time-spent/
+ERROR 2025-04-10 13:39:18,747 basehttp 48028 37496 "GET /api/analytics/time-spent/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:39:18,758 middleware 48028 24804 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:39:18,758 middleware 48028 24804 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:39:18,760 log 48028 24804 Internal Server Error: /api/analytics/user-activity-summary/
+ERROR 2025-04-10 13:39:18,760 basehttp 48028 24804 "GET /api/analytics/user-activity-summary/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:07,365 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:07,365 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:07,367 log 48028 37496 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:40:07,367 basehttp 48028 37496 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,780 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,781 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,782 log 48028 37496 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 13:40:12,782 basehttp 48028 37496 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,788 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,789 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,790 log 48028 37496 Internal Server Error: /api/analytics/user-stats/
+ERROR 2025-04-10 13:40:12,790 basehttp 48028 37496 "GET /api/analytics/user-stats/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,799 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,799 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,800 log 48028 37496 Internal Server Error: /api/analytics/learning-progress/
+ERROR 2025-04-10 13:40:12,801 basehttp 48028 37496 "GET /api/analytics/learning-progress/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,820 middleware 48028 37496 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,820 middleware 48028 37496 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,821 log 48028 37496 Internal Server Error: /api/analytics/learning-progress/
+ERROR 2025-04-10 13:40:12,821 basehttp 48028 37496 "GET /api/analytics/learning-progress/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,826 middleware 48028 14264 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,827 middleware 48028 14264 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,828 log 48028 14264 Internal Server Error: /api/analytics/time-spent/
+ERROR 2025-04-10 13:40:12,829 basehttp 48028 14264 "GET /api/analytics/time-spent/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,833 middleware 48028 14264 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,833 middleware 48028 14264 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,834 log 48028 14264 Internal Server Error: /api/analytics/time-spent/
+ERROR 2025-04-10 13:40:12,834 basehttp 48028 14264 "GET /api/analytics/time-spent/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,842 middleware 48028 24804 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,842 middleware 48028 24804 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,843 log 48028 24804 Internal Server Error: /api/analytics/user-activity-summary/
+ERROR 2025-04-10 13:40:12,844 basehttp 48028 24804 "GET /api/analytics/user-activity-summary/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:40:12,853 middleware 48028 24804 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:40:12,853 middleware 48028 24804 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:40:12,854 log 48028 24804 Internal Server Error: /api/analytics/user-activity-summary/
+ERROR 2025-04-10 13:40:12,854 basehttp 48028 24804 "GET /api/analytics/user-activity-summary/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:42:38,951 middleware 48028 14264 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:42:38,952 middleware 48028 14264 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:42:38,952 log 48028 14264 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:42:38,954 basehttp 48028 14264 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:43:14,548 middleware 48028 14264 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:43:14,548 middleware 48028 14264 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:43:14,549 log 48028 14264 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:43:14,549 basehttp 48028 14264 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 13:43:14,554 middleware 48028 14264 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 13:43:14,554 middleware 48028 14264 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 13:43:14,555 log 48028 14264 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 13:43:14,555 basehttp 48028 14264 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+INFO 2025-04-10 15:42:48,897 basehttp 48028 53160 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+WARNING 2025-04-10 15:42:49,215 log 48028 56404 Forbidden: /api/auth/profile/
+WARNING 2025-04-10 15:42:49,217 basehttp 48028 56404 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-10 15:45:13,664 log 48028 31952 Forbidden: /api/auth/profile/
+WARNING 2025-04-10 15:45:13,665 basehttp 48028 31952 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-10 15:45:13,669 log 48028 31952 Forbidden: /api/auth/profile/
+WARNING 2025-04-10 15:45:13,670 basehttp 48028 31952 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-10 15:46:40,115 log 48028 32900 Forbidden: /api/auth/profile/
+WARNING 2025-04-10 15:46:40,116 basehttp 48028 32900 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-10 15:46:40,120 log 48028 32900 Forbidden: /api/auth/profile/
+WARNING 2025-04-10 15:46:40,121 basehttp 48028 32900 "GET /api/auth/profile/ HTTP/1.1" 403 52
+INFO 2025-04-10 15:48:24,294 basehttp 48028 51512 "OPTIONS /api/courses/categories/ HTTP/1.1" 200 0
+INFO 2025-04-10 15:48:24,294 basehttp 48028 54416 "OPTIONS /api/courses/ HTTP/1.1" 200 0
+WARNING 2025-04-10 15:48:24,336 log 48028 54416 Not Found: /api/courses/categories/
+WARNING 2025-04-10 15:48:24,338 basehttp 48028 54416 "GET /api/courses/categories/ HTTP/1.1" 404 5065
+ERROR 2025-04-10 15:48:24,346 middleware 48028 51512 API Error: ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near the keyword 'GROUP'. (156) (SQLExecDirectW)")
+ERROR 2025-04-10 15:48:24,347 middleware 48028 51512 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near the keyword 'GROUP'. (156) (SQLExecDirectW)")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\utils.py", line 73, in wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\courses\views.py", line 76, in list_courses
+    cursor.execute(query, params)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near the keyword 'GROUP'. (156) (SQLExecDirectW)")
+
+ERROR 2025-04-10 15:48:24,348 log 48028 51512 Internal Server Error: /api/courses/
+ERROR 2025-04-10 15:48:24,348 basehttp 48028 51512 "GET /api/courses/ HTTP/1.1" 500 4395
+INFO 2025-04-10 15:48:29,485 basehttp 48028 51512 "OPTIONS /api/nfts/ HTTP/1.1" 200 0
+WARNING 2025-04-10 15:48:29,498 log 48028 51512 Not Found: /api/nfts/
+WARNING 2025-04-10 15:48:29,499 basehttp 48028 51512 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-04-10 18:03:48,165 basehttp 48028 54056 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+ERROR 2025-04-10 18:03:48,499 middleware 48028 59144 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 18:03:48,499 middleware 48028 59144 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 18:03:48,501 log 48028 59144 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 18:03:48,502 basehttp 48028 59144 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 18:09:58,529 middleware 48028 49640 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 18:09:58,529 middleware 48028 49640 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 18:09:58,530 log 48028 49640 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 18:09:58,531 basehttp 48028 49640 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 18:09:58,535 middleware 48028 49640 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 18:09:58,535 middleware 48028 49640 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 18:09:58,537 log 48028 49640 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 18:09:58,538 basehttp 48028 49640 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 18:13:08,896 middleware 48028 49640 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 18:13:08,896 middleware 48028 49640 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 18:13:08,897 log 48028 49640 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 18:13:08,898 basehttp 48028 49640 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 18:13:08,903 middleware 48028 49640 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 18:13:08,904 middleware 48028 49640 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 18:13:08,904 log 48028 49640 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 18:13:08,906 basehttp 48028 49640 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-10 18:13:11,966 middleware 48028 49640 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-10 18:13:11,966 middleware 48028 49640 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-10 18:13:11,969 log 48028 49640 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-10 18:13:11,970 basehttp 48028 49640 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+INFO 2025-04-12 18:53:36,375 autoreload 79932 44852 Watching for file changes with StatReloader
+INFO 2025-04-12 18:53:50,142 basehttp 79932 59572 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-12 18:53:50,142 basehttp 79932 71688 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+WARNING 2025-04-12 18:53:50,464 log 79932 44900 Forbidden: /api/auth/profile/
+WARNING 2025-04-12 18:53:50,466 basehttp 79932 44900 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-12 18:53:50,468 log 79932 44900 Forbidden: /api/auth/profile/
+WARNING 2025-04-12 18:53:50,468 basehttp 79932 44900 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-12 19:11:07,955 log 79932 81400 Forbidden: /api/auth/profile/
+WARNING 2025-04-12 19:11:07,957 basehttp 79932 81400 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-12 19:11:07,961 log 79932 81400 Forbidden: /api/auth/profile/
+WARNING 2025-04-12 19:11:07,961 basehttp 79932 81400 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-12 19:11:08,011 log 79932 81400 Forbidden: /api/auth/profile/
+WARNING 2025-04-12 19:11:08,012 basehttp 79932 81400 "GET /api/auth/profile/ HTTP/1.1" 403 52
+WARNING 2025-04-12 19:12:44,588 log 79932 81400 Not Found: /api/auth/logout/
+WARNING 2025-04-12 19:12:44,588 basehttp 79932 81400 "POST /api/auth/logout/ HTTP/1.1" 404 5957
+INFO 2025-04-12 19:27:45,835 autoreload 79932 44852 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-12 19:27:47,037 autoreload 80852 81120 Watching for file changes with StatReloader
+INFO 2025-04-12 19:27:57,091 autoreload 80852 81120 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-12 19:27:58,192 autoreload 74612 81720 Watching for file changes with StatReloader
+INFO 2025-04-12 19:28:08,401 autoreload 74612 81720 C:\WISENTIA_Q\wisentia\wisentia_backend\users\urls.py changed, reloading.
+INFO 2025-04-12 19:28:09,511 autoreload 58240 41084 Watching for file changes with StatReloader
+INFO 2025-04-12 19:31:17,248 basehttp 58240 81892 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+WARNING 2025-04-12 19:31:17,563 log 58240 72068 Forbidden: /api/auth/logout/
+WARNING 2025-04-12 19:31:17,564 basehttp 58240 72068 "POST /api/auth/logout/ HTTP/1.1" 403 58
+WARNING 2025-04-12 19:33:11,976 log 58240 72068 Forbidden: /api/auth/logout/
+WARNING 2025-04-12 19:33:11,977 basehttp 58240 72068 "POST /api/auth/logout/ HTTP/1.1" 403 58
+INFO 2025-04-12 19:35:09,013 basehttp 58240 76912 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+WARNING 2025-04-12 19:35:09,325 log 58240 61952 Forbidden: /api/auth/profile/
+WARNING 2025-04-12 19:35:09,325 basehttp 58240 61952 "GET /api/auth/profile/ HTTP/1.1" 403 52
+INFO 2025-04-12 19:35:12,349 basehttp 58240 76912 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+WARNING 2025-04-12 19:35:12,351 log 58240 61952 Forbidden: /api/auth/logout/
+WARNING 2025-04-12 19:35:12,351 basehttp 58240 61952 "POST /api/auth/logout/ HTTP/1.1" 403 52
+WARNING 2025-04-12 19:35:16,788 log 58240 61952 Forbidden: /api/auth/logout/
+WARNING 2025-04-12 19:35:16,789 basehttp 58240 61952 "POST /api/auth/logout/ HTTP/1.1" 403 58
+WARNING 2025-04-12 19:35:24,841 log 58240 61952 Forbidden: /api/auth/logout/
+WARNING 2025-04-12 19:35:24,841 basehttp 58240 61952 "POST /api/auth/logout/ HTTP/1.1" 403 58
+INFO 2025-04-12 20:02:55,884 basehttp 58240 64712 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-12 20:02:56,241 basehttp 58240 77116 "POST /api/auth/login/ HTTP/1.1" 200 507
+ERROR 2025-04-12 20:02:56,304 middleware 58240 77116 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-12 20:02:56,304 middleware 58240 77116 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-12 20:02:56,305 log 58240 77116 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-12 20:02:56,305 basehttp 58240 77116 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-12 20:02:58,831 middleware 58240 77116 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-12 20:02:58,831 middleware 58240 77116 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-12 20:02:58,832 log 58240 77116 Internal Server Error: /api/auth/profile/
+ERROR 2025-04-12 20:02:58,832 basehttp 58240 77116 "GET /api/auth/profile/ HTTP/1.1" 500 2326
+ERROR 2025-04-12 20:03:31,515 middleware 58240 77116 API Error: type object 'User' has no attribute 'pk'
+ERROR 2025-04-12 20:03:31,515 middleware 58240 77116 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 503, in dispatch
+    self.initial(request, *args, **kwargs)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 422, in initial
+    self.check_throttles(request)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 365, in check_throttles
+    if not throttle.allow_request(request, self):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 119, in allow_request
+    self.key = self.get_cache_key(request, view)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\throttling.py", line 195, in get_cache_key
+    ident = request.user.pk
+            ^^^^^^^^^^^^^^^
+AttributeError: type object 'User' has no attribute 'pk'
+
+ERROR 2025-04-12 20:03:31,515 log 58240 77116 Internal Server Error: /api/auth/logout/
+ERROR 2025-04-12 20:03:31,516 basehttp 58240 77116 "POST /api/auth/logout/ HTTP/1.1" 500 2326
+INFO 2025-04-12 20:06:51,903 autoreload 58240 41084 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-12 20:06:52,946 autoreload 75840 47556 Watching for file changes with StatReloader
+INFO 2025-04-12 20:07:08,143 autoreload 75840 47556 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-12 20:07:09,219 autoreload 71124 78304 Watching for file changes with StatReloader
+INFO 2025-04-12 20:25:06,924 autoreload 71124 78304 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-12 20:25:08,060 autoreload 75464 40548 Watching for file changes with StatReloader
+INFO 2025-04-12 20:25:19,342 autoreload 75464 40548 C:\WISENTIA_Q\wisentia\wisentia_backend\users\throttling.py changed, reloading.
+INFO 2025-04-12 20:25:20,292 autoreload 12188 52104 Watching for file changes with StatReloader
+INFO 2025-04-12 20:25:26,748 autoreload 12188 52104 C:\WISENTIA_Q\wisentia\wisentia_backend\users\throttling.py changed, reloading.
+INFO 2025-04-12 20:25:27,759 autoreload 76168 81504 Watching for file changes with StatReloader
+INFO 2025-04-12 20:25:42,105 autoreload 76168 81504 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\middleware.py changed, reloading.
+INFO 2025-04-12 20:25:43,183 autoreload 67776 78564 Watching for file changes with StatReloader
+INFO 2025-04-12 20:28:11,559 autoreload 67776 78564 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
+INFO 2025-04-12 20:28:12,663 autoreload 75716 80468 Watching for file changes with StatReloader
+INFO 2025-04-12 20:28:23,597 autoreload 14848 77224 Watching for file changes with StatReloader
