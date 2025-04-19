@@ -17,21 +17,26 @@ import {
   Grid,
   Card,
   CardContent,
+  CardActionArea,
   Avatar,
-  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   Divider,
   Paper,
   IconButton,
   Chip,
   Alert,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  InputAdornment,
-  OutlinedInput,
   Tooltip,
   alpha,
-  useTheme
+  useTheme,
+  Stack
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -43,71 +48,151 @@ import {
   Wallet as WalletIcon,
   SaveAlt as SaveIcon,
   Cancel as CancelIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  LightMode as LightModeIcon,
-  DarkMode as DarkModeIcon,
+  Close as CloseIcon,
+  MoreHoriz as MoreHorizIcon,
+  ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-// Animasyonlu bileşenler için
+// Animated components
 const MotionBox = styled(motion.div)``;
 const MotionCard = styled(motion(Card))``;
 
-// Özel bileşenler
-const StatsCard = styled(Card)(({ theme }) => ({
+// Custom components
+const StatsCard = styled(Paper)(({ theme }) => ({
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: theme.spacing(2),
+  padding: theme.spacing(3),
   transition: 'all 0.3s ease',
   position: 'relative',
   overflow: 'hidden',
+  borderRadius: theme.shape.borderRadius * 2,
+  boxShadow: theme.palette.mode === 'dark' 
+    ? `0 8px 24px ${alpha(theme.palette.common.black, 0.3)}`
+    : `0 8px 24px ${alpha(theme.palette.primary.main, 0.1)}`,
   '&:hover': {
     transform: 'translateY(-5px)',
-    boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.2)}`,
-  },
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '4px',
-    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+    boxShadow: theme.palette.mode === 'dark'
+      ? `0 12px 28px ${alpha(theme.palette.common.black, 0.4)}`
+      : `0 12px 28px ${alpha(theme.palette.primary.main, 0.15)}`,
   }
 }));
 
 const ProfileAvatar = styled(Avatar)(({ theme }) => ({
-  width: 100,
-  height: 100,
-  boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-  border: `3px solid ${theme.palette.background.paper}`,
+  width: 150,
+  height: 150,
+  boxShadow: theme.palette.mode === 'dark'
+    ? `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`
+    : `0 8px 25px ${alpha(theme.palette.primary.main, 0.3)}`,
+  border: `5px solid ${theme.palette.background.paper}`,
+  '&.MuiAvatar-colorDefault': {
+    background: theme.palette.mode === 'dark' 
+      ? 'linear-gradient(135deg, #3f51b5, #9c27b0)'
+      : 'linear-gradient(135deg, #4158D0, #C850C0)',
+    fontSize: '3.5rem',
+    fontWeight: 'bold'
+  },
 }));
 
-const UploadButton = styled(IconButton)(({ theme }) => ({
+const CameraBadge = styled(IconButton)(({ theme }) => ({
   position: 'absolute',
-  bottom: 0,
-  right: 0,
+  bottom: 5,
+  right: 5,
   backgroundColor: theme.palette.background.paper,
   border: `2px solid ${theme.palette.primary.main}`,
+  padding: 8,
   '&:hover': {
     backgroundColor: alpha(theme.palette.primary.main, 0.1),
   },
 }));
 
+// Tab styles
+const StyledTab = styled(Button)(({ theme, active }) => ({
+  minHeight: 48,
+  minWidth: 150,
+  fontWeight: 600,
+  borderRadius: 100,
+  margin: '0 8px',
+  padding: '10px 24px',
+  transition: 'all 0.3s ease',
+  backgroundColor: active ? 
+    theme.palette.mode === 'dark' ? 
+      'linear-gradient(to right, #3f51b5, #9c27b0)' : 
+      'linear-gradient(to right, #4158D0, #8E49E8)' 
+    : 'transparent',
+  color: active ? '#fff' : theme.palette.text.primary,
+  boxShadow: active ? '0 4px 20px rgba(0, 0, 0, 0.15)' : 'none',
+  '&:hover': {
+    backgroundColor: !active ? alpha(theme.palette.primary.main, 0.1) : 
+      theme.palette.mode === 'dark' ? 
+        'linear-gradient(to right, #3f51b5, #9c27b0)' : 
+        'linear-gradient(to right, #4158D0, #8E49E8)',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 15px rgba(0, 0, 0, 0.1)',
+  },
+}));
+
+// Card content custom component
+const StatIcon = styled(Box)(({ theme, color = 'primary' }) => ({
+  width: 70,
+  height: 70,
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: theme.palette.mode === 'dark' ?
+    color === 'primary' 
+      ? 'linear-gradient(135deg, #3f51b5, #5E6BE7)' 
+      : color === 'success' 
+        ? 'linear-gradient(135deg, #0B8A5C, #25A67E)' 
+        : color === 'warning'
+          ? 'linear-gradient(135deg, #FF9800, #ED6C02)'
+          : 'linear-gradient(135deg, #9c27b0, #d81b60)'
+    :
+    color === 'primary' 
+      ? 'linear-gradient(135deg, #4158D0, #7D75CC)' 
+      : color === 'success' 
+        ? 'linear-gradient(135deg, #0BA360, #3CBA92)' 
+        : color === 'warning'
+          ? 'linear-gradient(135deg, #FF9A44, #FC6076)'
+          : 'linear-gradient(135deg, #C850C0, #FFCC70)',
+  marginBottom: theme.spacing(2),
+  boxShadow: theme.palette.mode === 'dark'
+    ? `0 6px 20px ${alpha(theme.palette.common.black, 0.3)}`
+    : `0 6px 20px ${alpha(theme.palette[color].main, 0.25)}`,
+  '& svg': {
+    fontSize: 35,
+    color: '#fff',
+  }
+}));
+
+const DetailButton = styled(Button)(({ theme }) => ({
+  borderRadius: 100,
+  textTransform: 'none',
+  fontSize: '0.8rem',
+  padding: '4px 12px',
+  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+  color: theme.palette.primary.main,
+  boxShadow: 'none',
+  fontWeight: 'bold',
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.2),
+  }
+}));
+
 export default function ProfilePage() {
   const router = useRouter();
   const { isAuthenticated, user, updateUser, authChecked } = useAuth();
-  const { isDarkMode, toggleTheme } = useCustomTheme();
+  const { isDarkMode } = useCustomTheme();
   const theme = useTheme();
   
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(0); // 0: overview, 1: courses, 2: quests, 3: nfts, 4: settings
+  const [activeTab, setActiveTab] = useState(0); // 0: overview, 1: courses, 2: quests, 3: nfts
   
   const [editMode, setEditMode] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -127,14 +212,13 @@ export default function ProfilePage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageError, setImageError] = useState(null);
   
-  // Şifre için state'ler
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false
+  // Detail pop-up state
+  const [detailDialog, setDetailDialog] = useState({
+    open: false,
+    type: null, // 'courses', 'videos', 'quests', 'nfts'
+    title: '',
+    data: null
   });
-  const [passwordError, setPasswordError] = useState(null);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
   
   // File input ref
   const fileInputRef = useRef(null);
@@ -151,10 +235,8 @@ export default function ProfilePage() {
     }
   }, [authChecked]);
   
-  
-  
-  // Tab değişimini yönet
-  const handleTabChange = (event, newValue) => {
+  // Tab change handler
+  const handleTabChange = (newValue) => {
     setActiveTab(newValue);
   };
   
@@ -162,7 +244,7 @@ export default function ProfilePage() {
     try {
       setLoading(true);
       
-      // API'yi çağırmayı dene
+      // Try to call API
       try {
         const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
         const token = localStorage.getItem('access_token');
@@ -174,7 +256,7 @@ export default function ProfilePage() {
           withCredentials: true
         });
         
-        console.log("API Yanıtı:", response.data);
+        console.log("API Response:", response.data);
         setProfileData(response.data);
         setProfileForm({
           username: response.data.username,
@@ -184,7 +266,7 @@ export default function ProfilePage() {
       } catch (apiError) {
         console.error('API Error:', apiError);
         
-        // API hatası durumunda mock veri kullan
+        // Use mock data in case of API error
         console.log("Using mock data due to API error");
         const mockProfileData = {
           id: 1,
@@ -217,8 +299,8 @@ export default function ProfilePage() {
   
   const fetchUserStats = async () => {
     try {
-      // Gerçek API'niz hazır olduğunda buraya ekleyin
-      // Şimdilik örnek veri kullanıyoruz
+      // Add your real API here when ready
+      // For now using sample data
       setTimeout(() => {
         setStats({
           completedCourses: 3,
@@ -229,7 +311,7 @@ export default function ProfilePage() {
         });
       }, 1000);
       
-      // Gerçek API çağrısı:
+      // Real API call:
       // const response = await axios.get('/api/analytics/user-stats/');
       // setStats(response.data);
     } catch (err) {
@@ -307,48 +389,251 @@ export default function ProfilePage() {
     }
   };
   
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-    setPasswordError(null);
-    setPasswordSuccess(false);
-    
-    try {
-      const formData = new FormData(e.target);
-      const currentPassword = formData.get('currentPassword');
-      const newPassword = formData.get('newPassword');
-      const confirmPassword = formData.get('confirmPassword');
-      
-      if (newPassword !== confirmPassword) {
-        setPasswordError('New passwords do not match.');
-        return;
-      }
-      
-      await axios.put('/api/auth/profile/change-password/', {
-        currentPassword,
-        newPassword
-      });
-      
-      setPasswordSuccess(true);
-      e.target.reset();
-    } catch (err) {
-      if (err.response && err.response.data && err.response.data.error) {
-        setPasswordError(err.response.data.error);
-      } else {
-        setPasswordError('Error changing password.');
-      }
-      console.error('Password change error:', err);
-    }
-  };
-  
   const handleFileInputClick = () => {
     fileInputRef.current.click();
   };
   
-  const handlePasswordVisibility = (field) => {
-    setShowPassword(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
+  // Detail popup functions
+  const handleOpenDetail = (type, title, data) => {
+    setDetailDialog({
+      open: true,
+      type,
+      title,
+      data
+    });
+  };
+  
+  const handleCloseDetail = () => {
+    setDetailDialog({
+      ...detailDialog,
+      open: false
+    });
+  };
+
+  const handleNavigateToDetail = (type) => {
+    handleCloseDetail();
+    // Navigate to the corresponding page
+    switch(type) {
+      case 'courses':
+        router.push('/courses');
+        break;
+      case 'videos':
+        router.push('/courses');
+        break;
+      case 'quests':
+        router.push('/quests');
+        break;
+      case 'nfts':
+        router.push('/nfts');
+        break;
+      default:
+        break;
+    }
+  };
+  
+  // Show relevant data section
+  const getDetailContent = () => {
+    const { type, data } = detailDialog;
+    
+    switch (type) {
+      case 'courses':
+        return (
+          <Box>
+            <Typography variant="body1">
+              You have successfully completed 3 courses so far.
+            </Typography>
+            <List sx={{ mt: 2 }}>
+              <ListItem>
+                <ListItemIcon><SchoolIcon color="primary" /></ListItemIcon>
+                <ListItemText primary="Blockchain Fundamentals" secondary="Completed: January 15, 2025" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon><SchoolIcon color="primary" /></ListItemIcon>
+                <ListItemText primary="Smart Contract Development" secondary="Completed: February 27, 2025" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon><SchoolIcon color="primary" /></ListItemIcon>
+                <ListItemText primary="Web3 Applications" secondary="Completed: March 10, 2025" />
+              </ListItem>
+            </List>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                endIcon={<ArrowForwardIcon />}
+                onClick={() => handleNavigateToDetail('courses')}
+                sx={{ borderRadius: 28 }}
+              >
+                View All Courses
+              </Button>
+            </Box>
+          </Box>
+        );
+        
+      case 'videos':
+        return (
+          <Box>
+            <Typography variant="body1">
+              You have watched a total of 24 educational videos. Recently watched:
+            </Typography>
+            <List sx={{ mt: 2 }}>
+              <ListItem>
+                <ListItemIcon><PlayCircleIcon color="success" /></ListItemIcon>
+                <ListItemText primary="How NFT Marketplaces Work" secondary="Watched: April 12, 2025" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon><PlayCircleIcon color="success" /></ListItemIcon>
+                <ListItemText primary="Introduction to Decentralized Finance (DeFi)" secondary="Watched: April 10, 2025" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon><PlayCircleIcon color="success" /></ListItemIcon>
+                <ListItemText primary="Ethereum 2.0 In-Depth Review" secondary="Watched: April 5, 2025" />
+              </ListItem>
+            </List>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+              <Button 
+                variant="contained" 
+                color="success" 
+                endIcon={<ArrowForwardIcon />}
+                onClick={() => handleNavigateToDetail('videos')}
+                sx={{ borderRadius: 28 }}
+              >
+                Browse Content Library
+              </Button>
+            </Box>
+          </Box>
+        );
+        
+      case 'quests':
+        return (
+          <Box>
+            <Typography variant="body1">
+              You have successfully completed 7 quests so far.
+            </Typography>
+            <List sx={{ mt: 2 }}>
+              <ListItem>
+                <ListItemIcon><EmojiEventsIcon color="warning" /></ListItemIcon>
+                <ListItemText 
+                  primary="Blockchain Explorer" 
+                  secondary="Earned: 250 points, 1 NFT" 
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon><EmojiEventsIcon color="warning" /></ListItemIcon>
+                <ListItemText 
+                  primary="Smart Contract Challenge" 
+                  secondary="Earned: 500 points" 
+                />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon><EmojiEventsIcon color="warning" /></ListItemIcon>
+                <ListItemText 
+                  primary="Web3 Explorer" 
+                  secondary="Earned: 300 points, 1 NFT" 
+                />
+              </ListItem>
+            </List>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+              <Button 
+                variant="contained" 
+                color="warning" 
+                endIcon={<ArrowForwardIcon />}
+                onClick={() => handleNavigateToDetail('quests')}
+                sx={{ borderRadius: 28 }}
+              >
+                View All Quests
+              </Button>
+            </Box>
+          </Box>
+        );
+        
+      case 'nfts':
+        return (
+          <Box>
+            <Typography variant="body1">
+              You have earned a total of 5 educational NFTs.
+            </Typography>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
+              <Grid item xs={6} md={4}>
+                <Card variant="outlined" sx={{ 
+                  borderRadius: 2, 
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                    boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
+                  }
+                }}>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Avatar sx={{ 
+                      width: 80, 
+                      height: 80, 
+                      mx: 'auto', 
+                      mb: 2,
+                      background: `linear-gradient(135deg, #6366F1, #8B5CF6)`
+                    }}>
+                      <SchoolIcon sx={{ fontSize: 40 }} />
+                    </Avatar>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      Blockchain Graduate
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Rare
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={6} md={4}>
+                <Card variant="outlined" sx={{ 
+                  borderRadius: 2,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                    boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
+                  }
+                }}>
+                  <CardContent sx={{ textAlign: 'center' }}>
+                    <Avatar sx={{ 
+                      width: 80, 
+                      height: 80, 
+                      mx: 'auto', 
+                      mb: 2,
+                      background: `linear-gradient(135deg, #F59E0B, #EF4444)`
+                    }}>
+                      <WalletIcon sx={{ fontSize: 40 }} />
+                    </Avatar>
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      Web3 Explorer
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Common
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+              <Button 
+                variant="contained" 
+                sx={{ 
+                  borderRadius: 28,
+                  background: 'linear-gradient(to right, #C850C0, #FFCC70)',
+                }}
+                endIcon={<ArrowForwardIcon />}
+                onClick={() => handleNavigateToDetail('nfts')}
+              >
+                View All NFTs
+              </Button>
+            </Box>
+          </Box>
+        );
+          
+      default:
+        return <Typography>No details found.</Typography>;
+    }
   };
   
   if (loading) {
@@ -387,52 +672,109 @@ export default function ProfilePage() {
   return (
     <Box sx={{ 
       minHeight: 'calc(100vh - 64px)', 
-      pt: 2, 
+      pt: 4, 
       pb: 6,
       background: theme.palette.mode === 'dark' 
-        ? `linear-gradient(180deg, ${alpha(theme.palette.background.default, 0.8)}, ${theme.palette.background.default})`
-        : `linear-gradient(180deg, ${alpha(theme.palette.primary.light, 0.05)}, ${theme.palette.background.default})`,
+        ? `linear-gradient(135deg, #121212, #1E1E30)`
+        : `linear-gradient(135deg, #F0F2FF, #FFFFFF)`,
+      position: 'relative',
+      overflow: 'hidden',
+      '&:before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundImage: theme.palette.mode === 'dark'
+          ? `radial-gradient(circle at 25% 25%, ${alpha('#303F9F', 0.2)} 0%, transparent 35%), radial-gradient(circle at 75% 75%, ${alpha('#9C27B0', 0.2)} 0%, transparent 35%)`
+          : `radial-gradient(circle at 25% 25%, ${alpha('#E3F2FD', 1)} 0%, transparent 35%), radial-gradient(circle at 75% 75%, ${alpha('#F3E5F5', 1)} 0%, transparent 35%)`,
+        zIndex: 0,
+      },
+      '&:after': {
+        content: '""',
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        top: 0,
+        left: 0,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18C11 18.5523 10.5523 19 10 19C9.44772 19 9 18.5523 9 18C9 17.4477 9.44772 17 10 17C10.5523 17 11 17.4477 11 18Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M51 18C51 18.5523 50.5523 19 50 19C49.4477 19 49 18.5523 49 18C49 17.4477 49.4477 17 50 17C50.5523 17 51 17.4477 51 18Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M91 18C91 18.5523 90.5523 19 90 19C89.4477 19 89 18.5523 89 18C89 17.4477 89.4477 17 90 17C90.5523 17 91 17.4477 91 18Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M11 50C11 50.5523 10.5523 51 10 51C9.44772 51 9 50.5523 9 50C9 49.4477 9.44772 49 10 49C10.5523 49 11 49.4477 11 50Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M51 50C51 50.5523 50.5523 51 50 51C49.4477 51 49 50.5523 49 50C49 49.4477 49.4477 49 50 49C50.5523 49 51 49.4477 51 50Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M91 50C91 50.5523 90.5523 51 90 51C89.4477 51 89 50.5523 89 50C89 49.4477 89.4477 49 90 49C90.5523 49 91 49.4477 91 50Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M11 82C11 82.5523 10.5523 83 10 83C9.44772 83 9 82.5523 9 82C9 81.4477 9.44772 81 10 81C10.5523 81 11 81.4477 11 82Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M51 82C51 82.5523 50.5523 83 50 83C49.4477 83 49 82.5523 49 82C49 81.4477 49.4477 81 50 81C50.5523 81 51 81.4477 51 82Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3Cpath d='M91 82C91 82.5523 90.5523 83 90 83C89.4477 83 89 82.5523 89 82C89 81.4477 89.4477 81 90 81C90.5523 81 91 81.4477 91 82Z' fill='%23${theme.palette.mode === 'dark' ? 'FFFFFF' : '4158D0'}' fill-opacity='0.05'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'repeat',
+        pointerEvents: 'none',
+        opacity: 0.8,
+        zIndex: 0,
+        animation: 'starFloat 120s linear infinite',
+      },
+      '@keyframes starFloat': {
+        '0%': {
+          backgroundPosition: '0% 0%',
+        },
+        '100%': {
+          backgroundPosition: '100% 100%',
+        },
+      },
     }}>
       <Container maxWidth="lg">
-        {/* Profile Header Card */}
+        {/* Profile Header Card - Enhanced Design */}
         <MotionCard
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           sx={{ 
-            p: 3, 
-            mb: 4, 
-            borderRadius: 3,
+            borderRadius: 4,
             position: 'relative',
             overflow: 'visible',
             boxShadow: theme.palette.mode === 'dark'
-              ? '0 8px 24px rgba(0,0,0,0.2)'
-              : '0 8px 24px rgba(0,0,0,0.1)',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '100px',
-              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              borderTopLeftRadius: theme.shape.borderRadius * 3,
-              borderTopRightRadius: theme.shape.borderRadius * 3,
-              zIndex: 0,
-            }
+              ? '0 8px 32px rgba(0,0,0,0.3)'
+              : '0 8px 32px rgba(0,0,0,0.1)',
+            mb: 4,
           }}
         >
-          <Grid container spacing={3} position="relative" zIndex={1}>
-            <Grid item xs={12} md={8} sx={{ display: 'flex' }}>
-              <Box sx={{ position: 'relative', mr: 3 }}>
-                <ProfileAvatar 
-                  src={profileData.profileImage || '/images/default-avatar.png'} 
-                  alt={profileData.username}
-                >
-                  {!profileData.profileImage && profileData.username?.charAt(0)?.toUpperCase()}
-                </ProfileAvatar>
-                {editMode && (
-                  <UploadButton 
+          {/* Top Gradient Banner */}
+          <Box 
+            sx={{ 
+              height: 160, 
+              background: theme.palette.mode === 'dark'
+                ? `linear-gradient(135deg, #303F9F, #9C27B0)`
+                : `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              borderTopLeftRadius: theme.shape.borderRadius * 4,
+              borderTopRightRadius: theme.shape.borderRadius * 4,
+              position: 'relative',
+              overflow: 'hidden',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'url(/images/pattern.svg) repeat',
+                opacity: 0.1,
+              }
+            }}
+          />
+          
+          {/* Profile Content */}
+          <Box sx={{ px: 4, pb: 4, pt: 0, mt: -8, position: 'relative' }}>
+            <Grid container spacing={3}>
+              {/* Avatar and Profile Info */}
+              <Grid item xs={12} md={12} sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' }, 
+                alignItems: { xs: 'center', sm: 'flex-start' },
+                justifyContent: 'center',
+                mb: 2
+              }}>
+                {/* Avatar with Badge */}
+                <Box sx={{ position: 'relative', mr: { xs: 0, sm: 4 }, mb: { xs: 2, sm: 0 } }}>
+                  <ProfileAvatar 
+                    src={profileData.profileImage || '/images/default-avatar.png'} 
+                    alt={profileData.username}
+                  >
+                    {!profileData.profileImage && profileData.username?.charAt(0)?.toUpperCase()}
+                  </ProfileAvatar>
+                  
+                  <CameraBadge 
                     size="small"
                     onClick={handleFileInputClick}
                     disabled={uploadingImage}
@@ -449,149 +791,183 @@ export default function ProfilePage() {
                       accept="image/jpeg, image/png, image/gif"
                       onChange={handleImageUpload}
                     />
-                  </UploadButton>
-                )}
-              </Box>
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="h4" fontWeight="bold">
-                  {profileData.username}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {profileData.email}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                  <Chip
-                    label={`${stats.totalPoints} Points`}
-                    color="primary"
-                    size="small"
-                    sx={{ 
-                      mr: 1, 
-                      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      fontWeight: 'bold'
-                    }}
-                  />
-                  <Chip
-                    label={`Level ${Math.floor(stats.totalPoints / 100)}`}
-                    size="small"
-                    sx={{ 
-                      backgroundColor: alpha(theme.palette.secondary.main, 0.1),
-                      color: theme.palette.secondary.main,
-                      fontWeight: 'bold'
-                    }}
-                  />
+                  </CameraBadge>
                 </Box>
-              </Box>
+                
+                {/* Profile Information */}
+                <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+                  <Typography variant="h4" fontWeight="bold" gutterBottom>
+                    {profileData.username}
+                  </Typography>
+                  
+                  <Typography variant="body1" color="text.secondary" gutterBottom>
+                    {profileData.email}
+                  </Typography>
+                  
+                  <Stack direction="row" spacing={1} sx={{ mt: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
+                    <Chip
+                      label={`${stats.totalPoints} Points`}
+                      color="primary"
+                      size="medium"
+                      sx={{ 
+                        fontWeight: 'bold',
+                        background: theme.palette.mode === 'dark'
+                          ? `linear-gradient(90deg, #3f51b5, #9c27b0)`
+                          : `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                        color: '#fff',
+                        px: 1,
+                      }}
+                    />
+                    <Chip
+                      label={`Level ${Math.floor(stats.totalPoints / 100)}`}
+                      size="medium"
+                      sx={{ 
+                        backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+                        color: theme.palette.secondary.main,
+                        fontWeight: 'bold',
+                        px: 1,
+                      }}
+                    />
+                    {profileData.role === 'admin' && (
+                      <Chip
+                        label="Admin"
+                        size="medium"
+                        color="error"
+                        sx={{ 
+                          fontWeight: 'bold',
+                          px: 1,
+                        }}
+                      />
+                    )}
+                  </Stack>
+                </Box>
+              </Grid>
             </Grid>
-            <Grid item xs={12} md={4} sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
-              <Button
-                variant="contained"
-                color={editMode ? "secondary" : "primary"}
-                startIcon={editMode ? <CancelIcon /> : <EditIcon />}
-                onClick={() => setEditMode(!editMode)}
-                sx={{ 
-                  borderRadius: 2,
-                  mt: 2,
-                  boxShadow: editMode ? '' : '0 4px 14px rgba(0,0,0,0.15)',
-                }}
-              >
-                {editMode ? 'Cancel Editing' : 'Edit Profile'}
-              </Button>
-            </Grid>
-          </Grid>
+          </Box>
         </MotionCard>
         
-        {/* Joined Date and Stats Summary */}
-        <MotionBox
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Paper
+        {/* Wallet Connection Status */}
+        {!profileData.walletAddress && (
+          <MotionCard
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             sx={{ 
-              p: 2, 
-              mb: 3, 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              borderRadius: 3,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+              mb: 4, 
+              borderRadius: 4,
+              backgroundColor: alpha(theme.palette.warning.main, 0.08),
+              border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+              boxShadow: `0 8px 32px ${alpha(theme.palette.warning.main, 0.1)}`,
             }}
           >
-            <Typography variant="body2" color="text.secondary">
-              Joined {new Date(profileData.joinDate).toLocaleDateString()} • Last Login: {
-                profileData.lastLogin ? new Date(profileData.lastLogin).toLocaleDateString() : 'Not available'
-              }
-            </Typography>
-            <Chip 
-              label={profileData.role || 'Student'} 
-              size="small" 
-              sx={{ 
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                color: theme.palette.primary.main
-              }}
-            />
-          </Paper>
-        </MotionBox>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <Avatar sx={{ 
+                  mr: 2, 
+                  bgcolor: alpha(theme.palette.warning.main, 0.2),
+                  color: theme.palette.warning.main
+                }}>
+                  <WalletIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" gutterBottom color="warning.main" fontWeight="bold">
+                    Connect Your Wallet
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    Connect your wallet to mint your NFTs and access web3 features. 
+                    This will allow you to manage your earned rewards and participate in the full ecosystem.
+                  </Typography>
+                  <Button 
+                    component={Link}
+                    href="/wallet"
+                    variant="contained" 
+                    color="warning"
+                    sx={{ borderRadius: 8, fontWeight: 'bold' }}
+                  >
+                    Connect Wallet
+                  </Button>
+                </Box>
+              </Box>
+            </CardContent>
+          </MotionCard>
+        )}
         
-        {/* Tabs */}
-        <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              '& .MuiTab-root': {
-                minHeight: 48,
-                px: 3,
-                fontWeight: 600,
-              },
-              '& .Mui-selected': {
-                color: theme.palette.primary.main,
-              },
-              '& .MuiTabs-indicator': {
-                height: 3,
-                borderTopLeftRadius: 3,
-                borderTopRightRadius: 3,
-                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              }
+        {/* Custom Navigation Buttons */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mb: 4, 
+          mt: 4,
+          flexWrap: 'wrap',
+          gap: 2
+        }}>
+          <StyledTab 
+            onClick={() => handleTabChange(0)}
+            sx={{ 
+              background: activeTab === 0 
+                ? theme.palette.mode === 'dark'
+                  ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                  : 'linear-gradient(to right, #4158D0, #8E49E8)'
+                : 'transparent',
+              boxShadow: activeTab === 0 ? '0 4px 20px rgba(0, 0, 0, 0.15)' : 'none',
+              color: activeTab === 0 ? '#fff' : theme.palette.text.primary,
             }}
           >
-            <Tab 
-              label="Overview" 
-              icon={<SchoolIcon />} 
-              iconPosition="start"
-            />
-            <Tab 
-              label="My Courses" 
-              icon={<PlayCircleIcon />} 
-              iconPosition="start"
-            />
-            <Tab 
-              label="My Quests" 
-              icon={<EmojiEventsIcon />} 
-              iconPosition="start"
-            />
-            <Tab 
-              label="My NFTs" 
-              icon={<WalletIcon />} 
-              iconPosition="start"
-            />
-            <Tab 
-              label="Settings" 
-              icon={<EditIcon />} 
-              iconPosition="start"
-            />
-          </Tabs>
+            OVERVIEW
+          </StyledTab>
+          <StyledTab 
+            onClick={() => handleTabChange(1)}
+            sx={{ 
+              background: activeTab === 1 
+                ? theme.palette.mode === 'dark'
+                  ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                  : 'linear-gradient(to right, #4158D0, #8E49E8)'
+                : 'transparent',
+              boxShadow: activeTab === 1 ? '0 4px 20px rgba(0, 0, 0, 0.15)' : 'none',
+              color: activeTab === 1 ? '#fff' : theme.palette.text.primary,
+            }}
+          >
+            MY COURSES
+          </StyledTab>
+          <StyledTab 
+            onClick={() => handleTabChange(2)}
+            sx={{ 
+              background: activeTab === 2 
+                ? theme.palette.mode === 'dark'
+                  ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                  : 'linear-gradient(to right, #4158D0, #8E49E8)'
+                : 'transparent',
+              boxShadow: activeTab === 2 ? '0 4px 20px rgba(0, 0, 0, 0.15)' : 'none',
+              color: activeTab === 2 ? '#fff' : theme.palette.text.primary,
+            }}
+          >
+            MY QUESTS
+          </StyledTab>
+          <StyledTab 
+            onClick={() => handleTabChange(3)}
+            sx={{ 
+              background: activeTab === 3 
+                ? theme.palette.mode === 'dark'
+                  ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                  : 'linear-gradient(to right, #4158D0, #8E49E8)'
+                : 'transparent',
+              boxShadow: activeTab === 3 ? '0 4px 20px rgba(0, 0, 0, 0.15)' : 'none',
+              color: activeTab === 3 ? '#fff' : theme.palette.text.primary,
+            }}
+          >
+            MY NFTS
+          </StyledTab>
         </Box>
         
         {/* Tab Content */}
         <Paper 
           elevation={2} 
           sx={{ 
-            p: 3, 
-            borderRadius: 3,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+            p: 4, 
+            borderRadius: 4,
+            boxShadow: theme.palette.mode === 'dark'
+              ? '0 4px 20px rgba(0,0,0,0.5)'
+              : '0 4px 20px rgba(0,0,0,0.08)',
             minHeight: 400
           }}
         >
@@ -602,64 +978,278 @@ export default function ProfilePage() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.4 }}
             >
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+              <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ textAlign: 'center', mb: 3 }}>
                 Overview
               </Typography>
               
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <StatsCard>
-                    <SchoolIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
-                    <Typography variant="h4" fontWeight="bold" color="primary">
-                      {stats.completedCourses}
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      Completed Courses
-                    </Typography>
-                  </StatsCard>
+              <Grid container spacing={3} sx={{ mb: 4, mt: 2, width: '100%', mx: 0 }}>
+                {/* Completed Courses */}
+                <Grid item xs={12} sm={6} lg={3}>
+                  <CardActionArea 
+                    onClick={() => handleOpenDetail('courses', 'Completed Courses', stats.completedCourses)}
+                    sx={{ 
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      height: '100%',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 45, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 12px 20px rgba(0,0,0,0.2)'
+                      }
+                    }}
+                  >
+                    <StatsCard sx={{ width: '100%', height: '100%', boxShadow: 'none' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        width: '100%', 
+                        height: '100%',
+                        p: 3
+                      }}>
+                        <Avatar sx={{ 
+                          width: 70, 
+                          height: 70, 
+                          mb: 2,
+                          bgcolor: '#5B69FF',
+                          boxShadow: '0 8px 20px rgba(91, 105, 255, 0.25)'
+                        }}>
+                          <SchoolIcon sx={{ fontSize: 35, color: '#fff' }} />
+                        </Avatar>
+                        <Typography 
+                          variant="h1" 
+                          fontWeight="bold"
+                          color={theme.palette.mode === 'dark' ? '#8F96FF' : '#5B69FF'}
+                          sx={{ mb: 1, fontSize: '3.5rem' }}
+                        >
+                          {stats.completedCourses}
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                          Completed Courses
+                        </Typography>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          mt: 1,
+                          color: theme.palette.mode === 'dark' ? '#8F96FF' : '#5B69FF',
+                          '& svg': { ml: 0.5, transition: 'transform 0.3s ease' }
+                        }}>
+                          <Typography variant="button" fontWeight="medium">
+                            View Details
+                          </Typography>
+                          <MoreHorizIcon fontSize="small" sx={{ transition: 'transform 0.3s ease' }} />
+                        </Box>
+                      </Box>
+                    </StatsCard>
+                  </CardActionArea>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <StatsCard>
-                    <PlayCircleIcon sx={{ fontSize: 40, color: theme.palette.success.main, mb: 1 }} />
-                    <Typography variant="h4" fontWeight="bold" color="success">
-                      {stats.completedVideos}
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      Watched Videos
-                    </Typography>
-                  </StatsCard>
+
+                {/* Watched Videos */}
+                <Grid item xs={12} sm={6} lg={3}>
+                  <CardActionArea 
+                    onClick={() => handleOpenDetail('videos', 'Watched Videos', stats.completedVideos)}
+                    sx={{ 
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      height: '100%',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 45, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 12px 20px rgba(0,0,0,0.2)'
+                      }
+                    }}
+                  >
+                    <StatsCard sx={{ width: '100%', height: '100%', boxShadow: 'none' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        width: '100%', 
+                        height: '100%',
+                        p: 3
+                      }}>
+                        <Avatar sx={{ 
+                          width: 70, 
+                          height: 70, 
+                          mb: 2,
+                          bgcolor: '#0BAF63',
+                          boxShadow: '0 8px 20px rgba(11, 175, 99, 0.25)'
+                        }}>
+                          <PlayCircleIcon sx={{ fontSize: 35, color: '#fff' }} />
+                        </Avatar>
+                        <Typography 
+                          variant="h1" 
+                          fontWeight="bold"
+                          color={theme.palette.mode === 'dark' ? '#5DD997' : '#0BAF63'}
+                          sx={{ mb: 1, fontSize: '3.5rem' }}
+                        >
+                          {stats.completedVideos}
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                          Watched Videos
+                        </Typography>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          mt: 1,
+                          color: theme.palette.mode === 'dark' ? '#5DD997' : '#0BAF63',
+                          '& svg': { ml: 0.5, transition: 'transform 0.3s ease' }
+                        }}>
+                          <Typography variant="button" fontWeight="medium">
+                            View Details
+                          </Typography>
+                          <MoreHorizIcon fontSize="small" />
+                        </Box>
+                      </Box>
+                    </StatsCard>
+                  </CardActionArea>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <StatsCard>
-                    <EmojiEventsIcon sx={{ fontSize: 40, color: theme.palette.warning.main, mb: 1 }} />
-                    <Typography variant="h4" fontWeight="bold" color="warning">
-                      {stats.completedQuests}
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      Completed Quests
-                    </Typography>
-                  </StatsCard>
+
+                {/* Completed Quests */}
+                <Grid item xs={12} sm={6} lg={3}>
+                  <CardActionArea 
+                    onClick={() => handleOpenDetail('quests', 'Completed Quests', stats.completedQuests)}
+                    sx={{ 
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      height: '100%',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 45, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 12px 20px rgba(0,0,0,0.2)'
+                      }
+                    }}
+                  >
+                    <StatsCard sx={{ width: '100%', height: '100%', boxShadow: 'none' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        width: '100%', 
+                        height: '100%',
+                        p: 3
+                      }}>
+                        <Avatar sx={{ 
+                          width: 70, 
+                          height: 70, 
+                          mb: 2,
+                          bgcolor: '#FF9A44',
+                          boxShadow: '0 8px 20px rgba(255, 154, 68, 0.25)'
+                        }}>
+                          <EmojiEventsIcon sx={{ fontSize: 35, color: '#fff' }} />
+                        </Avatar>
+                        <Typography 
+                          variant="h1" 
+                          fontWeight="bold"
+                          color={theme.palette.mode === 'dark' ? '#FFC380' : '#FF9A44'}
+                          sx={{ mb: 1, fontSize: '3.5rem' }}
+                        >
+                          {stats.completedQuests}
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                          Completed Quests
+                        </Typography>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          mt: 1,
+                          color: theme.palette.mode === 'dark' ? '#FFC380' : '#FF9A44',
+                          '& svg': { ml: 0.5, transition: 'transform 0.3s ease' }
+                        }}>
+                          <Typography variant="button" fontWeight="medium">
+                            View Details
+                          </Typography>
+                          <MoreHorizIcon fontSize="small" />
+                        </Box>
+                      </Box>
+                    </StatsCard>
+                  </CardActionArea>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <StatsCard>
-                    <WalletIcon sx={{ fontSize: 40, color: theme.palette.secondary.main, mb: 1 }} />
-                    <Typography variant="h4" fontWeight="bold" color="secondary">
-                      {stats.earnedNFTs}
-                    </Typography>
-                    <Typography variant="subtitle1" color="text.secondary">
-                      Earned NFTs
-                    </Typography>
-                  </StatsCard>
+
+                {/* Earned NFTs */}
+                <Grid item xs={12} sm={6} lg={3}>
+                  <CardActionArea 
+                    onClick={() => handleOpenDetail('nfts', 'Earned NFTs', stats.earnedNFTs)}
+                    sx={{ 
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      height: '100%',
+                      transition: 'all 0.3s ease',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(30, 30, 45, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                      '&:hover': {
+                        transform: 'translateY(-8px)',
+                        boxShadow: '0 12px 20px rgba(0,0,0,0.2)'
+                      }
+                    }}
+                  >
+                    <StatsCard sx={{ width: '100%', height: '100%', boxShadow: 'none' }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'center', 
+                        alignItems: 'center',
+                        width: '100%', 
+                        height: '100%',
+                        p: 3
+                      }}>
+                        <Avatar sx={{ 
+                          width: 70, 
+                          height: 70, 
+                          mb: 2,
+                          bgcolor: '#C850C0',
+                          boxShadow: '0 8px 20px rgba(200, 80, 192, 0.25)'
+                        }}>
+                          <WalletIcon sx={{ fontSize: 35, color: '#fff' }} />
+                        </Avatar>
+                        <Typography 
+                          variant="h1" 
+                          fontWeight="bold"
+                          color={theme.palette.mode === 'dark' ? '#E68CE3' : '#C850C0'}
+                          sx={{ mb: 1, fontSize: '3.5rem' }}
+                        >
+                          {stats.earnedNFTs}
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                          Earned NFTs
+                        </Typography>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          mt: 1,
+                          color: theme.palette.mode === 'dark' ? '#E68CE3' : '#C850C0',
+                          '& svg': { ml: 0.5, transition: 'transform 0.3s ease' }
+                        }}>
+                          <Typography variant="button" fontWeight="medium">
+                            View Details
+                          </Typography>
+                          <MoreHorizIcon fontSize="small" />
+                        </Box>
+                      </Box>
+                    </StatsCard>
+                  </CardActionArea>
                 </Grid>
               </Grid>
               
-              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mt: 3, mb: 2 }}>
+              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mt: 4, mb: 2 }}>
                 Account Information
               </Typography>
               
-              <Card sx={{ mb: 3, borderRadius: 2 }}>
+              <Card sx={{ 
+                mb: 3, 
+                borderRadius: 3, 
+                overflow: 'hidden',
+                boxShadow: theme.palette.mode === 'dark'
+                  ? '0 4px 20px rgba(0,0,0,0.2)'
+                  : '0 4px 20px rgba(0,0,0,0.05)',
+              }}>
                 <CardContent>
-                  <Grid container spacing={2}>
+                  <Grid container spacing={3}>
                     <Grid item xs={12} sm={6}>
                       <Box sx={{ mb: 2 }}>
                         <Typography variant="subtitle2" color="text.secondary">
@@ -716,41 +1306,6 @@ export default function ProfilePage() {
                   </Grid>
                 </CardContent>
               </Card>
-              
-              {!profileData.walletAddress && (
-                <Card 
-                  sx={{ 
-                    mb: 3, 
-                    borderRadius: 2,
-                    backgroundColor: alpha(theme.palette.warning.main, 0.08),
-                    border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-                  }}
-                >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                      <WalletIcon sx={{ color: theme.palette.warning.main, mr: 2, mt: 0.5 }} />
-                      <Box>
-                        <Typography variant="h6" gutterBottom color="warning.main" fontWeight="bold">
-                          Connect Your Wallet
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                          Connect your wallet to mint your NFTs and access web3 features. 
-                          This will allow you to manage your earned rewards and participate in the full ecosystem.
-                        </Typography>
-                        <Button 
-                          component={Link}
-                          href="/wallet"
-                          variant="contained" 
-                          color="warning"
-                          sx={{ borderRadius: 2 }}
-                        >
-                          Connect Wallet
-                        </Button>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              )}
             </MotionBox>
           )}
           
@@ -795,9 +1350,17 @@ export default function ProfilePage() {
                 <Button 
                   component={Link}
                   href="/courses"
-                  variant="outlined" 
+                  variant="contained" 
                   color="primary"
-                  sx={{ borderRadius: 2 }}
+                  sx={{ 
+                    borderRadius: 8, 
+                    fontWeight: 'bold',
+                    px: 4,
+                    py: 1.2,
+                    background: theme.palette.mode === 'dark'
+                      ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                      : 'linear-gradient(to right, #4158D0, #8E49E8)',
+                  }}
                 >
                   Explore All Courses
                 </Button>
@@ -846,9 +1409,17 @@ export default function ProfilePage() {
                 <Button 
                   component={Link}
                   href="/quests"
-                  variant="outlined" 
+                  variant="contained" 
                   color="primary"
-                  sx={{ borderRadius: 2 }}
+                  sx={{ 
+                    borderRadius: 8, 
+                    fontWeight: 'bold',
+                    px: 4,
+                    py: 1.2,
+                    background: theme.palette.mode === 'dark'
+                      ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                      : 'linear-gradient(to right, #4158D0, #8E49E8)',
+                  }}
                 >
                   Explore All Quests
                 </Button>
@@ -871,7 +1442,7 @@ export default function ProfilePage() {
                 <Card 
                   sx={{ 
                     mt: 3,
-                    borderRadius: 2,
+                    borderRadius: 3,
                     backgroundColor: alpha(theme.palette.warning.main, 0.08),
                     border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
                   }}
@@ -892,7 +1463,7 @@ export default function ProfilePage() {
                           href="/wallet"
                           variant="contained" 
                           color="warning"
-                          sx={{ borderRadius: 2 }}
+                          sx={{ borderRadius: 8, fontWeight: 'bold' }}
                         >
                           Connect Wallet
                         </Button>
@@ -919,9 +1490,17 @@ export default function ProfilePage() {
                     <Button 
                       component={Link}
                       href="/nfts"
-                      variant="outlined" 
+                      variant="contained" 
                       color="primary"
-                      sx={{ borderRadius: 2 }}
+                      sx={{ 
+                        borderRadius: 8, 
+                        fontWeight: 'bold',
+                        px: 4,
+                        py: 1.2,
+                        background: theme.palette.mode === 'dark'
+                          ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                          : 'linear-gradient(to right, #4158D0, #8E49E8)',
+                      }}
                     >
                       Explore All NFTs
                     </Button>
@@ -930,240 +1509,46 @@ export default function ProfilePage() {
               )}
             </MotionBox>
           )}
-          
-          {/* Settings Tab */}
-          {activeTab === 4 && (
-            <MotionBox
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4 }}
-            >
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
-                Settings
-              </Typography>
-              
-              {/* Profile Edit Form */}
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Profile Information
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                
-                {editMode ? (
-                  <form onSubmit={handleProfileUpdate}>
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          label="Username"
-                          name="username"
-                          value={profileForm.username}
-                          onChange={handleInputChange}
-                          fullWidth
-                          required
-                          variant="outlined"
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          label="Email Address"
-                          name="email"
-                          value={profileForm.email}
-                          onChange={handleInputChange}
-                          fullWidth
-                          required
-                          variant="outlined"
-                          type="email"
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Profile Picture
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar 
-                            src={profileForm.profileImage || '/images/default-avatar.png'} 
-                            alt="Profile picture"
-                            sx={{ width: 60, height: 60, mr: 2 }}
-                          >
-                            {!profileForm.profileImage && profileForm.username?.charAt(0)?.toUpperCase()}
-                          </Avatar>
-                          <Button 
-                            variant="outlined"
-                            component="label"
-                            startIcon={<CameraIcon />}
-                            disabled={uploadingImage}
-                          >
-                            {uploadingImage ? 'Uploading...' : 'Select Image'}
-                            <input
-                              type="file"
-                              hidden
-                              accept="image/jpeg, image/png, image/gif"
-                              onChange={handleImageUpload}
-                            />
-                          </Button>
-                        </Box>
-                        {imageError && (
-                          <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                            {imageError}
-                          </Typography>
-                        )}
-                      </Grid>
-                      <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                        <Button
-                          type="button"
-                          variant="outlined"
-                          color="secondary"
-                          onClick={() => setEditMode(false)}
-                          sx={{ mr: 2, borderRadius: 2 }}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="submit"
-                          variant="contained"
-                          color="primary"
-                          startIcon={<SaveIcon />}
-                          sx={{ borderRadius: 2 }}
-                        >
-                          Save Changes
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </form>
-                ) : (
-                  <Typography variant="body1" color="text.secondary">
-                    Click the "Edit Profile" button to update your profile information.
-                  </Typography>
-                )}
-              </Box>
-              
-              {/* Password Change Form */}
-              <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Change Password
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                
-                {passwordSuccess && (
-                  <Alert severity="success" sx={{ mb: 3 }}>
-                    Password has been successfully changed.
-                  </Alert>
-                )}
-                
-                {passwordError && (
-                  <Alert severity="error" sx={{ mb: 3 }}>
-                    {passwordError}
-                  </Alert>
-                )}
-                
-                <form onSubmit={handlePasswordChange}>
-                  <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <FormControl variant="outlined" fullWidth>
-                        <InputLabel htmlFor="current-password">Current Password</InputLabel>
-                        <OutlinedInput
-                          id="current-password"
-                          name="currentPassword"
-                          type={showPassword.current ? 'text' : 'password'}
-                          required
-                          endAdornment={
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => handlePasswordVisibility('current')}
-                                edge="end"
-                              >
-                                {showPassword.current ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                              </IconButton>
-                            </InputAdornment>
-                          }
-                          label="Current Password"
-                        />
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControl variant="outlined" fullWidth>
-                        <InputLabel htmlFor="new-password">New Password</InputLabel>
-                        <OutlinedInput
-                          id="new-password"
-                          name="newPassword"
-                          type={showPassword.new ? 'text' : 'password'}
-                          required
-                          endAdornment={
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => handlePasswordVisibility('new')}
-                                edge="end"
-                              >
-                                {showPassword.new ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                              </IconButton>
-                            </InputAdornment>
-                          }
-                          label="New Password"
-                        />
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <FormControl variant="outlined" fullWidth>
-                        <InputLabel htmlFor="confirm-password">Confirm New Password</InputLabel>
-                        <OutlinedInput
-                          id="confirm-password"
-                          name="confirmPassword"
-                          type={showPassword.confirm ? 'text' : 'password'}
-                          required
-                          endAdornment={
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() => handlePasswordVisibility('confirm')}
-                                edge="end"
-                              >
-                                {showPassword.confirm ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                              </IconButton>
-                            </InputAdornment>
-                          }
-                          label="Confirm New Password"
-                        />
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        sx={{ borderRadius: 2 }}
-                      >
-                        Change Password
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </form>
-              </Box>
-              
-              {/* Theme Settings */}
-              <Box sx={{ mt: 4 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Theme Settings
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography variant="body1" sx={{ mr: 2 }}>
-                    Theme Mode:
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={toggleTheme}
-                    startIcon={isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    {isDarkMode ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-                  </Button>
-                </Box>
-              </Box>
-            </MotionBox>
-          )}
         </Paper>
       </Container>
+      
+      {/* Details Dialog */}
+      <Dialog 
+        open={detailDialog.open} 
+        onClose={handleCloseDetail}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 0,
+            overflow: 'hidden',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          }
+        }}
+      >
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          backgroundImage: theme.palette.mode === 'dark'
+            ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+            : 'linear-gradient(to right, #4158D0, #C850C0)',
+          color: 'white',
+          py: 2,
+          px: 3
+        }}>
+          <Box component="div" sx={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+            {detailDialog.title}
+          </Box>
+          <IconButton onClick={handleCloseDetail} sx={{ color: 'white' }}>
+            <CloseIcon />
+          </IconButton>
+        </Box>
+        <DialogContent sx={{ py: 4, px: 4 }}>
+          {getDetailContent()}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

@@ -11,4 +11,5 @@ urlpatterns = [
     path('courses/create/', views.create_course, name='create-course'),
     path('system-health/', views.system_health, name='system-health'),
     path('cache-stats/', views.cache_stats, name='cache-stats'),
+    path('dashboard/debug/', views.admin_dashboard_debug, name='admin-dashboard-debug'),
 ]

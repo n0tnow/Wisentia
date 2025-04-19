@@ -10,10 +10,12 @@ export default function MainLayout({ children }) {
   const pathname = usePathname();
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
   
-  // Login ve register sayfalarında header ve footer'ı gizle
+  // Login, register ve admin sayfalarında header ve footer'ı gizle
   useEffect(() => {
     const excludePaths = ['/login', '/register', '/auth/login', '/auth/register'];
-    setShowHeaderFooter(!excludePaths.includes(pathname));
+    const isAdminPage = pathname?.startsWith('/admin');
+    
+    setShowHeaderFooter(!excludePaths.includes(pathname) && !isAdminPage);
   }, [pathname]);
   
   return (

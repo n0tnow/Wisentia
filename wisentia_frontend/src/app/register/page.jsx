@@ -19,7 +19,6 @@ import {
   CircularProgress,
   useTheme,
   alpha,
-  keyframes,
   Avatar,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
@@ -33,6 +32,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import NextLink from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { keyframes } from '@emotion/react';
 
 // Animasyon tanımlamaları
 const twinkleAnimation = keyframes`
@@ -60,7 +60,7 @@ const pulseAnimation = keyframes`
 
 // Client-side only bileşen olarak tanımla
 function StarEffect() {
-  // Sabit seed ile rastgele değerler oluştur (hydration hatası önlemek için)
+  // Statik yıldızlar (hydration hatasını önlemek için)
   const seedStars = [
     { id: 1, top: '10%', left: '20%', size: '2px', duration: '3s', delay: '0s' },
     { id: 2, top: '25%', left: '15%', size: '1.5px', duration: '4s', delay: '0.5s' },
@@ -134,44 +134,65 @@ export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated } = useAuth();
 
-  // Kullanıcı giriş yapmışsa dashboard'a yönlendir - sadece bir kez çalıştır
+  // Cookie ve localStorage temizleme - ÖNEMLİ!
   useEffect(() => {
-    // Sadece ilk render'da kontrol etmek için
-    if (!redirectCompleted) {
-      // LocalStorage kontrolü
-      const token = localStorage.getItem('access_token');
-      const userStr = localStorage.getItem('user');
+    // Tüm cookie'leri temizle
+    const clearCookies = () => {
+      document.cookie.split(';').forEach(function(c) {
+        document.cookie = c.trim().split('=')[0] + '=;' + 'expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+      });
       
-      // Context veya localStorage kontrolü
-      if ((token && userStr) || isAuthenticated) {
-        console.log('User is already authenticated, redirecting to dashboard');
-        setRedirectCompleted(true);
-        router.push('/dashboard');
-      }
-    }
-  }, [isAuthenticated, redirectCompleted, router]);
-
-  // Header'ı ve footer'ı gizle
-  useEffect(() => {
-    // Sayfadaki header ve footer elementlerini bul
-    const header = document.querySelector('header');
-    const footer = document.querySelector('footer');
+      // Kritik olanları tekrar temizle
+      document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    };
     
-    // Orijinal display değerlerini kaydet
-    const originalHeaderDisplay = header ? header.style.display : '';
-    const originalFooterDisplay = footer ? footer.style.display : '';
+    // LocalStorage'ı temizle
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
     
-    // Header ve footer'ı gizle
-    if (header) header.style.display = 'none';
-    if (footer) footer.style.display = 'none';
+    // Cookie'leri temizle
+    clearCookies();
     
-    // Component unmount olduğunda orijinal değerlere geri döndür
+    console.log("Register sayfası: Cookie ve localStorage temizlendi");
+    
+    // DOM'a script ekle (yedek temizleme metodu)
+    const script = document.createElement('script');
+    script.innerHTML = `
+      // Tüm cookie'leri temizle
+      document.cookie.split(';').forEach(function(c) {
+        document.cookie = c.trim().split('=')[0] + '=;' + 'expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+      });
+      
+      // LocalStorage'ı temizle
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      
+      console.log("Script: Cookie ve localStorage temizlendi");
+    `;
+    document.body.appendChild(script);
+    
     return () => {
-      if (header) header.style.display = originalHeaderDisplay;
-      if (footer) footer.style.display = originalFooterDisplay;
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
+  // Kullanıcı giriş yapmışsa dashboard'a yönlendir - sadece bir kez çalışır
+  useEffect(() => {
+    if (!redirectCompleted) {
+      // Temiz başlangıç için localStorage kontrol etmeden önce temizle
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+    }
+  }, [redirectCompleted]);
+
+  // Form doğrulama
   const validateStep = (step) => {
     const newErrors = {};
     
@@ -227,7 +248,7 @@ export default function RegisterPage() {
       [name]: type === 'checkbox' ? checked : value
     }));
     
-    // Clear field error when typing
+    // Yazarken hatayı temizle
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -289,34 +310,44 @@ export default function RegisterPage() {
         walletAddress: formData.walletAddress || ''
       };
       
-      console.log('Submitting registration data:', userData);
+      console.log('Kayıt verileri hazırlandı:', userData);
       
-      // Backend'e istek at
+      // Önceki oturum verilerini temizle
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      
+      // Cookie'leri temizle
+      document.cookie.split(';').forEach(function(c) {
+        document.cookie = c.trim().split('=')[0] + '=;' + 'expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+      });
+      
+      // Register işlemini gerçekleştir
       const result = await register(userData);
       
-      console.log('Registration result:', result);
+      console.log('Kayıt sonucu:', result);
       
       if (result.success) {
-        console.log('Registration successful!');
+        console.log('Kayıt başarılı!');
         setRedirectCompleted(true);
         router.push('/dashboard');
       } else {
-        console.error('Registration failed:', result.error);
+        console.error('Kayıt başarısız:', result.error);
         
-        // Manuel geçersiz kılma yapıldıysa ve bu başarılı olduysa yönlendir
+        // Manual override kontrolü
         if (result.manualOverride) {
-          console.log('Manual override successful');
+          console.log('Manuel geçersiz kılma başarılı');
           setRedirectCompleted(true);
           router.push('/dashboard');
           return;
         }
         
-        setSubmitError(result.error || 'Registration failed. Please try again.');
+        setSubmitError(result.error || 'Kayıt başarısız. Lütfen tekrar deneyin.');
         setActiveStep(0); // Hata durumunda ilk adıma dön
       }
     } catch (error) {
-      console.error('Register error:', error);
-      setSubmitError(error.message || 'An error occurred. Please try again.');
+      console.error('Register hatası:', error);
+      setSubmitError(error.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
       setActiveStep(0); // Hata durumunda ilk adıma dön
     } finally {
       setIsSubmitting(false);
@@ -594,27 +625,27 @@ export default function RegisterPage() {
                       color: '#8E54E9',
                     },
                   }}
-                />
-              }
-              label={
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}>
-                  I agree to the <Link href="#" sx={{ color: '#8E54E9' }}>terms of service</Link> and <Link href="#" sx={{ color: '#8E54E9' }}>privacy policy</Link>
-                </Typography>
-              }
-              sx={{ mb: 0.5 }}
-            />
-            {errors.agreeTerms && (
-              <Typography variant="caption" sx={{ color: '#f44336', pl: 4, display: 'block', mb: 1.5 }}>
-                {errors.agreeTerms}
+                  />
+            }
+            label={
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem' }}>
+                I agree to the <Link href="#" sx={{ color: '#8E54E9' }}>terms of service</Link> and <Link href="#" sx={{ color: '#8E54E9' }}>privacy policy</Link>
               </Typography>
-            )}
-          </Box>
+            }
+            sx={{ mb: 0.5 }}
+          />
+          {errors.agreeTerms && (
+            <Typography variant="caption" sx={{ color: '#f44336', pl: 4, display: 'block', mb: 1.5 }}>
+              {errors.agreeTerms}
+            </Typography>
+          )}
         </Box>
-      ),
-    },
-  ];
+      </Box>
+    ),
+  },
+];
 
-  // Eğer yönlendirme tamamlandıysa, içeriği render etmeyi atla
+  // Yönlendirme tamamlandıysa, içeriği render etmeyi atla
   if (redirectCompleted) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
       <CircularProgress />

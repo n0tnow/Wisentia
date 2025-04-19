@@ -96,7 +96,13 @@ def generate_token(user_id):
     
     access_token = jwt.encode(access_payload, settings.SECRET_KEY, algorithm='HS256')
     refresh_token = jwt.encode(refresh_payload, settings.SECRET_KEY, algorithm='HS256')
-    
+
+        # PyJWT 2.x'te string'e dönüştür
+    if isinstance(access_token, bytes):
+        access_token = access_token.decode('utf-8')
+    if isinstance(refresh_token, bytes):
+        refresh_token = refresh_token.decode('utf-8')
+
     return {
         'access': access_token,
         'refresh': refresh_token,

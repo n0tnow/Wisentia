@@ -45,9 +45,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -57,6 +57,7 @@ MIDDLEWARE = [
     'wisentia_backend.middleware.APIExceptionMiddleware',
     'wisentia_backend.middleware.RateLimitHeaderMiddleware',
 ]
+
 
 ROOT_URLCONF = 'wisentia_backend.urls'
 
@@ -171,8 +172,38 @@ REST_FRAMEWORK = {
 CORS_ALLOW_ALL_ORIGINS = True  # Geliştirme ortamında
 CORS_ALLOW_CREDENTIALS = True
 
-SESSION_COOKIE_SAMESITE = None
-SESSION_COOKIE_SECURE = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Next.js frontend
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+# Tüm CORS header'larını etkinleştirin
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+# Çerezleri güvenliliği düşürmeden etkinleştir
+SESSION_COOKIE_SAMESITE = 'Lax'  # 'None' kullanırsanız, güvenli=True olmalı
+SESSION_COOKIE_SECURE = False  # False sadece geliştirme ortamında
+
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js frontend
