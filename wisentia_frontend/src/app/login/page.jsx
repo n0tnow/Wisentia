@@ -1,22 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { 
-  Box, 
-  Typography, 
-  TextField, 
-  Button, 
-  Link,
-  InputAdornment,
-  IconButton,
-  Checkbox,
-  FormControlLabel,
-  Divider,
-  CircularProgress,
-  useTheme,
-  alpha,
-  Alert,
+import {
+  Box, Typography, TextField, Button, Link, InputAdornment, IconButton, Checkbox,
+  FormControlLabel, Divider, CircularProgress, useTheme, Alert, Paper
 } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -31,14 +19,13 @@ import NextLink from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import dynamic from 'next/dynamic';
 
-// Animation keyframes
+// Animasyon tanımlamaları burada... (mevcut kodunuzu koruyun)
 const shimmer = {
   '@keyframes shimmer': {
     '0%': { backgroundPosition: '-200% 0' },
     '100%': { backgroundPosition: '200% 0' },
   }
 };
-
 const float = {
   '@keyframes float': {
     '0%': { transform: 'translateY(0px)' },
@@ -46,7 +33,6 @@ const float = {
     '100%': { transform: 'translateY(0px)' },
   }
 };
-
 const pulse = {
   '@keyframes pulse': {
     '0%': { transform: 'scale(1)' },
@@ -54,7 +40,6 @@ const pulse = {
     '100%': { transform: 'scale(1)' },
   }
 };
-
 const twinkle = {
   '@keyframes twinkle': {
     '0%': { opacity: 0.3, transform: 'scale(0.8)' },
@@ -63,9 +48,7 @@ const twinkle = {
   }
 };
 
-// StarEffect component - client-side rendering
 const StarEffect = dynamic(() => Promise.resolve(() => {
-  // Star elements
   const stars = Array.from({ length: 20 }, (_, i) => ({
     id: i,
     size: Math.random() * 3 + 1,
@@ -76,15 +59,7 @@ const StarEffect = dynamic(() => Promise.resolve(() => {
   }));
 
   return (
-    <Box sx={{ 
-      position: 'absolute', 
-      top: 0, 
-      left: 0, 
-      right: 0, 
-      bottom: 0,
-      overflow: 'hidden',
-      zIndex: 0 
-    }}>
+    <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden', zIndex: 0 }}>
       {stars.map(star => (
         <Box
           key={star.id}
@@ -107,198 +82,170 @@ const StarEffect = dynamic(() => Promise.resolve(() => {
   );
 }), { ssr: false });
 
-// Button stars effect
-const ButtonStars = () => {
-  const stars = Array.from({ length: 10 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 2 + 1,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    delay: Math.random() * 0.5,
-    duration: 0.5 + Math.random() * 1
-  }));
-
-  return (
-    <Box
-      sx={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        overflow: 'hidden',
-        pointerEvents: 'none',
-        opacity: 0,
-        transition: 'opacity 0.2s ease',
-        '.MuiButton-root:hover &': {
-          opacity: 1
-        }
-      }}
-    >
-      {stars.map(star => (
-        <Box
-          key={star.id}
-          sx={{
-            position: 'absolute',
-            width: `${star.size}px`,
-            height: `${star.size}px`,
-            backgroundColor: 'white',
-            borderRadius: '50%',
-            top: star.top,
-            left: star.left,
-            opacity: 0,
-            boxShadow: '0 0 5px 1px rgba(255,255,255,0.5)',
-            animation: `twinkle ${star.duration}s ${star.delay}s infinite`,
-          }}
-        />
-      ))}
-    </Box>
-  );
-};
-
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isWalletConnecting, setIsWalletConnecting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isWalletConnecting, setIsWalletConnecting] = useState(false);
   const [inputFocus, setInputFocus] = useState({ email: false, password: false });
   const [redirectInProgress, setRedirectInProgress] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('');
-  
+
   const theme = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isAuthenticated, authChecked, isLoading: authLoading } = useAuth();
-  const redirectPath = searchParams ? searchParams.get('redirect') : null;
-  
-  // Güvenli yönlendirme - redirect parametresinde bir değer varsa kullan, yoksa dashboard'a git
-  const redirectTarget = redirectPath || '/';
-  
-  // Debug amaçlı - redirect parametresini kontrol et
-  useEffect(() => {
-    console.log('Login page mounted', { 
-      redirectPath, 
-      authLoading, 
-      authChecked,
-      redirectInProgress
-    });
-  }, 
-  []);
-  
-  // Kullanıcının kimlik durumunu kontrol et ve yönlendir
-  // useEffect İÇİNDE
-  useEffect(() => {
-    console.log('Login page mounted', {
-      redirectPath,
-      authLoading,
-      authChecked,
-      redirectInProgress,
-    });
+  const { login, isAuthenticated, authChecked, isLoading: authLoading, user } = useAuth();
 
-    // Eğer auth kontrolü tamamlanmışsa ve kullanıcı giriş yapmışsa yönlendir
-    if (!authLoading && authChecked && isAuthenticated() && !redirectInProgress) {
+  const redirectPath = searchParams?.get('redirect');
+  const redirectTarget = redirectPath || '/dashboard';
+  
+  // Cookie ve localStorage temizleme
+  useEffect(() => {
+    // Tüm cookie'leri temizle
+    document.cookie.split(';').forEach(function(c) {
+      document.cookie = c.trim().split('=')[0] + '=;' + 'expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;';
+    });
+    
+    // LocalStorage'ı temizle
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    
+    console.log("Login sayfası yüklendi: Cookie ve localStorage temizlendi");
+  }, []);
+
+  // Kullanıcı giriş yapmışsa yönlendir
+  useEffect(() => {
+    if (authLoading || redirectInProgress) return;
+    
+    if (authChecked && isAuthenticated()) {
       setRedirectInProgress(true);
-      router.replace(redirectPath); // BURADA KAL
+      
+      // Kullanıcı rolünü al
+      let userRole = 'regular';
+      try {
+        // Önce context'teki user'dan kontrol et
+        if (user && user.role) {
+          userRole = user.role;
+        } 
+        // Yoksa localStorage'dan almayı dene
+        else {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            userRole = parsedUser.role || 'regular';
+          }
+        }
+        
+        console.log("Kullanıcı rolü:", userRole);
+      } catch (e) {
+        console.error('Kullanıcı rolü parse hatası:', e);
+      }
+      
+      // Rol bazlı yönlendirme
+      if (userRole === 'admin') {
+        console.log("Admin dashboard'a yönlendiriliyor");
+        window.location.href = '/admin/dashboard';
+      } else {
+        console.log(`${redirectTarget} sayfasına yönlendiriliyor`);
+        window.location.href = redirectTarget;
+      }
     }
-  }, [authLoading, authChecked, redirectInProgress, redirectPath]);
-  
+  }, [authLoading, authChecked, user, redirectTarget, redirectInProgress, isAuthenticated]);
 
-  // Login function - manual login attempt
   const handleLogin = async (e) => {
     e.preventDefault();
-    
     if (!email || !password) {
-      setError('Please enter both email and password');
+      setError('Lütfen email ve şifre girin');
       return;
     }
-    
     try {
       setIsLoading(true);
       setError('');
-      console.log('Attempting login with email:', email);
       
+      console.log(`${email} ile login deneniyor`);
       const result = await login({ email, password });
+      console.log("Login sonucu:", result);
       
       if (result.success) {
-        // Login başarılı - router.push yerine window.location kullan
-        console.log('Login successful. Redirecting to:', redirectTarget);
+        // Token ve kullanıcı bilgilerini temiz şekilde kaydet
+        localStorage.clear(); // Önceki bilgileri temizle
         
-        // Kısa bir gecikme ekle (localStorage yazma işleminin tamamlanması için)
+        // Token bilgilerini kaydet
+        if (result.token) {
+          localStorage.setItem('access_token', result.token);
+          document.cookie = `access_token=${result.token}; path=/; max-age=86400`;
+        } else if (result.tokens && result.tokens.access) {
+          localStorage.setItem('access_token', result.tokens.access);
+          document.cookie = `access_token=${result.tokens.access}; path=/; max-age=86400`;
+          
+          if (result.tokens.refresh) {
+            localStorage.setItem('refresh_token', result.tokens.refresh);
+          }
+        }
+        
+        // Kullanıcı bilgilerini kaydet
+        if (result.user) {
+          const userJSON = JSON.stringify(result.user);
+          localStorage.setItem('user', userJSON);
+          document.cookie = `user=${userJSON}; path=/; max-age=86400`;
+        }
+        
+        // Role göre yönlendirme
         setTimeout(() => {
-          // Router yerine doğrudan window.location kullan
-          window.location.href = redirectTarget;
+          const userRole = result.user?.role || 'regular';
+          if (userRole === 'admin') {
+            console.log('Admin paneline yönlendiriliyor');
+            window.location.href = '/admin/dashboard';
+          } else {
+            console.log('Dashboard\'a yönlendiriliyor');
+            window.location.href = redirectTarget;
+          }
         }, 200);
       } else {
-        setError(result.error || 'Login failed. Please check your credentials.');
+        setError(result.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
       }
     } catch (err) {
-      console.error('Login error:', err);
-      setError('An error occurred during login. Please try again.');
+      console.error('Login hatası:', err);
+      setError('Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
   };
   
-  // MetaMask connection
+  // MetaMask wallet bağlantısı
   const handleConnectMetaMask = async () => {
     setIsWalletConnecting(true);
     setError('');
     
     try {
-      // Check for MetaMask
+      // MetaMask kontrolü
       if (typeof window !== 'undefined' && typeof window.ethereum === 'undefined') {
-        throw new Error('MetaMask is not installed. Please install it to continue.');
+        throw new Error('MetaMask yüklü değil. Lütfen yükleyin ve tekrar deneyin.');
       }
       
-      // Connect wallet
+      // Cüzdan bağlantısı
       if (typeof window !== 'undefined' && window.ethereum) {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         
         if (accounts.length === 0) {
-          throw new Error('No accounts found. Please create an account in MetaMask.');
+          throw new Error('Hesap bulunamadı. Lütfen MetaMask\'ta bir hesap oluşturun.');
         }
         
-        // Başarılı bağlantı sonrası window.location kullan
+        // Bağlantı sonrası yönlendirme
         window.location.href = redirectTarget;
       }
     } catch (err) {
-      console.error('MetaMask connection error:', err);
-      setError(err.message || 'Failed to connect with MetaMask');
+      console.error('MetaMask bağlantı hatası:', err);
+      setError(err.message || 'MetaMask bağlantısı başarısız');
     } finally {
       setIsWalletConnecting(false);
     }
   };
-  
 
-  
-  // DEBUG DASHBOARD İÇİN
-  const handleDirectDashboard = () => {
-    window.location.href = '/';
-  };
-  
-  // Debug için yardımcı fonksiyon (sadece dev ortamında)
-  const checkAuthStatus = () => {
-    if (process.env.NODE_ENV !== 'development') return;
-    
-    const token = localStorage.getItem('access_token');
-    const user = localStorage.getItem('user');
-    
-    setDebugInfo(`
-      Auth status check:
-      - Redirect target: ${redirectTarget}
-      - Token exists: ${!!token}
-      - User exists: ${!!user}
-      - isAuthenticated(): ${isAuthenticated()}
-      - authChecked: ${authChecked}
-      - authLoading: ${authLoading}
-      - redirectInProgress: ${redirectInProgress}
-    `);
-  };
-
-  // Platform features
+  // Platform özellikleri
   const features = [
     { 
       title: 'Interactive Courses', 
@@ -326,13 +273,13 @@ export default function LoginPage() {
     }
   ];
 
-  // Eğer yönlendirme devam ediyorsa veya auth yükleniyorsa yükleme göster
+  // Kimlik doğrulama sırasında yükleniyor gösterimi
   if (redirectInProgress || authLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <CircularProgress size={50} />
         <Typography variant="body1" sx={{ mt: 3 }}>
-          {redirectInProgress ? 'Redirecting...' : 'Loading...'}
+          {redirectInProgress ? 'Yönlendiriliyor...' : 'Yükleniyor...'}
         </Typography>
       </Box>
     );
@@ -357,7 +304,7 @@ export default function LoginPage() {
         ...twinkle
       }}
     >
-      {/* Left Panel - Platform Information */}
+      {/* Sol Panel - Platform Bilgileri */}
       <Box
         sx={{
           width: { xs: '0%', md: '50%' },
@@ -373,7 +320,7 @@ export default function LoginPage() {
           overflow: 'hidden',
         }}
       >
-        {/* Background decorative elements */}
+        {/* Arkaplan dekoratif elementleri */}
         <Box sx={{
           position: 'absolute',
           top: 0,
@@ -495,7 +442,7 @@ export default function LoginPage() {
         </Box>
       </Box>
       
-      {/* Right Panel - Login Form */}
+      {/* Sağ Panel - Login Formu */}
       <Box
         sx={{
           width: { xs: '100%', md: '50%' },
@@ -511,481 +458,437 @@ export default function LoginPage() {
           overflow: 'hidden',
         }}
       >
-        {/* Star effect background */}
+        {/* Yıldız efekti arka planı */}
         <StarEffect />
         
-        {/* Login Form */}
+        {/* Login Formu */}
         <Box
           component="form"
           onSubmit={handleLogin}
           sx={{
-            maxWidth: 350,
+            maxWidth: 380,
             width: '85%',
             position: 'relative',
             zIndex: 10,
             backdropFilter: 'blur(5px)',
             backgroundColor: 'rgba(0, 0, 0, 0.2)',
-            p: 4,
             borderRadius: 4,
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
+            overflow: 'hidden',
           }}
         >
-          <Typography
-            variant="h4"
-            component="h1"
-            fontWeight="bold"
-            sx={{
-              textAlign: 'center',
-              mb: 1,
-              background: 'linear-gradient(45deg, #8E54E9, #4776E6)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              letterSpacing: '0.5px',
-            }}
-          >
-            Sign In
-          </Typography>
-          
-          <Typography
-            variant="body2"
-            sx={{
-              textAlign: 'center',
-              mb: 3,
-              color: 'rgba(255,255,255,0.7)',
-            }}
-          >
-            Welcome back! Please enter your details
-          </Typography>
-          
-          {/* Error message */}
-          {error && (
-            <Alert
-              severity="error"
-              sx={{
-                mb: 2,
-                borderRadius: 2,
-                fontSize: '0.8rem',
-                py: 0.5,
-                bgcolor: 'rgba(244,67,54,0.1)',
-                color: '#ff8a80',
-                border: '1px solid rgba(244,67,54,0.2)',
-              }}
-            >
-              {error}
-            </Alert>
-          )}
-          
-          {/* Debug info */}
-          {debugInfo && (
-            <Alert
-              severity="info"
-              sx={{
-                mb: 2,
-                borderRadius: 2,
-                fontSize: '0.8rem',
-                py: 0.5,
-                overflowX: 'auto',
-                whiteSpace: 'pre-line'
-              }}
-            >
-              {debugInfo}
-            </Alert>
-          )}
-          
-          {/* Email field */}
-          <Box sx={{ mb: 2 }}>
-            <Typography
-              component="label"
-              htmlFor="email"
-              sx={{
-                display: 'flex',
-                mb: 0.5,
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: '0.8rem',
-              }}
-            >
-              Email Address *
-            </Typography>
-            <TextField
-              fullWidth
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              size="small"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onFocus={() => setInputFocus({ ...inputFocus, email: true })}
-              onBlur={() => setInputFocus({ ...inputFocus, email: false })}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <EmailOutlinedIcon 
-                      sx={{ 
-                        color: inputFocus.email ? '#8E54E9' : 'rgba(255,255,255,0.5)',
-                        fontSize: '1.2rem',
-                        transition: 'color 0.3s ease',
-                      }} 
-                    />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  bgcolor: 'rgba(255,255,255,0.05)',
-                  transition: 'all 0.3s ease',
-                  ...(inputFocus.email && {
-                    boxShadow: '0 0 0 2px rgba(142, 84, 233, 0.3)',
-                  }),
-                },
-                '& .MuiInputBase-input': {
-                  color: 'white',
-                  fontSize: '0.9rem',
-                  py: 1,
-                  transition: 'all 0.3s ease',
-                  '&::placeholder': {
-                    color: 'rgba(255,255,255,0.5)',
-                    transition: 'opacity 0.3s ease',
-                    opacity: inputFocus.email ? 0 : 1,
-                  },
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255,255,255,0.1)',
-                  transition: 'all 0.3s ease',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255,255,255,0.3)',
-                },
-                '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#8E54E9',
-                },
-              }}
-            />
-          </Box>
-          
-          {/* Password field */}
-          <Box sx={{ mb: 1.5 }}>
-            <Typography
-              component="label"
-              htmlFor="password"
-              sx={{
-                display: 'flex',
-                mb: 0.5,
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: '0.8rem',
-              }}
-            >
-              Password *
-            </Typography>
-            <TextField
-              fullWidth
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              size="small"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => setInputFocus({ ...inputFocus, password: true })}
-              onBlur={() => setInputFocus({ ...inputFocus, password: false })}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LockOutlinedIcon 
-                      sx={{ 
-                        color: inputFocus.password ? '#8E54E9' : 'rgba(255,255,255,0.5)',
-                        fontSize: '1.2rem',
-                        transition: 'color 0.3s ease',
-                      }} 
-                    />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      size="small"
-                      sx={{ 
-                        color: 'rgba(255,255,255,0.5)',
-                        transition: 'color 0.2s ease',
-                        '&:hover': {
-                          color: 'rgba(255,255,255,0.8)',
-                        }
-                      }}
-                    >
-                      {showPassword ? 
-                        <VisibilityOffOutlinedIcon sx={{ fontSize: '1.2rem' }} /> : 
-                        <VisibilityOutlinedIcon sx={{ fontSize: '1.2rem' }} />
-                      }
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  bgcolor: 'rgba(255,255,255,0.05)',
-                  transition: 'all 0.3s ease',
-                  ...(inputFocus.password && {
-                    boxShadow: '0 0 0 2px rgba(142, 84, 233, 0.3)',
-                  }),
-                },
-                '& .MuiInputBase-input': {
-                  color: 'white',
-                  fontSize: '0.9rem',
-                  py: 1,
-                  transition: 'all 0.3s ease',
-                  '&::placeholder': {
-                    color: 'rgba(255,255,255,0.5)',
-                    transition: 'opacity 0.3s ease',
-                    opacity: inputFocus.password ? 0 : 1,
-                  },
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255,255,255,0.1)',
-                  transition: 'all 0.3s ease',
-                },
-                '&:hover .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'rgba(255,255,255,0.3)',
-                },
-                '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-                  borderColor: '#8E54E9',
-                },
-              }}
-            />
-          </Box>
-          
-          {/* Remember me and Forgot password */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              mb: 2,
-            }}
-          >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  sx={{
-                    color: 'rgba(255,255,255,0.5)',
-                    '&.Mui-checked': {
-                      color: '#8E54E9',
-                    },
-                    '& .MuiSvgIcon-root': { fontSize: 18 },
-                  }}
-                />
-              }
-              label="Remember me"
-              sx={{ 
-                '& .MuiTypography-root': { 
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: '0.8rem',
-                },
-                mr: 0 
-              }}
-            />
-            <Link
-              component={NextLink}
-              href="/forgot-password"
-              sx={{
-                color: '#a3f7ff',
-                textDecoration: 'none',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  textDecoration: 'underline',
-                  color: '#c3fdff',
-                },
-              }}
-            >
-              Forgot password?
-            </Link>
-          </Box>
-          
-          {/* Login button */}
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            disabled={isLoading}
-            sx={{
-              py: 1.2,
-              borderRadius: 2,
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              mb: 2,
-              background: 'linear-gradient(90deg, #4776E6, #8E54E9)',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              position: 'relative',
+          <Paper 
+            elevation={0}
+            sx={{ 
+              bgcolor: 'transparent',
+              borderRadius: 4,
               overflow: 'hidden',
-              '&:hover': {
-                backgroundImage: 'linear-gradient(90deg, #4776E6, #8E54E9)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 5px 15px rgba(71, 118, 230, 0.4)',
-              },
-              '&:before': {
-                content: '""',
-                position: 'absolute',
-                top: '-50%',
-                left: '-50%',
-                width: '200%',
-                height: '200%',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%)',
-                opacity: 0,
-                transition: 'opacity 0.5s ease',
-              },
-              '&:hover:before': {
-                opacity: 1,
-              },
             }}
           >
-            {isLoading ? <CircularProgress size={20} color="inherit" /> : 'Sign In'}
-          </Button>
-          
-          {/* Debug button for development */}
-          {process.env.NODE_ENV === 'development' && (
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={checkAuthStatus}
-              sx={{ 
-                mb: 2,
-                fontSize: '0.8rem',
-                color: 'rgba(255,255,255,0.7)',
-                borderColor: 'rgba(255,255,255,0.2)',
-              }}
-            >
-              Debug Auth Status
-            </Button>
-          )}
-          
-          {/* DIVIDER */}
-          <Box sx={{ position: 'relative', my: 2 }}>
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+            <Box sx={{ p: 4 }}>
+              <Typography
+                variant="h5"
+                component="h1"
+                fontWeight="bold"
+                sx={{
+                  textAlign: 'center',
+                  mb: 1,
+                  color: 'white',
+                }}
+              >
+                Sign In
+              </Typography>
+              
               <Typography
                 variant="body2"
-                component="span"
                 sx={{
-                  px: 1,
-                  color: 'rgba(255,255,255,0.5)',
-                  fontSize: '0.75rem',
+                  textAlign: 'center',
+                  mb: 3,
+                  color: 'rgba(255,255,255,0.7)',
                 }}
               >
-                OR
+                Welcome back! Please enter your details
               </Typography>
-            </Divider>
-          </Box>
-          
-          {/* MetaMask connection button */}
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
-            onClick={handleConnectMetaMask}
-            disabled={isWalletConnecting}
-            sx={{
-              py: 1.2,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontSize: '0.9rem',
-              border: '1px solid rgba(246, 133, 27, 0.5)',
-              color: '#F6851B',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-              position: 'relative',
-              overflow: 'hidden',
-              '&:hover': {
-                backgroundColor: 'transparent',
-                borderColor: '#F6851B',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 5px 15px rgba(246, 133, 27, 0.2)',
-              },
-              '&:before': {
-                content: '""',
-                position: 'absolute',
-                top: '-50%',
-                left: '-50%',
-                width: '200%',
-                height: '200%',
-                background: 'radial-gradient(circle, rgba(246, 133, 27, 0.1) 0%, rgba(246, 133, 27, 0) 70%)',
-                opacity: 0,
-                transition: 'opacity 0.5s ease',
-              },
-              '&:hover:before': {
-                opacity: 1,
-              },
-            }}
-          >
-            {isWalletConnecting ? (
-              <CircularProgress size={20} color="inherit" />
-            ) : (
-              'Connect with MetaMask'
-            )}
-          </Button>
-          
-          {/* Debug button (for development) */}
-          {process.env.NODE_ENV === 'development' && (
-            <Button
-              fullWidth
-              variant="text"
-              onClick={handleDirectDashboard}
-              sx={{
-                mt: 1,
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: '0.8rem',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                  color: 'rgba(255,255,255,0.8)',
-                }
-              }}
-            >
-              Go to Dashboard Directly
-            </Button>
-          )}
-          
-          {/* Don't have an account? */}
-          <Box
-            sx={{
-              textAlign: 'center',
-              mt: 3,
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: '0.8rem',
-              }}
-            >
-              Don't have an account?{' '}
-              <Link
-                component={NextLink}
-                href="/register"
+              
+              {/* Hata mesajı */}
+              {error && (
+                <Alert
+                  severity="error"
+                  sx={{
+                    mb: 2,
+                    borderRadius: 2,
+                    fontSize: '0.8rem',
+                    py: 0.5,
+                    bgcolor: 'rgba(244,67,54,0.1)',
+                    color: '#ff8a80',
+                    border: '1px solid rgba(244,67,54,0.2)',
+                  }}
+                >
+                  {error}
+                </Alert>
+              )}
+              
+              {/* Email alanı */}
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  component="label"
+                  htmlFor="email"
+                  sx={{
+                    display: 'flex',
+                    mb: 0.5,
+                    color: 'rgba(255,255,255,0.7)',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  Email Address *
+                </Typography>
+                <TextField
+                  fullWidth
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  autoComplete="email"
+                  size="small"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setInputFocus({ ...inputFocus, email: true })}
+                  onBlur={() => setInputFocus({ ...inputFocus, email: false })}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailOutlinedIcon 
+                          sx={{ 
+                            color: inputFocus.email ? '#8E54E9' : 'rgba(255,255,255,0.5)',
+                            fontSize: '1.2rem',
+                            transition: 'color 0.3s ease',
+                          }} 
+                        />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      bgcolor: 'rgba(255,255,255,0.05)',
+                      transition: 'all 0.3s ease',
+                      ...(inputFocus.email && {
+                        boxShadow: '0 0 0 2px rgba(142, 84, 233, 0.3)',
+                      }),
+                    },
+                    '& .MuiInputBase-input': {
+                      color: 'white',
+                      fontSize: '0.9rem',
+                      py: 1,
+                      transition: 'all 0.3s ease',
+                      '&::placeholder': {
+                        color: 'rgba(255,255,255,0.5)',
+                        transition: 'opacity 0.3s ease',
+                        opacity: inputFocus.email ? 0 : 1,
+                      },
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.1)',
+                      transition: 'all 0.3s ease',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#8E54E9',
+                    },
+                  }}
+                />
+              </Box>
+              
+              {/* Şifre alanı */}
+              <Box sx={{ mb: 1.5 }}>
+                <Typography
+                  component="label"
+                  htmlFor="password"
+                  sx={{
+                    display: 'flex',
+                    mb: 0.5,
+                    color: 'rgba(255,255,255,0.7)',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  Password *
+                </Typography>
+                <TextField
+                  fullWidth
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  size="small"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setInputFocus({ ...inputFocus, password: true })}
+                  onBlur={() => setInputFocus({ ...inputFocus, password: false })}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockOutlinedIcon 
+                          sx={{ 
+                            color: inputFocus.password ? '#8E54E9' : 'rgba(255,255,255,0.5)',
+                            fontSize: '1.2rem',
+                            transition: 'color 0.3s ease',
+                          }} 
+                        />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          size="small"
+                          sx={{ 
+                            color: 'rgba(255,255,255,0.5)',
+                            transition: 'color 0.2s ease',
+                            '&:hover': {
+                              color: 'rgba(255,255,255,0.8)',
+                            }
+                          }}
+                        >
+                          {showPassword ? 
+                            <VisibilityOffOutlinedIcon sx={{ fontSize: '1.2rem' }} /> : 
+                            <VisibilityOutlinedIcon sx={{ fontSize: '1.2rem' }} />
+                          }
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                      bgcolor: 'rgba(255,255,255,0.05)',
+                      transition: 'all 0.3s ease',
+                      ...(inputFocus.password && {
+                        boxShadow: '0 0 0 2px rgba(142, 84, 233, 0.3)',
+                      }),
+                    },
+                    '& .MuiInputBase-input': {
+                      color: 'white',
+                      fontSize: '0.9rem',
+                      py: 1,
+                      transition: 'all 0.3s ease',
+                      '&::placeholder': {
+                        color: 'rgba(255,255,255,0.5)',
+                        transition: 'opacity 0.3s ease',
+                        opacity: inputFocus.password ? 0 : 1,
+                      },
+                    },
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.1)',
+                      transition: 'all 0.3s ease',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                    },
+                    '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#8E54E9',
+                    },
+                  }}
+                />
+              </Box>
+              
+              {/* Remember me and Forgot password */}
+              <Box
                 sx={{
-                  color: '#a3f7ff',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                }}
+              >
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      sx={{
+                        color: 'rgba(255,255,255,0.5)',
+                        '&.Mui-checked': {
+                          color: '#8E54E9',
+                        },
+                        '& .MuiSvgIcon-root': { fontSize: 18 },
+                      }}
+                    />
+                  }
+                  label="Remember me"
+                  sx={{ 
+                    '& .MuiTypography-root': { 
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: '0.8rem',
+                    },
+                    mr: 0 
+                  }}
+                />
+                <Link
+                  component={NextLink}
+                  href="/forgot-password"
+                  sx={{
+                    color: '#a3f7ff',
+                    textDecoration: 'none',
+                    fontSize: '0.8rem',
+                    fontWeight: 500,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      textDecoration: 'underline',
+                      color: '#c3fdff',
+                    },
+                  }}
+                >
+                  Forgot password?
+                </Link>
+              </Box>
+              
+              {/* Login button */}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isLoading}
+                sx={{
+                  py: 1.2,
+                  borderRadius: 2,
                   fontWeight: 600,
-                  textDecoration: 'none',
-                  transition: 'all 0.2s ease',
+                  fontSize: '0.9rem',
+                  mb: 2,
+                  background: 'linear-gradient(90deg, #4776E6, #8E54E9)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
                   '&:hover': {
-                    textDecoration: 'underline',
-                    color: '#c3fdff',
+                    backgroundImage: 'linear-gradient(90deg, #4776E6, #8E54E9)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 5px 15px rgba(71, 118, 230, 0.4)',
+                  },
+                  '&:before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: '-50%',
+                    left: '-50%',
+                    width: '200%',
+                    height: '200%',
+                    borderRadius: '50%',
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 70%)',
+                    opacity: 0,
+                    transition: 'opacity 0.5s ease',
+                  },
+                  '&:hover:before': {
+                    opacity: 1,
                   },
                 }}
               >
-                Sign Up
-              </Link>
-            </Typography>
-          </Box>
+                {isLoading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+              
+              {/* DIVIDER */}
+              <Box sx={{ position: 'relative', my: 2 }}>
+                <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <Typography
+                    variant="body2"
+                    component="span"
+                    sx={{
+                      px: 1,
+                      color: 'rgba(255,255,255,0.5)',
+                      fontSize: '0.75rem',
+                    }}
+                  >
+                    OR
+                  </Typography>
+                </Divider>
+              </Box>
+              
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: '1.1rem' }} />}
+                onClick={handleConnectMetaMask}
+                disabled={isWalletConnecting}
+                sx={{
+                  py: 1.2,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '0.9rem',
+                  border: '1px solid rgba(246, 133, 27, 0.5)',
+                  color: '#F6851B',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&:hover': {
+                    backgroundColor: 'transparent',
+                    borderColor: '#F6851B',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 5px 15px rgba(246, 133, 27, 0.2)',
+                  },
+                  '&:before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: '-50%',
+                    left: '-50%',
+                    width: '200%',
+                    height: '200%',
+                    background: 'radial-gradient(circle, rgba(246, 133, 27, 0.1) 0%, rgba(246, 133, 27, 0) 70%)',
+                    opacity: 0,
+                    transition: 'opacity 0.5s ease',
+                  },
+                  '&:hover:before': {
+                    opacity: 1,
+                  },
+                }}
+              >
+                {isWalletConnecting ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  'Connect with MetaMask'
+                )}
+              </Button>
+              
+              {/* Don't have an account */}
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  mt: 3,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'rgba(255,255,255,0.7)',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  Don't have an account?{' '}
+                  <Link
+                    component={NextLink}
+                    href="/register"
+                    sx={{
+                      color: '#a3f7ff',
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                        color: '#c3fdff',
+                      },
+                    }}
+                  >
+                    Sign Up
+                  </Link>
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
         </Box>
       </Box>
     </Box>

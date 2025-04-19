@@ -1,25 +1,35 @@
-// src/middleware.js
+// middleware.js
 import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  const currentUser = request.cookies.get('user')?.value;
-  
-  // Debug: Cookie varlığını kontrol et
-  console.log(`Middleware çalıştı: ${request.nextUrl.pathname}, Cookie user:`, currentUser ? 'var' : 'yok');
-
-  // GEÇİCİ ÇÖZÜM #1: Local Storage'dan token kontrol et
-  // (Sadece localStorage'ı direkt kontrol edemeyiz, burası server-side çalışıyor)
-  
-  // GEÇİCİ ÇÖZÜM #2: /login ve /register sayfalarını bypass yap
-  // Sonsuz döngüyü kırmak için login sayfasına müdahale etmeyi durdur
+  // Login/Register sayfalarını her zaman bypass et
   if (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register') {
-    console.log('Login/Register sayfası bypass ediliyor...');
+    console.log(`Auth sayfası erişimi: ${request.nextUrl.pathname}`);
     return NextResponse.next();
   }
+
+  const currentUser = request.cookies.get('user')?.value;
+  console.log(`Middleware çalıştı: ${request.nextUrl.pathname}, Cookie user:`, currentUser ? 'var' : 'yok');
   
-  const isLoggedIn = !!currentUser;
+  // Kullanıcı durumunu kontrol et
+  let isLoggedIn = false;
+  let userRole = 'regular';
+  let userId = null;
   
-  // Korumalı route'ları burada tanımlayın
+  if (currentUser) {
+    try {
+      const userData = JSON.parse(currentUser);
+      userId = userData.id;
+      isLoggedIn = !!userId; // ID varsa giriş yapmış kabul et
+      userRole = userData.role || 'regular';
+      console.log(`Kullanıcı bilgisi: ID=${userId}, Rol=${userRole}, GirişYapılmış=${isLoggedIn}`);
+    } catch (e) {
+      console.error('Cookie parse hatası:', e.message);
+      isLoggedIn = false;
+    }
+  }
+  
+  // Korumalı rotaları tanımla
   const authRoutes = ['/dashboard', '/profile', '/wallet', '/subscriptions'];
   const questDetailRoute = /^\/quests\/[\w-]+$/;
   const adminRoutes = ['/admin'];
@@ -29,48 +39,33 @@ export function middleware(request) {
 
   // Admin sayfalarını kontrol et
   if (adminRoutes.some(route => pathname.startsWith(route))) {
-    // Kullanıcı giriş yapmamışsa veya admin değilse
     if (!isLoggedIn) {
       console.log('Admin sayfası erişimi engellendi: Oturum yok');
-      return NextResponse.redirect(new URL('/login', request.url));
+      return NextResponse.redirect(new URL(`/login?redirect=${pathname}`, request.url));
     }
 
-    try {
-      const user = JSON.parse(currentUser);
-      if (user.role !== 'admin') {
-        console.log('Admin sayfası erişimi engellendi: Admin değil');
-        return NextResponse.redirect(new URL('/', request.url));
-      }
-    } catch (error) {
-      console.log('Admin sayfası erişimi engellendi: Parse hatası');
-      return NextResponse.redirect(new URL('/login', request.url));
+    if (userRole !== 'admin') {
+      console.log('Admin sayfası erişimi engellendi: Admin değil');
+      return NextResponse.redirect(new URL('/', request.url));
     }
+    
+    console.log('Admin sayfası erişimi izni verildi');
   }
 
   // Quest detay sayfaları için kontrol
   if (questDetailRoute.test(pathname) && !isLoggedIn) {
     console.log('Quest detay sayfası erişimi engellendi');
-    const url = new URL('/login', request.url);
-    url.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(new URL(`/login?redirect=${pathname}`, request.url));
   }
 
   // Korumalı sayfaları kontrol et
   if (authRoutes.some(route => pathname.startsWith(route))) {
-    // GEÇİCİ ÇÖZÜM #3: Geliştirme sırasında korumalı sayfalara her koşulda izin ver
-    // Bu satırı kaldırarak normal güvenlik kontrollerini aktifleştirebilirsiniz
-    console.log('GEÇİCİ ÇÖZÜM: Korumalı sayfaya erişim izni veriliyor');
-    return NextResponse.next();
-    
-    // Normal kontrol (geliştirme sonunda aşağıdaki kodu aktifleştirin)
-    /*
     if (!isLoggedIn) {
       console.log('Korumalı sayfa erişimi engellendi');
-      const url = new URL('/login', request.url);
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(new URL(`/login?redirect=${pathname}`, request.url));
     }
-    */
+    
+    console.log('Korumalı sayfaya erişim izni verildi');
   }
 
   return NextResponse.next();
@@ -78,14 +73,6 @@ export function middleware(request) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/profile/:path*',
-    '/wallet/:path*',
-    '/quests/:path*',
-    '/nfts/:path*',
-    '/subscriptions/:path*',
-    '/admin/:path*',
-    '/login',
-    '/register',
+    '/((?!api|_next/static|_next/image|favicon.ico|images).*)',
   ],
 };

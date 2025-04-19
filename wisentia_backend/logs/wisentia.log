@@ -3229,3 +3229,583 @@ INFO 2025-04-12 20:25:43,183 autoreload 67776 78564 Watching for file changes wi
 INFO 2025-04-12 20:28:11,559 autoreload 67776 78564 C:\WISENTIA_Q\wisentia\wisentia_backend\users\views.py changed, reloading.
 INFO 2025-04-12 20:28:12,663 autoreload 75716 80468 Watching for file changes with StatReloader
 INFO 2025-04-12 20:28:23,597 autoreload 14848 77224 Watching for file changes with StatReloader
+INFO 2025-04-12 20:28:45,079 basehttp 14848 68736 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-12 20:28:45,090 basehttp 14848 68736 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-12 20:28:47,213 basehttp 14848 68736 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-12 20:29:02,788 basehttp 14848 68736 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-12 20:29:02,794 basehttp 14848 47436 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-12 20:30:22,819 basehttp 14848 47436 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-12 20:30:38,428 basehttp 14848 47436 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-12 20:30:38,438 basehttp 14848 47436 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-12 20:30:40,547 basehttp 14848 47436 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:01:00,669 basehttp 14848 51048 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+INFO 2025-04-13 04:01:01,065 basehttp 14848 84080 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-13 04:02:10,409 basehttp 14848 51048 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-13 04:02:10,433 basehttp 14848 84080 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-13 04:02:10,440 basehttp 14848 51048 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-13 04:02:10,448 basehttp 14848 84080 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:02:13,126 basehttp 14848 84080 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:09:34,524 basehttp 14848 84364 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:09:34,532 basehttp 14848 84364 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:19:28,990 basehttp 14848 81308 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:20:11,318 basehttp 14848 81308 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:20:15,943 basehttp 14848 81308 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:20:15,995 basehttp 14848 81308 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:20:18,033 basehttp 14848 81308 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:20:18,457 basehttp 14848 81308 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:22:12,540 basehttp 14848 87704 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:25:19,571 basehttp 14848 87704 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:28:52,956 basehttp 14848 87704 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:28:53,716 basehttp 14848 87704 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:28:53,870 basehttp 14848 87704 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:28:53,920 basehttp 14848 87704 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:39:30,748 basehttp 14848 66576 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:39:30,755 basehttp 14848 66576 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 04:39:30,796 basehttp 14848 66576 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:19:44,388 basehttp 14848 80836 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:19:44,396 basehttp 14848 80836 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:19:44,434 basehttp 14848 80836 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:33:47,972 basehttp 14848 69136 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:33:47,986 basehttp 14848 69136 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:33:48,024 basehttp 14848 69136 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:39:13,804 basehttp 14848 87540 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:39:13,811 basehttp 14848 87540 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:57:54,410 basehttp 14848 84156 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:57:54,418 basehttp 14848 84156 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:58:16,250 basehttp 14848 84156 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:59:44,882 basehttp 14848 84156 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 05:59:44,887 basehttp 14848 84156 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:07:21,674 basehttp 14848 81992 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-13 06:07:21,676 basehttp 14848 81992 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-13 06:07:22,002 basehttp 14848 75804 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:07:22,016 basehttp 14848 75804 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:21:45,069 basehttp 14848 82564 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:24:25,028 basehttp 14848 82564 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:24:25,034 basehttp 14848 82564 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:36:50,540 basehttp 14848 67756 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:36:50,545 basehttp 14848 67756 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:37:44,355 basehttp 14848 67756 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:37:44,360 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:37:44,364 basehttp 14848 67756 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:37:44,369 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:39:07,073 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:39:11,267 basehttp 14848 80548 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+INFO 2025-04-13 06:39:11,278 basehttp 14848 85420 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-13 06:39:20,671 basehttp 14848 80548 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-13 06:39:20,693 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-13 06:39:20,702 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:39:23,203 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:43:11,176 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:43:11,182 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:43:51,299 basehttp 14848 85420 "POST /api/auth/logout/ HTTP/1.1" 200 36
+WARNING 2025-04-13 06:47:26,534 log 14848 85420 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:47:26,535 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 06:48:11,306 log 14848 85420 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:48:11,307 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 06:48:20,936 log 14848 85420 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:48:20,937 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 06:48:22,509 log 14848 85420 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:48:22,510 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 06:48:26,265 log 14848 85420 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:48:26,266 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 06:48:27,724 log 14848 85420 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:48:27,724 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 401 31
+INFO 2025-04-13 06:48:34,633 basehttp 14848 85420 "POST /api/auth/login/ HTTP/1.1" 200 498
+INFO 2025-04-13 06:48:34,644 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 255
+INFO 2025-04-13 06:48:36,771 basehttp 14848 85420 "GET /api/auth/profile/ HTTP/1.1" 200 255
+INFO 2025-04-13 06:48:54,593 basehttp 14848 85420 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-13 06:52:54,905 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-13 06:52:54,916 basehttp 14848 80060 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:52:57,224 basehttp 14848 80060 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:53:05,086 basehttp 14848 80060 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:57:49,593 basehttp 14848 80060 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-13 06:57:51,965 basehttp 14848 80060 "POST /api/auth/logout/ HTTP/1.1" 200 36
+WARNING 2025-04-13 06:58:04,866 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:58:04,866 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 06:58:14,347 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:58:14,348 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 06:58:15,419 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 06:58:15,420 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:03,633 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:03,634 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:06,687 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:06,688 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:07,641 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:07,641 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:07,829 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:07,829 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:08,046 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:08,047 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:08,204 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:08,204 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:44,260 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:44,261 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:44,849 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:44,850 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:45,035 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:45,036 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:53,636 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:53,636 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-13 07:00:56,462 log 14848 80060 Unauthorized: /api/auth/login/
+WARNING 2025-04-13 07:00:56,463 basehttp 14848 80060 "POST /api/auth/login/ HTTP/1.1" 401 31
+INFO 2025-04-13 21:53:29,230 basehttp 14848 95656 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+WARNING 2025-04-13 21:53:29,557 log 14848 35668 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 21:53:29,558 basehttp 14848 35668 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 21:53:30,882 log 14848 35668 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 21:53:30,882 basehttp 14848 35668 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 21:53:31,808 log 14848 35668 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 21:53:31,808 basehttp 14848 35668 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 21:53:32,758 log 14848 35668 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 21:53:32,758 basehttp 14848 35668 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 21:53:33,656 log 14848 35668 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 21:53:33,657 basehttp 14848 35668 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 21:53:34,572 log 14848 35668 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 21:53:34,574 basehttp 14848 35668 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 21:53:35,650 log 14848 35668 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 21:53:35,650 basehttp 14848 35668 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:15:13,606 log 14848 81460 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:15:13,606 basehttp 14848 81460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:15:18,127 log 14848 81460 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:15:18,127 basehttp 14848 81460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:15:24,377 log 14848 81460 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:15:24,378 basehttp 14848 81460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:15:34,248 log 14848 81460 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:15:34,249 basehttp 14848 81460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:18:07,323 log 14848 81460 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:18:07,325 basehttp 14848 81460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:18:09,280 log 14848 81460 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:18:09,281 basehttp 14848 81460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+INFO 2025-04-13 22:25:48,491 basehttp 14848 84880 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+WARNING 2025-04-13 22:25:48,803 log 14848 91468 Forbidden: /api/auth/logout/
+WARNING 2025-04-13 22:25:48,804 basehttp 14848 91468 "POST /api/auth/logout/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:40:47,818 log 14848 82584 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:40:47,820 basehttp 14848 82584 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-13 22:40:47,822 log 14848 82584 Forbidden: /api/auth/profile/
+WARNING 2025-04-13 22:40:47,822 basehttp 14848 82584 "GET /api/auth/profile/ HTTP/1.1" 403 48
+INFO 2025-04-14 02:18:37,538 autoreload 33048 39316 Watching for file changes with StatReloader
+INFO 2025-04-14 02:19:11,776 basehttp 33048 79204 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+WARNING 2025-04-14 02:19:12,101 log 33048 94024 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:19:12,102 basehttp 33048 94024 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:30:43,575 log 33048 34436 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:30:43,576 basehttp 33048 34436 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:32:03,464 log 33048 34436 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:32:03,466 basehttp 33048 34436 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:44:34,986 log 33048 3388 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:44:34,987 basehttp 33048 3388 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:44:46,387 log 33048 3388 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:44:46,388 basehttp 33048 3388 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:48:59,823 log 33048 3388 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:48:59,824 basehttp 33048 3388 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:49:16,608 log 33048 3388 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:49:16,609 basehttp 33048 3388 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:49:22,607 log 33048 3388 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:49:22,607 basehttp 33048 3388 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:50:14,044 log 33048 3388 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:50:14,044 basehttp 33048 3388 "GET /api/auth/profile/ HTTP/1.1" 403 48
+INFO 2025-04-14 02:52:29,316 basehttp 33048 49104 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+WARNING 2025-04-14 02:52:29,622 log 33048 30792 Forbidden: /api/auth/logout/
+WARNING 2025-04-14 02:52:29,623 basehttp 33048 30792 "POST /api/auth/logout/ HTTP/1.1" 403 48
+WARNING 2025-04-14 02:52:42,862 log 33048 30792 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 02:52:42,863 basehttp 33048 30792 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 03:00:13,334 log 33048 32092 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 03:00:13,335 basehttp 33048 32092 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 03:01:23,884 log 33048 32092 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 03:01:23,884 basehttp 33048 32092 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-14 03:01:24,335 log 33048 80448 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-14 03:01:24,335 basehttp 33048 80448 "GET /api/admin/dashboard/ HTTP/1.1" 403 58
+WARNING 2025-04-14 03:01:24,338 log 33048 80448 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-14 03:01:24,338 basehttp 33048 80448 "GET /api/admin/dashboard/ HTTP/1.1" 403 58
+WARNING 2025-04-14 03:14:29,068 log 33048 32576 Forbidden: /api/auth/profile/
+WARNING 2025-04-14 03:14:29,070 basehttp 33048 32576 "GET /api/auth/profile/ HTTP/1.1" 403 48
+INFO 2025-04-15 05:04:18,034 basehttp 33048 105812 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+WARNING 2025-04-15 05:04:18,353 log 33048 88636 Forbidden: /api/auth/logout/
+WARNING 2025-04-15 05:04:18,354 basehttp 33048 88636 "POST /api/auth/logout/ HTTP/1.1" 403 48
+INFO 2025-04-15 05:04:59,340 basehttp 33048 105812 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+WARNING 2025-04-15 05:04:59,344 log 33048 88636 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:04:59,345 basehttp 33048 88636 "GET /api/auth/profile/ HTTP/1.1" 403 48
+INFO 2025-04-15 05:08:30,446 autoreload 33048 39316 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-15 05:08:31,895 autoreload 92428 96328 Watching for file changes with StatReloader
+WARNING 2025-04-15 05:09:34,634 log 92428 101052 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:09:34,635 basehttp 92428 101052 "GET /api/auth/profile/ HTTP/1.1" 403 48
+INFO 2025-04-15 05:09:48,573 autoreload 92428 96328 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-15 05:09:49,413 autoreload 97592 32700 Watching for file changes with StatReloader
+WARNING 2025-04-15 05:10:40,092 log 97592 92552 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:10:40,093 basehttp 97592 92552 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:11:40,090 log 97592 92552 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:11:40,090 basehttp 97592 92552 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:12:41,966 log 97592 92552 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:12:41,968 basehttp 97592 92552 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:13:50,593 log 97592 92552 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:13:50,594 basehttp 97592 92552 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:14:03,325 log 97592 92552 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:14:03,325 basehttp 97592 92552 "GET /api/auth/profile/ HTTP/1.1" 403 48
+INFO 2025-04-15 05:15:38,637 autoreload 97592 32700 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 05:15:39,613 autoreload 106288 101828 Watching for file changes with StatReloader
+WARNING 2025-04-15 05:16:05,432 log 106288 106716 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:16:05,433 basehttp 106288 106716 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:16:51,870 log 106288 106716 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:16:51,871 basehttp 106288 106716 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:22:51,330 log 106288 103332 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:22:51,330 basehttp 106288 103332 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:23:44,656 log 106288 103332 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:23:44,658 basehttp 106288 103332 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:25:05,651 log 106288 103332 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:25:05,652 basehttp 106288 103332 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:31:49,692 log 106288 106460 Forbidden: /api/auth/logout/
+WARNING 2025-04-15 05:31:49,693 basehttp 106288 106460 "POST /api/auth/logout/ HTTP/1.1" 403 48
+INFO 2025-04-15 05:32:14,844 basehttp 106288 106616 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-15 05:32:14,902 basehttp 106288 106460 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-15 05:32:15,158 basehttp 106288 106460 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-15 05:32:19,911 basehttp 106288 106460 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-15 05:32:47,411 basehttp 106288 106460 "POST /api/auth/logout/ HTTP/1.1" 200 36
+WARNING 2025-04-15 05:32:58,548 log 106288 106460 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:32:58,549 basehttp 106288 106460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:36:26,174 log 106288 106460 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:36:26,175 basehttp 106288 106460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:36:29,962 log 106288 106460 Forbidden: /api/auth/logout/
+WARNING 2025-04-15 05:36:29,963 basehttp 106288 106460 "POST /api/auth/logout/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:36:39,425 log 106288 106460 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:36:39,426 basehttp 106288 106460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:36:58,666 log 106288 106460 Forbidden: /api/auth/logout/
+WARNING 2025-04-15 05:36:58,667 basehttp 106288 106460 "POST /api/auth/logout/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:37:05,759 log 106288 106460 Unauthorized: /api/auth/login/
+WARNING 2025-04-15 05:37:05,759 basehttp 106288 106460 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-15 05:37:19,919 log 106288 106460 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:37:19,920 basehttp 106288 106460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:39:15,304 log 106288 106460 Forbidden: /api/auth/logout/
+WARNING 2025-04-15 05:39:15,305 basehttp 106288 106460 "POST /api/auth/logout/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:39:22,068 log 106288 106460 Unauthorized: /api/auth/login/
+WARNING 2025-04-15 05:39:22,069 basehttp 106288 106460 "POST /api/auth/login/ HTTP/1.1" 401 31
+WARNING 2025-04-15 05:39:23,072 log 106288 106460 Forbidden: /api/auth/profile/
+WARNING 2025-04-15 05:39:23,072 basehttp 106288 106460 "GET /api/auth/profile/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:54:20,792 log 106288 37536 Forbidden: /api/auth/logout/
+WARNING 2025-04-15 05:54:20,793 basehttp 106288 37536 "POST /api/auth/logout/ HTTP/1.1" 403 48
+WARNING 2025-04-15 05:54:47,723 log 106288 37536 Unauthorized: /api/auth/login/
+WARNING 2025-04-15 05:54:47,724 basehttp 106288 37536 "POST /api/auth/login/ HTTP/1.1" 401 31
+INFO 2025-04-15 05:58:16,667 basehttp 106288 37536 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-15 05:58:16,693 basehttp 106288 37536 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-15 09:06:59,718 basehttp 106288 100872 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+WARNING 2025-04-15 09:07:00,028 log 106288 106640 Forbidden: /api/auth/login/
+WARNING 2025-04-15 09:07:00,028 basehttp 106288 106640 "POST /api/auth/login/ HTTP/1.1" 403 48
+WARNING 2025-04-15 10:08:20,691 log 106288 94388 Forbidden: /api/auth/login/
+WARNING 2025-04-15 10:08:20,692 basehttp 106288 94388 "POST /api/auth/login/ HTTP/1.1" 403 48
+WARNING 2025-04-15 10:08:21,489 log 106288 94388 Forbidden: /api/auth/login/
+WARNING 2025-04-15 10:08:21,489 basehttp 106288 94388 "POST /api/auth/login/ HTTP/1.1" 403 48
+WARNING 2025-04-15 10:08:32,156 log 106288 94388 Forbidden: /api/auth/login/
+WARNING 2025-04-15 10:08:32,156 basehttp 106288 94388 "POST /api/auth/login/ HTTP/1.1" 403 48
+INFO 2025-04-15 10:12:23,803 autoreload 106288 101828 C:\WISENTIA_Q\wisentia\wisentia_backend\users\auth.py changed, reloading.
+INFO 2025-04-15 10:12:24,909 autoreload 76228 101232 Watching for file changes with StatReloader
+INFO 2025-04-15 10:12:37,817 autoreload 76228 101232 C:\WISENTIA_Q\wisentia\wisentia_backend\users\auth.py changed, reloading.
+INFO 2025-04-15 10:12:38,710 autoreload 96184 85192 Watching for file changes with StatReloader
+WARNING 2025-04-15 10:14:49,263 log 96184 102632 Forbidden: /api/auth/login/
+WARNING 2025-04-15 10:14:49,264 basehttp 96184 102632 "POST /api/auth/login/ HTTP/1.1" 403 48
+INFO 2025-04-15 16:07:58,485 basehttp 96184 108568 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+WARNING 2025-04-15 16:07:58,805 log 96184 35812 Forbidden: /api/auth/login/
+WARNING 2025-04-15 16:07:58,806 basehttp 96184 35812 "POST /api/auth/login/ HTTP/1.1" 403 48
+INFO 2025-04-15 16:13:28,815 autoreload 108508 106704 Watching for file changes with StatReloader
+WARNING 2025-04-15 16:14:19,307 log 108508 73200 Unauthorized: /api/auth/login/
+WARNING 2025-04-15 16:14:19,308 basehttp 108508 73200 "POST /api/auth/login/ HTTP/1.1" 401 31
+INFO 2025-04-15 16:14:55,150 basehttp 108508 73200 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-15 16:15:01,966 basehttp 108508 105236 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-15 16:15:01,973 basehttp 108508 73200 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-15 16:15:38,210 basehttp 108508 105236 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+INFO 2025-04-15 16:15:38,222 basehttp 108508 73200 "POST /api/auth/logout/ HTTP/1.1" 200 36
+WARNING 2025-04-15 17:57:54,313 log 108508 109428 Unauthorized: /api/auth/login/
+WARNING 2025-04-15 17:57:54,314 basehttp 108508 109428 "POST /api/auth/login/ HTTP/1.1" 401 31
+INFO 2025-04-15 21:23:52,820 basehttp 108508 112980 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-15 21:23:53,178 basehttp 108508 28000 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-15 21:24:02,143 basehttp 108508 112980 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+INFO 2025-04-15 21:24:02,200 basehttp 108508 28000 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-15 21:24:37,246 basehttp 108508 112980 "OPTIONS /api/auth/register/ HTTP/1.1" 200 0
+INFO 2025-04-15 21:24:37,276 basehttp 108508 28000 "POST /api/auth/register/ HTTP/1.1" 201 508
+INFO 2025-04-15 21:45:00,647 basehttp 108508 104920 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-15 21:45:12,083 basehttp 108508 104920 "POST /api/auth/login/ HTTP/1.1" 200 502
+WARNING 2025-04-15 21:52:49,157 log 108508 64972 Not Found: /admin/dashboard/
+WARNING 2025-04-15 21:52:49,158 basehttp 108508 64972 "POST /admin/dashboard/ HTTP/1.1" 404 4147
+WARNING 2025-04-15 21:53:02,573 log 108508 64972 Not Found: /api/admin/dashboard/
+WARNING 2025-04-15 21:53:02,574 basehttp 108508 64972 "POST /api/admin/dashboard/ HTTP/1.1" 404 5866
+WARNING 2025-04-15 21:53:09,930 log 108508 64972 Not Found: /apiadmin/dashboard
+WARNING 2025-04-15 21:53:09,933 basehttp 108508 64972 "POST /apiadmin/dashboard HTTP/1.1" 404 4153
+WARNING 2025-04-15 21:53:16,908 log 108508 64972 Not Found: /api/admin/dashboard/
+WARNING 2025-04-15 21:53:16,909 basehttp 108508 64972 "POST /api/admin/dashboard/ HTTP/1.1" 404 5866
+WARNING 2025-04-15 21:53:22,971 log 108508 64972 Not Found: /admin/dashboard/
+WARNING 2025-04-15 21:53:22,971 basehttp 108508 64972 "POST /admin/dashboard/ HTTP/1.1" 404 4147
+WARNING 2025-04-15 21:53:27,416 log 108508 64972 Not Found: /
+WARNING 2025-04-15 21:53:27,417 basehttp 108508 64972 "POST / HTTP/1.1" 404 4081
+ERROR 2025-04-15 21:53:44,438 log 108508 64972 Internal Server Error: /api/auth/login
+Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to localhost:8000/api/auth/login/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-04-15 21:53:44,442 basehttp 108508 64972 "POST /api/auth/login HTTP/1.1" 500 79385
+WARNING 2025-04-15 21:53:54,469 log 108508 28076 Not Found: /api
+WARNING 2025-04-15 21:53:54,470 basehttp 108508 28076 "POST /api HTTP/1.1" 404 4108
+WARNING 2025-04-15 21:54:04,486 log 108508 28076 Not Found: /api/admin/dashboard
+WARNING 2025-04-15 21:54:04,486 basehttp 108508 28076 "POST /api/admin/dashboard HTTP/1.1" 404 5863
+WARNING 2025-04-15 21:54:06,217 log 108508 28076 Not Found: /api/admin/dashboard/
+WARNING 2025-04-15 21:54:06,218 basehttp 108508 28076 "POST /api/admin/dashboard/ HTTP/1.1" 404 5866
+WARNING 2025-04-15 21:54:11,482 log 108508 28076 Not Found: /admin/dashboard/
+WARNING 2025-04-15 21:54:11,483 basehttp 108508 28076 "POST /admin/dashboard/ HTTP/1.1" 404 4147
+WARNING 2025-04-15 21:55:37,227 log 108508 109364 Not Found: /api/admin/dashboard/
+WARNING 2025-04-15 21:55:37,228 basehttp 108508 109364 "POST /api/admin/dashboard/ HTTP/1.1" 404 5866
+WARNING 2025-04-15 21:55:42,549 log 108508 109364 Not Found: /admin/dashboard/
+WARNING 2025-04-15 21:55:42,550 basehttp 108508 109364 "POST /admin/dashboard/ HTTP/1.1" 404 4147
+WARNING 2025-04-15 21:56:55,302 log 108508 110232 Forbidden: /api/admin/admin/dashboard/
+WARNING 2025-04-15 21:56:55,303 basehttp 108508 110232 "POST /api/admin/admin/dashboard/ HTTP/1.1" 403 58
+INFO 2025-04-15 21:57:30,222 autoreload 108508 106704 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-15 21:57:31,884 autoreload 93464 110312 Watching for file changes with StatReloader
+WARNING 2025-04-15 21:57:36,299 log 93464 85192 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-15 21:57:36,300 basehttp 93464 85192 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+INFO 2025-04-15 22:01:13,454 basehttp 93464 108164 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-15 22:01:44,197 basehttp 93464 108164 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-15 22:06:12,459 basehttp 93464 108164 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-15 22:06:20,480 basehttp 93464 108164 "POST /api/auth/login/ HTTP/1.1" 200 502
+WARNING 2025-04-15 22:09:15,784 log 93464 111916 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-15 22:09:15,785 basehttp 93464 111916 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+WARNING 2025-04-15 22:10:21,193 log 93464 110584 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-15 22:10:21,193 basehttp 93464 110584 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+WARNING 2025-04-15 22:10:59,049 log 93464 110584 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-15 22:10:59,050 basehttp 93464 110584 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+WARNING 2025-04-15 22:11:00,057 log 93464 110584 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-15 22:11:00,058 basehttp 93464 110584 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+INFO 2025-04-15 22:23:34,085 basehttp 93464 72304 "OPTIONS /api/auth/refresh-token/ HTTP/1.1" 200 0
+INFO 2025-04-15 22:23:34,086 basehttp 93464 72304 "OPTIONS /api/auth/refresh-token/ HTTP/1.1" 200 0
+INFO 2025-04-15 22:23:34,415 basehttp 93464 100940 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:34,416 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:35,933 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:35,960 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:37,488 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:37,509 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:39,049 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:39,079 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:40,620 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:40,646 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:42,167 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:42,197 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:43,528 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:43,767 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:45,051 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:45,084 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:46,629 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:46,649 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:48,204 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:23:48,231 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+WARNING 2025-04-15 22:23:49,748 log 93464 107644 Too Many Requests: /api/auth/refresh-token/
+WARNING 2025-04-15 22:23:49,749 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 429 69
+WARNING 2025-04-15 22:23:50,096 log 93464 107644 Too Many Requests: /api/auth/refresh-token/
+WARNING 2025-04-15 22:23:50,097 basehttp 93464 107644 "POST /api/auth/refresh-token/ HTTP/1.1" 429 69
+INFO 2025-04-15 22:50:29,335 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:30,551 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:31,839 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:33,098 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:34,381 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:35,634 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:36,930 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:38,232 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:39,518 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:40,819 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:42,156 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:43,501 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:44,840 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:46,181 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:47,504 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:48,832 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:50,172 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:51,557 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:52,918 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:50:54,395 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+WARNING 2025-04-15 22:50:55,765 log 93464 77164 Too Many Requests: /api/auth/refresh-token/
+WARNING 2025-04-15 22:50:55,766 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 429 69
+WARNING 2025-04-15 22:51:03,802 log 93464 77164 Too Many Requests: /api/auth/refresh-token/
+WARNING 2025-04-15 22:51:03,803 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 429 69
+WARNING 2025-04-15 22:51:24,166 log 93464 77164 Too Many Requests: /api/auth/login/
+WARNING 2025-04-15 22:51:24,167 basehttp 93464 77164 "POST /api/auth/login/ HTTP/1.1" 429 68
+INFO 2025-04-15 22:51:40,318 basehttp 93464 77164 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-15 22:51:44,976 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:51:45,004 basehttp 93464 77164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:54:34,896 autoreload 93464 110312 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 22:54:35,960 autoreload 79800 108792 Watching for file changes with StatReloader
+INFO 2025-04-15 22:54:47,869 basehttp 79800 107684 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:54:57,458 basehttp 79800 107684 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 22:54:57,479 basehttp 79800 107684 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:01:18,736 basehttp 79800 94072 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:01:38,254 basehttp 79800 114512 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:01:38,273 basehttp 79800 102872 "GET /api/admin/dashboard HTTP/1.1" 301 0
+INFO 2025-04-15 23:01:38,276 basehttp 79800 114512 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:01:38,326 basehttp 79800 85192 "GET /api/admin/dashboard/ HTTP/1.1" 200 3031
+INFO 2025-04-15 23:13:27,743 basehttp 79800 101012 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:13:27,748 basehttp 79800 101012 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:13:38,162 basehttp 79800 91360 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:13:38,173 basehttp 79800 91360 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:13:38,201 basehttp 79800 101012 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:13:38,205 basehttp 79800 91360 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:13:55,011 basehttp 79800 91360 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:13:55,022 basehttp 79800 91360 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:13:55,049 basehttp 79800 101012 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:13:55,052 basehttp 79800 91360 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+WARNING 2025-04-15 23:14:40,160 log 79800 107752 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-15 23:14:40,160 basehttp 79800 107752 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+INFO 2025-04-15 23:15:18,350 basehttp 79800 110048 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:15:18,350 basehttp 79800 111468 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:15:18,367 basehttp 79800 101012 "GET /api/auth/profile/ HTTP/1.1" 200 275
+INFO 2025-04-15 23:15:18,374 basehttp 79800 101012 "GET /api/auth/profile/ HTTP/1.1" 200 275
+INFO 2025-04-15 23:15:48,000 basehttp 79800 101012 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-15 23:15:56,786 basehttp 79800 101012 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-15 23:16:36,621 basehttp 79800 101012 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-15 23:16:36,629 basehttp 79800 101012 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-15 23:18:26,015 autoreload 79800 108792 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-15 23:18:27,152 autoreload 108200 49604 Watching for file changes with StatReloader
+INFO 2025-04-15 23:18:32,092 basehttp 108200 54288 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-15 23:18:40,028 basehttp 108200 54288 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-15 23:18:42,171 basehttp 108200 54288 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:18:42,184 basehttp 108200 54288 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:18:56,109 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:18:56,123 basehttp 108200 89232 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:18:56,148 basehttp 108200 54288 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:18:56,167 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:09,283 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:09,292 basehttp 108200 89232 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:09,320 basehttp 108200 54288 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:19:09,340 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:15,031 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:15,039 basehttp 108200 89232 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:15,067 basehttp 108200 54288 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:19:15,083 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:17,739 basehttp 108200 89232 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:17,751 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:17,776 basehttp 108200 54288 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:19:17,793 basehttp 108200 89232 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:24,051 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:24,064 basehttp 108200 89232 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:19:24,085 basehttp 108200 54288 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:19:24,110 basehttp 108200 89232 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:30,837 autoreload 108200 49604 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-15 23:23:31,853 autoreload 84716 80992 Watching for file changes with StatReloader
+INFO 2025-04-15 23:23:36,214 basehttp 84716 53244 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:36,221 basehttp 84716 53244 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:36,567 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:23:36,570 basehttp 84716 53244 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:49,747 basehttp 84716 53244 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:49,757 basehttp 84716 53244 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:49,786 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:23:49,802 basehttp 84716 53244 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:58,428 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:58,438 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:23:58,464 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:23:58,479 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:01,298 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:01,309 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:01,331 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:24:01,353 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:03,931 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:03,939 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:03,962 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:24:03,983 basehttp 84716 53244 "OPTIONS /api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:19,180 basehttp 84716 53244 "OPTIONS /api/api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:19,190 basehttp 84716 53244 "OPTIONS /api/api/api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:19,218 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:24:19,237 basehttp 84716 53244 "OPTIONS /api/api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:22,640 basehttp 84716 53244 "OPTIONS /api/api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:22,650 basehttp 84716 53244 "OPTIONS /api/api/api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:22,673 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:24:22,691 basehttp 84716 53244 "OPTIONS /api/api/api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:24:25,257 basehttp 84716 55164 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:24:57,844 autoreload 84716 80992 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 23:24:58,911 autoreload 107576 110132 Watching for file changes with StatReloader
+INFO 2025-04-15 23:25:15,731 autoreload 107576 110132 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 23:25:16,670 autoreload 52252 108472 Watching for file changes with StatReloader
+INFO 2025-04-15 23:25:40,392 autoreload 52252 108472 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 23:25:41,326 autoreload 92696 113976 Watching for file changes with StatReloader
+INFO 2025-04-15 23:25:55,000 autoreload 92696 113976 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 23:25:55,952 autoreload 107644 95664 Watching for file changes with StatReloader
+INFO 2025-04-15 23:25:59,389 autoreload 107644 95664 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 23:26:00,358 autoreload 108252 113688 Watching for file changes with StatReloader
+INFO 2025-04-15 23:26:05,989 autoreload 108252 113688 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-15 23:26:07,001 autoreload 109748 98888 Watching for file changes with StatReloader
+INFO 2025-04-15 23:27:15,583 autoreload 109748 98888 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-15 23:27:16,657 autoreload 108268 113976 Watching for file changes with StatReloader
+INFO 2025-04-15 23:27:22,894 basehttp 108268 105928 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:27:22,898 basehttp 108268 114192 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:27:33,020 basehttp 108268 114192 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:27:37,987 basehttp 108268 114192 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:27:42,457 basehttp 108268 114108 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:27:42,466 basehttp 108268 114108 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:27:42,505 basehttp 108268 114192 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:27:42,514 basehttp 108268 114108 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:27:47,075 basehttp 108268 114108 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-15 23:27:47,088 basehttp 108268 114108 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-15 23:27:47,111 basehttp 108268 114192 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-15 23:27:47,129 basehttp 108268 114108 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:46:50,032 autoreload 90124 121764 Watching for file changes with StatReloader
+INFO 2025-04-17 20:47:22,680 basehttp 90124 119904 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-17 20:47:23,040 basehttp 90124 120792 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-17 20:47:30,765 basehttp 90124 119904 "OPTIONS /api/auth/refresh-token/ HTTP/1.1" 200 0
+INFO 2025-04-17 20:47:30,786 basehttp 90124 120792 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:47:30,796 basehttp 90124 120792 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:47:45,817 basehttp 90124 106584 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:47:45,828 basehttp 90124 106584 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-17 20:47:45,852 basehttp 90124 120792 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:47:45,872 basehttp 90124 106584 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:47:50,149 basehttp 90124 106584 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:47:50,159 basehttp 90124 106584 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-17 20:47:50,180 basehttp 90124 120792 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:47:50,201 basehttp 90124 106584 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:57:29,459 autoreload 90124 121764 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-17 20:57:30,563 autoreload 109376 122300 Watching for file changes with StatReloader
+INFO 2025-04-17 20:57:53,412 basehttp 109376 127764 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:57:53,424 basehttp 109376 120104 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:58:00,373 basehttp 109376 123240 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:58:00,385 basehttp 109376 123240 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-17 20:58:00,414 basehttp 109376 120104 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:58:00,480 basehttp 109376 123240 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:58:06,814 basehttp 109376 123240 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 20:58:06,831 basehttp 109376 123240 "OPTIONS /api/admin/dashboard/ HTTP/1.1" 200 0
+INFO 2025-04-17 20:58:06,858 basehttp 109376 120104 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-17 20:58:06,875 basehttp 109376 123240 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-17 21:15:04,185 autoreload 109376 122300 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-17 21:15:05,329 autoreload 126700 106916 Watching for file changes with StatReloader
+INFO 2025-04-17 21:15:15,136 autoreload 126700 106916 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-04-17 21:15:16,278 autoreload 35064 30172 Watching for file changes with StatReloader
+INFO 2025-04-17 21:16:17,106 autoreload 35064 30172 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-17 21:16:18,074 autoreload 95136 119116 Watching for file changes with StatReloader
+INFO 2025-04-17 21:17:24,230 autoreload 95136 119116 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-17 21:17:25,311 autoreload 109060 127976 Watching for file changes with StatReloader
+INFO 2025-04-17 21:17:36,274 autoreload 109060 127976 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-17 21:17:37,364 autoreload 115860 101236 Watching for file changes with StatReloader
+INFO 2025-04-17 21:17:53,789 autoreload 115860 101236 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-17 21:17:54,854 autoreload 126156 116724 Watching for file changes with StatReloader
+INFO 2025-04-17 21:18:13,551 autoreload 126156 116724 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-04-17 21:18:14,531 autoreload 123492 112356 Watching for file changes with StatReloader
+INFO 2025-04-17 21:18:30,381 basehttp 123492 117180 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-17 21:21:25,978 basehttp 123492 52156 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-17 22:24:28,421 autoreload 123492 112356 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-17 22:24:29,781 autoreload 126352 124500 Watching for file changes with StatReloader
+INFO 2025-04-17 22:24:45,382 autoreload 126352 124500 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-17 22:24:46,434 autoreload 126044 108344 Watching for file changes with StatReloader
+INFO 2025-04-17 22:24:57,394 autoreload 126044 108344 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-04-17 22:24:58,401 autoreload 96552 126608 Watching for file changes with StatReloader
+INFO 2025-04-17 22:25:16,970 basehttp 96552 120120 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-17 22:27:16,011 basehttp 96552 126856 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-17 22:32:34,120 basehttp 96552 120648 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-17 22:33:19,598 basehttp 96552 124184 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-17 22:37:08,210 basehttp 96552 127212 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-17 22:41:17,988 basehttp 96552 114620 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:22:28,123 autoreload 119668 119268 Watching for file changes with StatReloader
+INFO 2025-04-18 01:22:52,707 basehttp 119668 96432 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:28:19,479 basehttp 119668 127596 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:30:02,852 basehttp 119668 97420 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:32:04,098 basehttp 119668 127884 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:32:08,130 basehttp 119668 127884 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:33:27,639 basehttp 119668 126640 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:33:31,065 basehttp 119668 126640 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:33:32,876 basehttp 119668 126640 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:33:50,951 basehttp 119668 121764 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038

@@ -9,6 +9,10 @@ from django.conf import settings  # Eksik import eklendi
 import logging
 from wisentia_backend.utils import invalidate_cache
 from django.core.cache import cache
+from django.http import JsonResponse
+import json
+import sys
+
 
 logger = logging.getLogger('wisentia')
 
@@ -23,13 +27,18 @@ def is_admin(user_id):
         user_role = cursor.fetchone()
         return user_role and user_role[0] == 'admin'
 
-@api_view(['GET'])
+@api_view(['GET'])  # Sadece GET metodunu kabul ettiğini belirtin
 @permission_classes([IsAuthenticated])
 def admin_dashboard(request):
     """Admin dashboard verilerini getiren API endpoint'i"""
+    print(f"✅ API HIT: /admin/dashboard/")
+    print(f"✅ Authenticated user ID: {request.user.id}")
+    print(f"✅ Authenticated user role: {request.user.role if hasattr(request.user, 'role') else 'unknown'}")
+    
     user_id = request.user.id
     
     if not is_admin(user_id):
+        print(f"❌ Access denied for user {user_id}: Not admin")
         return Response({'error': 'You do not have permission to access this resource'}, 
                        status=status.HTTP_403_FORBIDDEN)
     
@@ -681,3 +690,38 @@ def cache_stats(request):
         return Response({
             'error': f"Failed to get cache stats: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_dashboard_debug(request):
+    """Admin dashboard debug bilgilerini getiren API endpoint'i"""
+    print(f"✅ DEBUG API HIT: /admin/dashboard/debug/")
+    print(f"✅ Authenticated user ID: {request.user.id}")
+    print(f"✅ Authenticated user role: {request.user.role if hasattr(request.user, 'role') else 'unknown'}")
+    
+    # Debug bilgileri
+    debug_info = {
+        'user': {
+            'id': request.user.id,
+            'username': request.user.username if hasattr(request.user, 'username') else 'unknown',
+            'role': request.user.role if hasattr(request.user, 'role') else 'unknown'
+        },
+        'request': {
+            'method': request.method,
+            'path': request.path,
+            'content_type': request.content_type,
+            'headers': dict(request.headers),
+        },
+        'server': {
+            'python_version': sys.version,
+            'timestamp': datetime.now().isoformat(),
+            'django_auth_user': str(request.user),
+        }
+    }
+    
+    # Sadece JSON döndürdüğümüzden emin olalım
+    response = JsonResponse(debug_info)
+    response['Content-Type'] = 'application/json'
+    
+    return response

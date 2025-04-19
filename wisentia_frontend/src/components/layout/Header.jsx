@@ -39,9 +39,10 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MenuIcon from '@mui/icons-material/Menu';
-import Link from 'next/link';
+
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link'; // NextLink yerine Link kullanılmalı
 
 export default function Header({ isLandingPage = false }) {
   const router = useRouter();
@@ -802,8 +803,9 @@ export default function Header({ isLandingPage = false }) {
                 ) : (
                   <Box sx={{ display: 'flex' }}>
                     <Button 
+                      component={Link}
+                      href="/login"
                       color="inherit" 
-                      onClick={() => router.push('/login')} 
                       sx={{ 
                         ml: 1,
                         color: '#fff',
@@ -829,8 +831,9 @@ export default function Header({ isLandingPage = false }) {
                       Login
                     </Button>
                     <Button 
+                      component={Link}
+                      href="/register"
                       variant="contained" 
-                      onClick={() => router.push('/register')}
                       sx={{ 
                         ml: 1,
                         borderRadius: '10px',

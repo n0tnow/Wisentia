@@ -5,27 +5,66 @@ import { createContext, useContext, useState, useEffect } from 'react';
 // API baz URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
-// Token doğrulaması
+// Token doğrulaması - güvenli hale getirildi
 const isTokenValid = (token) => {
   if (!token) return false;
+  try {
+    // Token formatını kontrol et
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    // Base64 decode ve payload kontrolü
+    try {
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payloadJson = atob(base64);
+      const payload = JSON.parse(payloadJson);
+      
+      if (!payload.exp) return false;
+      
+      // Süre kontrolü
+      const expiryTime = payload.exp * 1000; // saniyeden milisaniyeye çevir
+      const now = Date.now();
+
+      console.log("Token süre kontrolü:", new Date(expiryTime).toLocaleString(), "Şu an:", new Date(now).toLocaleString());
+      return expiryTime > now;
+    } catch (decodeError) {
+      console.error("Token decode hatası:", decodeError);
+      return false;
+    }
+  } catch (e) {
+    console.error("Token kontrol hatası:", e);
+    return false;
+  }
+};
+
+// Tüm cookie'leri temizle
+const clearAllCookies = () => {
+  // Tüm cookie'leri bul ve temizle
+  document.cookie.split(';').forEach(cookie => {
+    const [name] = cookie.trim().split('=');
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  });
   
-  // Basit doğrulama: JWT formatı kontrol edilebilir
-  // Bu basit bir kontrol, gerçek bir uygulamada daha kapsamlı olmalı
-  return token.length > 10;
+  // Kritik cookie'leri özellikle temizle
+  document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+  document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 };
 
 // HTTP istekleri
 const http = {
   get: async (url, options = {}) => {
     try {
-      console.log(`Making GET request to ${url}`);
+      console.log(`GET isteği: ${url}`);
       
-      // Token varsa ekle
+      // Header'lar
       const headers = { 
         'Content-Type': 'application/json',
         ...options.headers 
       };
       
+      // Token varsa ekle
       if (typeof window !== 'undefined') {
         const token = localStorage.getItem('access_token');
         if (token) {
@@ -36,7 +75,7 @@ const http = {
       const response = await fetch(`${API_BASE_URL}${url}`, {
         method: 'GET',
         headers,
-        credentials: 'include', // Her zaman cookie'leri gönder/al
+        credentials: 'include',
         ...options
       });
       
@@ -44,40 +83,40 @@ const http = {
       try {
         data = await response.json();
       } catch (jsonError) {
-        console.error('Error parsing JSON response:', jsonError);
+        console.error('JSON parse hatası:', jsonError);
         data = {};
       }
       
       if (!response.ok) {
         return {
           success: false,
-          error: data.error || `HTTP error! status: ${response.status}`,
+          error: data.error || data.detail || `HTTP hata! Durum: ${response.status}`,
           response: { status: response.status, data }
         };
       }
       
       return { success: true, data };
     } catch (error) {
-      console.error('GET request error:', error);
+      console.error('GET isteği hatası:', error);
       return {
         success: false, 
-        error: error.message || 'Request failed'
+        error: error.message || 'İstek başarısız'
       };
     }
   },
   
   post: async (url, data = {}, options = {}) => {
     try {
-      console.log(`Making POST request to ${url}`);
-      console.log('Request payload:', data);
+      console.log(`POST isteği: ${url}`);
       
-      // Token varsa ekle
+      // Header'lar
       const headers = { 
         'Content-Type': 'application/json',
         ...options.headers 
       };
       
-      if (typeof window !== 'undefined') {
+      // Token varsa ekle, ancak login/register için ekleme
+      if (typeof window !== 'undefined' && !url.includes('/auth/login/') && !url.includes('/auth/register/')) {
         const token = localStorage.getItem('access_token');
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
@@ -88,38 +127,35 @@ const http = {
         method: 'POST',
         headers,
         body: JSON.stringify(data),
-        credentials: 'include', // Her zaman cookie'leri gönder/al
+        credentials: 'include',
         ...options
       });
       
-      // Yanıt durumunu kontrol et
-      console.log('Response status:', response.status);
+      console.log('Yanıt durumu:', response.status);
       
-      // JSON yanıtını al 
       let responseData;
       try {
         responseData = await response.json();
-        console.log('Complete API response:', responseData);
+        console.log('API yanıtı:', responseData);
       } catch (jsonError) {
-        console.error('Error parsing JSON response:', jsonError);
-        // JSON parse hatası varsa boş bir obje kullan
+        console.error('JSON parse hatası:', jsonError);
         responseData = {};
       }
       
       if (!response.ok) {
         return {
           success: false,
-          error: responseData.error || responseData.detail || `HTTP error! status: ${response.status}`,
+          error: responseData.error || responseData.detail || `HTTP hata! Durum: ${response.status}`,
           response: { status: response.status, data: responseData }
         };
       }
       
       return { success: true, data: responseData };
     } catch (error) {
-      console.error('POST request error:', error);
+      console.error('POST isteği hatası:', error);
       return {
         success: false, 
-        error: error.message || 'Request failed'
+        error: error.message || 'İstek başarısız'
       };
     }
   },
@@ -130,60 +166,68 @@ const authService = {
   // Giriş yapma
   login: async (credentials) => {
     try {
-      console.log('Login payload:', credentials);
-      const result = await http.post('/auth/login/', credentials);
+      console.log('Login isteği:', credentials.email);
       
-      // API yanıtının tamamını incele
-      console.log('Complete login API response:', result);
+      const response = await fetch(`${API_BASE_URL}/auth/login/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials),
+        credentials: 'include'
+      });
       
-      if (result.success) {
-        const { data } = result;
-        
-        // Debug - API yanıtını daha detaylı incele
-        console.log('API Response - user:', data.user);
-        console.log('API Response - tokens structure:', data.tokens);
-        
-        try {
-          // Tokenları ve kullanıcı bilgilerini localStorage'a kaydet
-          if (data.tokens && typeof data.tokens === 'object') {
-            localStorage.setItem('access_token', data.tokens.access);
-            if (data.tokens.refresh) {
-              localStorage.setItem('refresh_token', data.tokens.refresh);
-            }
-          } else if (data.token) {
-            localStorage.setItem('access_token', data.token);
-          }
-          
-          if (data.user) {
-            localStorage.setItem('user', JSON.stringify(data.user));
-          }
-        } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
-        }
-
-        // Profile API'sini çağırarak cookie'lerin kaydedilmesini sağla
-        try {
-          await http.get('/auth/profile/');
-        } catch (profileError) {
-          console.log('Profile fetch after login failed, but continuing:', profileError);
-        }
-
+      console.log('Login yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+        console.log('Login yanıt verisi:', data);
+      } catch (jsonError) {
+        console.error('Login yanıt parse hatası:', jsonError);
         return {
-          success: true,
-          user: data.user,
-          tokens: data.tokens
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
         };
       }
       
+      if (!response.ok) {
+        console.error('Login başarısız:', data);
+        return {
+          success: false,
+          error: data.error || data.detail || `Login başarısız: ${response.status}`
+        };
+      }
+      
+      // Başarılı giriş
+      console.log('Login başarılı, kullanıcı:', data.user);
+      
+      // LocalStorage'da bilgileri güncelle
+      if (data.tokens && data.tokens.access) {
+        localStorage.setItem('access_token', data.tokens.access);
+        
+        if (data.tokens.refresh) {
+          localStorage.setItem('refresh_token', data.tokens.refresh);
+        }
+      } else if (data.token) {
+        localStorage.setItem('access_token', data.token);
+      }
+      
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      
       return {
-        success: false,
-        error: result.error || 'Login failed'
+        success: true,
+        user: data.user,
+        token: data.token,
+        tokens: data.tokens
       };
     } catch (error) {
-      console.error('Login service error:', error);
+      console.error('Login servis hatası:', error);
       return {
         success: false,
-        error: error.message || 'An error occurred during login'
+        error: error.message || 'Login sırasında hata oluştu'
       };
     }
   },
@@ -191,154 +235,116 @@ const authService = {
   // Kayıt olma
   register: async (userData) => {
     try {
-      console.log('Register payload:', userData);
-      const result = await http.post('/auth/register/', userData);
+      console.log('Register isteği:', userData.email);
       
-      console.log('Register API response:', result);
+      const response = await fetch(`${API_BASE_URL}/auth/register/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData),
+        credentials: 'include'
+      });
       
-      if (result.success) {
-        const { data } = result;
-        
-        console.log('Register successful. Data:', data);
-        
-        // Yanıtı kontrol et
-        if (data.success === false) {
-          return {
-            success: false,
-            error: data.error || 'Registration failed'
-          };
-        }
-
-        try {
-          // Kullanıcı ve token bilgilerini kaydet
-          if (data.user) {
-            localStorage.setItem('user', JSON.stringify(data.user));
-          }
-          
-          if (data.tokens) {
-            if (data.tokens.access) {
-              localStorage.setItem('access_token', data.tokens.access);
-            }
-            if (data.tokens.refresh) {
-              localStorage.setItem('refresh_token', data.tokens.refresh);
-            }
-          }
-        } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
-        }
-        
-        // Profile API'sini çağırarak cookie'lerin kaydedilmesini sağla
-        try {
-          await http.get('/auth/profile/');
-        } catch (profileError) {
-          console.log('Profile fetch after register failed, but continuing:', profileError);
-        }
-        
+      console.log('Register yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+        console.log('Register yanıt verisi:', data);
+      } catch (jsonError) {
+        console.error('Register yanıt parse hatası:', jsonError);
         return {
-          success: true,
-          user: data.user,
-          tokens: data.tokens
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
         };
       }
       
-      // Eğer backend veriyi kaydediyor ama hata dönüyorsa, bu durumu ele al
-      if (result.error === 'Database error occurred' && 
-          result.response && 
-          result.response.status === 201) {
-        // Veritabanına kaydoldu ama hatalı yanıt döndü
-        const tempUser = { id: Date.now(), ...userData };
-        const tempToken = 'temp_token_' + Date.now();
-        
-        try {
-          localStorage.setItem('user', JSON.stringify(tempUser));
-          localStorage.setItem('access_token', tempToken);
-        } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
-        }
-        
+      if (!response.ok) {
+        console.error('Register başarısız:', data);
         return {
-          success: true,
-          user: tempUser,
-          tokens: { access: tempToken }
+          success: false,
+          error: data.error || data.detail || `Register başarısız: ${response.status}`
         };
+      }
+      
+      // Başarılı kayıt
+      console.log('Register başarılı, kullanıcı:', data.user);
+      
+      // LocalStorage'da bilgileri güncelle
+      if (data.tokens && data.tokens.access) {
+        localStorage.setItem('access_token', data.tokens.access);
+        
+        if (data.tokens.refresh) {
+          localStorage.setItem('refresh_token', data.tokens.refresh);
+        }
+      } else if (data.token) {
+        localStorage.setItem('access_token', data.token);
+      }
+      
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
       }
       
       return {
-        success: false,
-        error: result.error || 'Registration failed'
+        success: true,
+        user: data.user,
+        token: data.token,
+        tokens: data.tokens
       };
     } catch (error) {
-      console.error('Register service error:', error);
-      
-      // Eğer API yanıt vermiyor ancak kaydetme başarılı oluyorsa
-      // bu durumda geçici bir başarı yanıtı oluştur
-      // NOT: Bu sadece geçici bir çözümdür, API'nin düzeltilmesi gerekir
-      if (error.message && error.message.includes('NetworkError')) {
-        console.log('Network error but registration might have succeeded');
-        const tempUser = { id: Date.now(), ...userData };
-        const tempToken = 'temp_token_' + Date.now();
-        
-        try {
-          localStorage.setItem('user', JSON.stringify(tempUser));
-          localStorage.setItem('access_token', tempToken);
-        } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
-        }
-        
-        return {
-          success: true,
-          user: tempUser,
-          tokens: { access: tempToken }
-        };
-      }
-      
+      console.error('Register servis hatası:', error);
       return {
         success: false,
-        error: error.message || 'An error occurred during registration'
+        error: error.message || 'Kayıt sırasında hata oluştu'
       };
     }
   },
 
-  // Çıkış yapma
-  logout: () => {
+  // Çıkış yapma - güçlendirildi
+  logout: async () => {
     try {
+      const token = localStorage.getItem('access_token');
+      
+      // Sunucudan çıkış yap
+      try {
+        await fetch(`${API_BASE_URL}/auth/logout/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          credentials: 'include',
+        });
+      } catch (apiError) {
+        console.warn('Logout API hatası:', apiError);
+      }
+      
+      // LocalStorage temizle
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       
-      // Sunucudan çıkış yapmayı dene (isteğe bağlı)
-      fetch(`${API_BASE_URL}/auth/logout/`, {
-        method: 'POST',
-        credentials: 'include'
-      }).catch(err => {
-        console.log('Logout API call failed, but continuing:', err);
-      });
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
-  },
-
-  // Kullanıcı profil bilgilerini getir
-  getProfile: async () => {
-    try {
-      const result = await http.get('/auth/profile/');
+      // Tüm cookie'leri temizle
+      clearAllCookies();
       
-      if (result.success) {
-        return {
-          success: true,
-          profile: result.data
-        };
-      }
+      console.log('Logout başarılı: Tüm token ve user bilgileri temizlendi');
       
-      return {
-        success: false,
-        error: result.error || 'Failed to fetch profile'
-      };
+      // Sayfayı tamamen yeniden yükle
+      window.location.href = '/login';
+      
+      return { success: true };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message || 'An error occurred while fetching profile'
-      };
+      console.error('Logout hatası:', error);
+      
+      // Hata olsa bile bilgileri temizle
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      clearAllCookies();
+      
+      window.location.href = '/login';
+      return { success: false, error: 'Çıkış sırasında hata oluştu' };
     }
   },
 
@@ -350,45 +356,51 @@ const authService = {
       if (!refreshToken) {
         return {
           success: false,
-          error: 'No refresh token found'
+          error: 'Refresh token bulunamadı'
         };
       }
       
-      const result = await http.post('/auth/refresh-token/', {
-        refresh_token: refreshToken
+      const response = await fetch(`${API_BASE_URL}/auth/refresh-token/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        credentials: 'include'
       });
       
-      if (result.success) {
-        const { data } = result;
-        
-        try {
-          localStorage.setItem('access_token', data.access);
-          if (data.refresh) {
-            localStorage.setItem('refresh_token', data.refresh);
-          }
-        } catch (storageError) {
-          console.error('Error saving to localStorage:', storageError);
-        }
-        
+      if (!response.ok) {
         return {
-          success: true,
-          tokens: data
+          success: false,
+          error: 'Token yenileme başarısız',
+          status: response.status
         };
       }
       
+      const data = await response.json();
+      
+      // LocalStorage güncelle
+      if (data.access) {
+        localStorage.setItem('access_token', data.access);
+      }
+      if (data.refresh) {
+        localStorage.setItem('refresh_token', data.refresh);
+      }
+      
       return {
-        success: false,
-        error: result.error || 'Failed to refresh token'
+        success: true,
+        tokens: data
       };
     } catch (error) {
+      console.error('Token yenileme hatası:', error);
       return {
         success: false,
-        error: error.message || 'An error occurred during token refresh'
+        error: error.message || 'Token yenileme sırasında hata oluştu'
       };
     }
   },
 
-  // Kimlik doğrulama durumunu kontrol et
+  // Kimlik doğrulama durumunu kontrol et - düzeltildi
   isAuthenticated: () => {
     if (typeof window === 'undefined') return false;
     
@@ -396,12 +408,19 @@ const authService = {
       const token = localStorage.getItem('access_token');
       const userStr = localStorage.getItem('user');
       
-      // Her ikisi de mevcut ve token geçerli mi
-      const isValid = isTokenValid(token) && !!userStr;
-      console.log('Auth check: Token exists:', !!token, 'User exists:', !!userStr, 'Is valid:', isValid);
+      // Token ve kullanıcı bilgisi gerekli
+      if (!token || !userStr) {
+        console.log('Auth kontrolü: Token veya kullanıcı bilgisi eksik');
+        return false;
+      }
+      
+      // Token format ve süre kontrolü
+      const isValid = isTokenValid(token);
+      console.log('Auth kontrolü: Token var:', !!token, 'Kullanıcı var:', !!userStr, 'Geçerli:', isValid);
+      
       return isValid;
     } catch (error) {
-      console.error('Auth check error:', error);
+      console.error('Auth kontrolü hatası:', error);
       return false;
     }
   }
@@ -417,37 +436,45 @@ export function AuthProvider({ children }) {
   const [authError, setAuthError] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Sayfa yüklendiğinde localStorage'dan kullanıcı bilgilerini al
+  // LocalStorage'dan kullanıcı bilgilerini yükle
   useEffect(() => {
     const loadUserFromStorage = async () => {
       try {
         setIsLoading(true);
         
+        // Giriş kontrolü
+        const path = window.location.pathname;
+        
+        // Login veya register sayfasındaysa token kontrolü yapmadan geç
+        if (path === '/login' || path === '/register') {
+          console.log('Login/Register sayfası: Auth kontrolü atlandı');
+          setIsLoading(false);
+          setAuthChecked(true);
+          return;
+        }
+        
+        // LocalStorage'dan verileri al
         const userStr = localStorage.getItem('user');
         const token = localStorage.getItem('access_token');
         
-        console.log('Loading user from storage. Token exists:', !!token, 'User exists:', !!userStr);
+        console.log('Storage yükleniyor. Token var:', !!token, 'Kullanıcı var:', !!userStr);
         
+        // Token kontrolü
         if (userStr && token && isTokenValid(token)) {
-          const userData = JSON.parse(userStr);
-          setUser(userData);
-          console.log('User data loaded from localStorage successfully');
-          
-          // Opsiyonel: Profile bilgilerini sunucudan taze olarak al
           try {
-            const profileResult = await authService.getProfile();
-            if (profileResult.success) {
-              console.log('Profile refreshed from server');
-            }
-          } catch (profileError) {
-            console.log('Profile refresh failed, but continuing with localStorage data');
+            const userData = JSON.parse(userStr);
+            setUser(userData);
+            console.log('Kullanıcı localStorage\'dan yüklendi');
+          } catch (parseError) {
+            console.error('Kullanıcı verisi parse hatası:', parseError);
+            setUser(null);
           }
         } else {
-          console.log('No valid user data found in localStorage');
+          console.log('LocalStorage\'da geçerli veri bulunamadı');
           setUser(null);
         }
       } catch (error) {
-        console.error('Error loading user from storage:', error);
+        console.error('Storage\'dan yükleme hatası:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -464,19 +491,37 @@ export function AuthProvider({ children }) {
     setAuthError(null);
     
     try {
+      // Önce mevcut oturum bilgilerini temizle
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      clearAllCookies();
+      
+      // Login işlemini gerçekleştir
       const result = await authService.login(credentials);
       
-      if (result.success) {
+      if (result.success && result.user) {
+        // Kullanıcı state'ini güncelle
         setUser(result.user);
         setAuthChecked(true);
+        
+        // Cookie olarak da sakla
+        document.cookie = `user=${JSON.stringify(result.user)}; path=/; max-age=86400`;
+        
+        if (result.token) {
+          document.cookie = `access_token=${result.token}; path=/; max-age=86400`;
+        } else if (result.tokens && result.tokens.access) {
+          document.cookie = `access_token=${result.tokens.access}; path=/; max-age=86400`;
+        }
+        
         return result;
       } else {
         setAuthError(result.error);
         return result;
       }
     } catch (error) {
-      setAuthError(error.message || 'Login failed');
-      return { success: false, error: error.message || 'Login failed' };
+      setAuthError(error.message || 'Login başarısız');
+      return { success: false, error: error.message || 'Login başarısız' };
     } finally {
       setIsLoading(false);
     }
@@ -488,128 +533,89 @@ export function AuthProvider({ children }) {
     setAuthError(null);
     
     try {
-      console.log("Registering user:", userData);
+      // Önceki oturum bilgilerini temizle
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      clearAllCookies();
+      
+      // Register işlemini gerçekleştir
       const result = await authService.register(userData);
       
-      console.log("Registration API result:", result);
-      
-      if (result.success) {
-        if (result.user) {
-          setUser(result.user);
-          setAuthChecked(true);
+      if (result.success && result.user) {
+        // State'i güncelle
+        setUser(result.user);
+        setAuthChecked(true);
+        
+        // Cookie olarak da sakla
+        document.cookie = `user=${JSON.stringify(result.user)}; path=/; max-age=86400`;
+        
+        if (result.token) {
+          document.cookie = `access_token=${result.token}; path=/; max-age=86400`;
+        } else if (result.tokens && result.tokens.access) {
+          document.cookie = `access_token=${result.tokens.access}; path=/; max-age=86400`;
         }
         
         return result;
       } else {
-        console.error("Registration failed:", result.error);
         setAuthError(result.error);
-        
-        // Manuel override kontrolü
-        if (result.manualOverride) {
-          console.log("Manual override detected, creating temporary session");
-          // Geçici oturum oluştur
-          const tempUser = {
-            id: Date.now(),
-            username: userData.username,
-            email: userData.email,
-            role: 'regular'
-          };
-          
-          try {
-            localStorage.setItem('user', JSON.stringify(tempUser));
-            localStorage.setItem('access_token', 'temp_token_' + Date.now());
-          } catch (storageError) {
-            console.error('Error saving to localStorage:', storageError);
-          }
-          
-          setUser(tempUser);
-          setAuthChecked(true);
-          
-          return {
-            success: true,
-            user: tempUser,
-            tokens: { access: 'temp_token_' + Date.now() },
-            manualOverride: true
-          };
-        }
-        
         return result;
       }
     } catch (error) {
-      console.error("Registration error:", error);
-      setAuthError(error.message || 'Registration failed');
-      
-      // Hata durumunda bile geçici bir oturum oluşturalım
-      const tempUser = {
-        id: Date.now(),
-        username: userData.username,
-        email: userData.email,
-        role: 'regular'
-      };
-      
-      try {
-        localStorage.setItem('user', JSON.stringify(tempUser));
-        const tempToken = 'temp_token_' + Date.now();
-        localStorage.setItem('access_token', tempToken);
-      } catch (storageError) {
-        console.error('Error saving to localStorage:', storageError);
-      }
-      
-      setUser(tempUser);
-      setAuthChecked(true);
-      
-      return {
-        success: true,
-        user: tempUser,
-        tokens: { access: tempToken },
-        manualOverride: true
-      };
+      setAuthError(error.message || 'Kayıt başarısız');
+      return { success: false, error: error.message || 'Kayıt başarısız' };
     } finally {
       setIsLoading(false);
     }
   };
 
   // Çıkış fonksiyonu
-const logout = async () => {
-  try {
-    // Token ve header'ları doğru şekilde ayarla
-    const token = localStorage.getItem('access_token');
-    
-    // API isteğinde kimlik doğrulama başlığını gönder
-    const response = await fetch(`${API_BASE_URL}/auth/logout/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : ''
-      },
-      credentials: 'include',
-    });
-    
-    console.log('Logout response:', response.status);
-    
-    // State ve localStorage temizle
-    setUser(null);
-    
-    // LocalStorage temizle
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    
-    // Sayfayı tamamen yenile - bu önemli!
-    window.location.href = '/';
-  } catch (error) {
-    console.error('Logout error:', error);
-    
-    // Hata durumunda bile state ve localStorage'ı temizle
-    setUser(null);
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    
-    // Sayfayı tamamen yenile
-    window.location.href = '/';
-  }
-};
+  const logout = async () => {
+    try {
+      // Token al
+      const token = localStorage.getItem('access_token');
+      
+      // API isteğinde kimlik doğrulama başlığını gönder
+      try {
+        await fetch(`${API_BASE_URL}/auth/logout/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          credentials: 'include',
+        });
+      } catch (apiError) {
+        console.warn('Logout API hatası, devam ediliyor:', apiError);
+      }
+      
+      // State temizle
+      setUser(null);
+      
+      // LocalStorage temizle
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      
+      // Tüm cookie'leri temizle
+      clearAllCookies();
+      
+      // Sayfayı tamamen yeniden yükle - bu önemli!
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Logout hatası:', error);
+      
+      // Hata durumunda bile state ve localStorage'ı temizle
+      setUser(null);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      clearAllCookies();
+      
+      // Sayfayı tamamen yeniden yükle
+      window.location.href = '/login';
+    }
+  };
 
   // Kimlik doğrulama kontrolü
   const isAuthenticated = () => {
@@ -638,7 +644,7 @@ const logout = async () => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth, AuthProvider içinde kullanılmalıdır');
   }
   return context;
 };
