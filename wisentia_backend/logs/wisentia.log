@@ -3809,3 +3809,277 @@ INFO 2025-04-18 01:33:27,639 basehttp 119668 126640 "GET /api/admin/dashboard/ H
 INFO 2025-04-18 01:33:31,065 basehttp 119668 126640 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
 INFO 2025-04-18 01:33:32,876 basehttp 119668 126640 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
 INFO 2025-04-18 01:33:50,951 basehttp 119668 121764 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 01:39:37,484 basehttp 119668 84948 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-18 01:39:37,486 basehttp 119668 114064 "OPTIONS /api/admin/dashboard HTTP/1.1" 200 0
+INFO 2025-04-18 01:40:19,113 basehttp 119668 52492 "OPTIONS /api/auth/refresh-token/ HTTP/1.1" 200 0
+INFO 2025-04-18 01:40:19,114 basehttp 119668 52492 "OPTIONS /api/auth/refresh-token/ HTTP/1.1" 200 0
+INFO 2025-04-18 01:40:19,453 basehttp 119668 123436 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-18 01:40:19,453 basehttp 119668 23412 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-18 02:01:13,950 basehttp 119668 44108 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 02:01:13,951 basehttp 119668 111872 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 15:44:38,391 basehttp 119668 132568 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-18 15:44:38,749 basehttp 119668 124620 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-18 15:44:41,229 basehttp 119668 120628 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 15:44:41,230 basehttp 119668 129688 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 16:02:09,741 basehttp 119668 130384 "OPTIONS /api/auth/refresh-token/ HTTP/1.1" 200 0
+INFO 2025-04-18 16:02:10,069 basehttp 119668 126520 "POST /api/auth/refresh-token/ HTTP/1.1" 200 396
+INFO 2025-04-18 16:02:19,351 basehttp 119668 130384 "OPTIONS /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 0
+INFO 2025-04-18 16:09:41,353 basehttp 119668 131144 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:10:02,397 basehttp 119668 115280 "GET /api/admin/users/14/ HTTP/1.1" 200 461
+INFO 2025-04-18 16:10:02,519 basehttp 119668 115280 "GET /api/admin/users/14/ HTTP/1.1" 200 461
+INFO 2025-04-18 16:10:05,780 basehttp 119668 115280 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:10:05,801 basehttp 119668 115280 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:10:40,640 basehttp 119668 130008 "GET /api/admin/users/36/ HTTP/1.1" 200 447
+INFO 2025-04-18 16:10:40,751 basehttp 119668 130008 "GET /api/admin/users/36/ HTTP/1.1" 200 447
+INFO 2025-04-18 16:10:44,217 basehttp 119668 130008 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:10:44,239 basehttp 119668 130008 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:48:29,061 basehttp 119668 111304 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:50:45,350 basehttp 119668 124460 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:50:46,358 basehttp 119668 124460 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:50:46,381 basehttp 119668 124460 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:51:47,167 basehttp 119668 131580 "GET /api/admin/users/?page=2&pageSize=10 HTTP/1.1" 200 797
+INFO 2025-04-18 16:51:48,188 basehttp 119668 131580 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:51:52,027 basehttp 119668 131580 "GET /api/admin/users/?page=1&pageSize=10&search=b.ka HTTP/1.1" 200 1100
+INFO 2025-04-18 16:52:08,176 basehttp 119668 118488 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:52:15,072 basehttp 119668 16780 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 16:52:15,097 basehttp 119668 16780 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:27:40,319 basehttp 119668 39304 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:27:40,339 basehttp 119668 39304 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:28:22,261 basehttp 119668 130008 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:28:23,284 basehttp 119668 130008 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:28:25,820 basehttp 119668 130008 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:28:33,049 basehttp 119668 130408 "GET /api/admin/users/?page=1&pageSize=10&role=admin HTTP/1.1" 200 364
+INFO 2025-04-18 19:28:34,864 basehttp 119668 130408 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:28:42,340 basehttp 119668 123216 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:28:47,118 basehttp 119668 123216 "GET /api/admin/users/?page=1&pageSize=10&role=admin HTTP/1.1" 200 364
+INFO 2025-04-18 19:28:48,035 basehttp 119668 123216 "GET /api/admin/users/?page=1&pageSize=10&role=admin HTTP/1.1" 200 364
+INFO 2025-04-18 19:28:49,778 basehttp 119668 123216 "GET /api/admin/users/?page=1&pageSize=10&role=admin HTTP/1.1" 200 364
+INFO 2025-04-18 19:28:53,111 basehttp 119668 123216 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:28:54,334 basehttp 119668 123216 "GET /api/admin/users/?page=1&pageSize=10&role=regular HTTP/1.1" 200 2780
+INFO 2025-04-18 19:38:55,797 basehttp 119668 126040 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:39:09,340 basehttp 119668 129500 "GET /api/admin/users/?page=2&pageSize=10 HTTP/1.1" 200 797
+INFO 2025-04-18 19:39:10,211 basehttp 119668 129500 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 19:41:56,991 basehttp 119668 131508 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:05:31,095 basehttp 119668 124936 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 20:05:31,096 basehttp 119668 130104 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 20:05:33,583 basehttp 119668 124936 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:05:33,610 basehttp 119668 124936 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:12:37,212 basehttp 119668 113120 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:18:57,007 basehttp 119668 100588 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:19:03,199 basehttp 119668 132336 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:28:47,968 basehttp 119668 100588 "GET /api/admin/users/38/ HTTP/1.1" 200 1514
+INFO 2025-04-18 20:28:48,110 basehttp 119668 100588 "GET /api/admin/users/38/ HTTP/1.1" 200 1514
+INFO 2025-04-18 20:30:25,957 basehttp 119668 123036 "GET /api/admin/users/38/ HTTP/1.1" 200 1514
+INFO 2025-04-18 20:30:26,062 basehttp 119668 123036 "GET /api/admin/users/38/ HTTP/1.1" 200 1514
+INFO 2025-04-18 20:51:51,827 basehttp 119668 124560 "GET /api/admin/users/38/ HTTP/1.1" 200 1514
+INFO 2025-04-18 20:51:51,977 basehttp 119668 124560 "GET /api/admin/users/38/ HTTP/1.1" 200 1514
+INFO 2025-04-18 20:52:59,149 basehttp 119668 126716 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:52:59,184 basehttp 119668 126716 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:53:34,943 basehttp 119668 133376 "GET /api/admin/users/36/ HTTP/1.1" 200 447
+INFO 2025-04-18 20:53:35,060 basehttp 119668 133376 "GET /api/admin/users/36/ HTTP/1.1" 200 447
+INFO 2025-04-18 20:56:31,236 basehttp 119668 132380 "GET /api/admin/users/36/ HTTP/1.1" 200 447
+INFO 2025-04-18 20:56:46,550 basehttp 119668 125868 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:56:46,573 basehttp 119668 125868 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:56:51,091 basehttp 119668 125868 "GET /api/admin/users/36/ HTTP/1.1" 200 447
+INFO 2025-04-18 20:56:51,207 basehttp 119668 125868 "GET /api/admin/users/36/ HTTP/1.1" 200 447
+INFO 2025-04-18 20:56:56,829 basehttp 119668 42908 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:56:56,851 basehttp 119668 42908 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 20:57:15,104 basehttp 119668 124772 "GET /api/admin/users/33/ HTTP/1.1" 200 439
+INFO 2025-04-18 20:57:15,224 basehttp 119668 124772 "GET /api/admin/users/33/ HTTP/1.1" 200 439
+INFO 2025-04-18 21:03:10,589 basehttp 119668 119056 "GET /api/admin/users/33/ HTTP/1.1" 200 439
+INFO 2025-04-18 21:03:10,732 basehttp 119668 119056 "GET /api/admin/users/33/ HTTP/1.1" 200 439
+INFO 2025-04-18 21:03:17,633 basehttp 119668 117816 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 21:03:17,655 basehttp 119668 117816 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 21:08:28,714 basehttp 119668 131160 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 21:08:28,737 basehttp 119668 131160 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 21:11:33,317 basehttp 119668 124760 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 21:47:43,476 basehttp 119668 33752 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 21:47:43,476 basehttp 119668 112744 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 21:50:08,735 basehttp 119668 130284 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 21:50:08,760 basehttp 119668 130284 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 23:37:57,596 basehttp 119668 120504 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 23:38:04,689 basehttp 119668 134112 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:38:04,690 basehttp 119668 119648 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:38:39,829 basehttp 119668 127392 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:38:39,834 basehttp 119668 84496 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:46:04,933 basehttp 119668 107912 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:46:04,934 basehttp 119668 129036 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:46:18,244 basehttp 119668 130112 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 23:46:18,270 basehttp 119668 130112 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 23:46:19,475 basehttp 119668 130112 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:46:19,486 basehttp 119668 109832 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:46:30,164 basehttp 119668 99552 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 23:46:30,193 basehttp 119668 99552 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 23:46:47,242 basehttp 119668 124328 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:46:47,243 basehttp 119668 129732 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-18 23:47:01,199 basehttp 119668 130268 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-18 23:47:01,227 basehttp 119668 130268 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-19 00:10:19,988 basehttp 119668 134032 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 00:10:19,988 basehttp 119668 128008 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 00:11:43,712 basehttp 119668 120468 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 00:11:43,712 basehttp 119668 115524 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 00:15:02,916 basehttp 119668 128212 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:15:02,942 basehttp 119668 128212 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:15:15,897 basehttp 119668 38528 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:15:15,917 basehttp 119668 38528 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:15:36,382 basehttp 119668 112356 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:15:36,406 basehttp 119668 112356 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:27:48,656 basehttp 119668 126136 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:27:50,377 basehttp 119668 126136 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:27:50,407 basehttp 119668 126136 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:33:59,036 basehttp 119668 45036 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:33:59,058 basehttp 119668 45036 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:34:02,414 basehttp 119668 128544 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 00:34:02,415 basehttp 119668 45036 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 00:34:24,242 basehttp 119668 130236 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:34:24,263 basehttp 119668 130236 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:37:57,956 basehttp 119668 103656 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:37:57,980 basehttp 119668 103656 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:38:09,020 basehttp 119668 111380 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:38:09,042 basehttp 119668 111380 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:38:25,587 basehttp 119668 96960 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:42:46,913 basehttp 119668 132396 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:42:48,367 basehttp 119668 132396 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:42:48,392 basehttp 119668 132396 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 200 65
+INFO 2025-04-19 00:42:51,598 basehttp 119668 132396 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:42:51,624 basehttp 119668 132396 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:44:19,635 basehttp 119668 28528 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 00:44:19,663 basehttp 119668 28528 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+WARNING 2025-04-19 00:46:19,345 log 119668 134072 Forbidden: /api/admin/content/
+WARNING 2025-04-19 00:46:19,346 basehttp 119668 134072 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 403 52
+WARNING 2025-04-19 00:46:19,365 log 119668 134072 Forbidden: /api/admin/content/
+WARNING 2025-04-19 00:46:19,366 basehttp 119668 134072 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 403 52
+WARNING 2025-04-19 00:46:26,685 log 119668 117452 Forbidden: /api/admin/content/
+WARNING 2025-04-19 00:46:26,686 basehttp 119668 117452 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 403 52
+WARNING 2025-04-19 00:46:26,708 log 119668 117452 Forbidden: /api/admin/content/
+WARNING 2025-04-19 00:46:26,709 basehttp 119668 117452 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 403 52
+WARNING 2025-04-19 00:59:49,888 log 119668 128068 Forbidden: /api/admin/content/
+WARNING 2025-04-19 00:59:49,889 basehttp 119668 128068 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 403 52
+WARNING 2025-04-19 00:59:49,908 log 119668 128068 Forbidden: /api/admin/content/
+WARNING 2025-04-19 00:59:49,909 basehttp 119668 128068 "GET /api/admin/content/?type=quests&page=1&pageSize=20&search=&difficulty=&status=&isAIGenerated= HTTP/1.1" 403 52
+INFO 2025-04-19 00:59:58,398 basehttp 119668 11076 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 00:59:58,400 basehttp 119668 104732 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+WARNING 2025-04-19 03:09:33,745 log 119668 84224 Forbidden: /api/admin/users/
+WARNING 2025-04-19 03:09:33,747 basehttp 119668 84224 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 403 52
+WARNING 2025-04-19 03:09:33,773 log 119668 84224 Forbidden: /api/admin/users/
+WARNING 2025-04-19 03:09:33,773 basehttp 119668 84224 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 403 52
+INFO 2025-04-19 03:09:49,648 basehttp 119668 130620 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-19 03:09:50,014 basehttp 119668 92604 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-19 03:09:53,118 basehttp 119668 130116 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 03:09:53,118 basehttp 119668 58592 "GET /api/admin/dashboard/ HTTP/1.1" 200 3038
+INFO 2025-04-19 03:09:55,234 basehttp 119668 130116 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-19 03:09:55,255 basehttp 119668 130116 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-19 03:10:18,457 basehttp 119668 110264 "GET /api/admin/users/?page=2&pageSize=10 HTTP/1.1" 200 797
+INFO 2025-04-19 03:10:21,326 basehttp 119668 110264 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-19 03:10:27,930 basehttp 119668 122460 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 03:10:27,950 basehttp 119668 122460 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 03:10:45,662 basehttp 119668 114864 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 03:10:45,684 basehttp 119668 114864 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 65
+INFO 2025-04-19 03:10:52,449 basehttp 119668 130620 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+INFO 2025-04-19 03:10:52,458 basehttp 119668 92604 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-19 03:10:59,461 basehttp 119668 92604 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-19 03:13:55,453 basehttp 119668 130620 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-19 03:13:55,457 basehttp 119668 130620 "OPTIONS /api/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-04-19 03:13:55,472 basehttp 119668 92604 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-19 03:13:55,479 basehttp 119668 92604 "GET /api/auth/profile/ HTTP/1.1" 200 281
+INFO 2025-04-19 03:18:04,710 basehttp 119668 92604 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-04-19 03:19:35,841 basehttp 119668 92604 "POST /api/auth/login/ HTTP/1.1" 200 507
+INFO 2025-04-19 12:35:56,907 basehttp 119668 126232 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+WARNING 2025-04-19 12:35:57,254 log 119668 133556 Forbidden: /api/auth/logout/
+WARNING 2025-04-19 12:35:57,255 basehttp 119668 133556 "POST /api/auth/logout/ HTTP/1.1" 403 52
+INFO 2025-04-19 12:36:13,163 basehttp 119668 126232 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-04-19 12:36:13,197 basehttp 119668 133556 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-04-19 12:37:00,675 basehttp 119668 132340 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-19 12:37:01,335 basehttp 119668 132340 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+INFO 2025-04-19 12:37:01,359 basehttp 119668 132340 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 2820
+WARNING 2025-04-19 14:03:15,057 log 119668 131800 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-19 14:03:15,058 basehttp 119668 131800 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+WARNING 2025-04-19 14:03:23,339 log 119668 131800 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-19 14:03:23,340 basehttp 119668 131800 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+ERROR 2025-04-19 14:03:30,690 log 119668 131800 Internal Server Error: /api/admin/dashboard
+Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\utils\deprecation.py", line 136, in __call__
+    response = self.process_response(request, response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\middleware\common.py", line 108, in process_response
+    return self.response_redirect_class(self.get_full_path_with_slash(request))
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\middleware\common.py", line 87, in get_full_path_with_slash
+    raise RuntimeError(
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash and you have APPEND_SLASH set. Django can't redirect to the slash URL while maintaining POST data. Change your form to point to localhost:8000/api/admin/dashboard/ (note the trailing slash), or set APPEND_SLASH=False in your Django settings.
+ERROR 2025-04-19 14:03:30,695 basehttp 119668 131800 "POST /api/admin/dashboard HTTP/1.1" 500 80215
+WARNING 2025-04-19 14:03:35,666 log 119668 131912 Forbidden: /api/admin/dashboard/
+WARNING 2025-04-19 14:03:35,667 basehttp 119668 131912 "POST /api/admin/dashboard/ HTTP/1.1" 403 58
+INFO 2025-04-19 18:59:51,563 basehttp 119668 128324 "OPTIONS /api/courses/ HTTP/1.1" 200 0
+INFO 2025-04-19 18:59:51,572 basehttp 119668 135912 "OPTIONS /api/courses/categories/ HTTP/1.1" 200 0
+WARNING 2025-04-19 18:59:51,589 log 119668 135912 Not Found: /api/courses/categories/
+WARNING 2025-04-19 18:59:51,590 basehttp 119668 135912 "GET /api/courses/categories/ HTTP/1.1" 404 5065
+ERROR 2025-04-19 18:59:51,727 middleware 119668 128324 API Error: ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near the keyword 'GROUP'. (156) (SQLExecDirectW)")
+ERROR 2025-04-19 18:59:51,728 middleware 119668 128324 Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near the keyword 'GROUP'. (156) (SQLExecDirectW)")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\decorators\csrf.py", line 65, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 515, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 475, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 486, in raise_uncaught_exception
+    raise exc
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\views.py", line 512, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\utils.py", line 73, in wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\courses\views.py", line 76, in list_courses
+    cursor.execute(query, params)
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\venv\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: ('42000', "[42000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Incorrect syntax near the keyword 'GROUP'. (156) (SQLExecDirectW)")
+
+ERROR 2025-04-19 18:59:51,731 log 119668 128324 Internal Server Error: /api/courses/
+ERROR 2025-04-19 18:59:51,731 basehttp 119668 128324 "GET /api/courses/ HTTP/1.1" 500 4395
+INFO 2025-04-19 18:59:53,454 basehttp 119668 128324 "OPTIONS /api/nfts/ HTTP/1.1" 200 0
+WARNING 2025-04-19 18:59:53,464 log 119668 128324 Not Found: /api/nfts/
+WARNING 2025-04-19 18:59:53,464 basehttp 119668 128324 "GET /api/nfts/ HTTP/1.1" 404 5334
