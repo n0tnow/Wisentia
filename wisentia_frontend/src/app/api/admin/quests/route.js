@@ -5,13 +5,11 @@ export async function GET(request) {
   // Token bilgisini al
   let token = '';
   try {
-    // Önce Authorization header'ından token'ı almaya çalış
     const authHeader = request.headers.get('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.substring(7);
     }
     
-    // Cookie'den token kontrolü
     if (!token) {
       const tokenCookie = request.cookies.get('access_token');
       token = tokenCookie?.value || '';
@@ -25,29 +23,29 @@ export async function GET(request) {
   try {
     // URL'den query parametrelerini al
     const { searchParams } = new URL(request.url);
+    
+    // Frontend'den gelen parametreleri al
     const page = searchParams.get('page') || 1;
     const pageSize = searchParams.get('pageSize') || 20;
     const search = searchParams.get('search') || '';
     const difficulty = searchParams.get('difficulty') || '';
     const status = searchParams.get('status') || '';
-    const isAIGenerated = searchParams.get('isAIGenerated') || '';
+    const aiGenerated = searchParams.get('aiGenerated') || '';
     
-    // Parametreleri query string'e dönüştür
-    const queryParams = new URLSearchParams({
-      page,
-      pageSize,
-      search,
-      difficulty,
-      status,
-      isAIGenerated
-    }).toString();
+    console.log('Quests arama parametreleri:', { page, pageSize, search, difficulty, status, aiGenerated });
     
-    // Backend API URL
-    const backendUrl = `http://localhost:8000/api/admin/content/?type=quests&${queryParams}`;
-    console.log('Quests Backend API isteği yapılıyor:', backendUrl);
+    // Önce doğrudan quests API'ye bir istek deneyelim
+    let backendUrl = `http://localhost:8000/api/quests/?page=${page}&pageSize=${pageSize}`;
+    
+    if (search) backendUrl += `&search=${encodeURIComponent(search)}`;
+    if (difficulty) backendUrl += `&difficulty=${encodeURIComponent(difficulty)}`;
+    if (status) backendUrl += `&status=${encodeURIComponent(status)}`;
+    if (aiGenerated) backendUrl += `&aiGenerated=${encodeURIComponent(aiGenerated)}`;
+    
+    console.log('Quests API isteği yapılıyor:', backendUrl);
     
     // Backend'e API isteği
-    const response = await fetch(backendUrl, {
+    let response = await fetch(backendUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -58,15 +56,43 @@ export async function GET(request) {
       cache: 'no-store'
     });
     
-    console.log('Quests Backend yanıt durumu:', response.status);
+    // Eğer doğrudan quests API çalışmazsa, admin/content API'yi deneyelim
+    if (response.status === 404) {
+      console.log('Quests API bulunamadı, admin/content API deneniyor...');
+      
+      // Content API'nin beklediği parametre formatını oluştur
+      const queryParams = new URLSearchParams({
+        page,
+        pageSize,
+        type: 'quests'  // content endpoint'i için önemli parametre
+      });
+      
+      if (search) queryParams.append('search', search);
+      if (difficulty) queryParams.append('difficulty', difficulty);
+      if (status) queryParams.append('status', status);
+      if (aiGenerated) queryParams.append('aiGenerated', aiGenerated);
+      
+      backendUrl = `http://localhost:8000/api/admin/content/?${queryParams.toString()}`;
+      console.log('Admin Content API isteği yapılıyor:', backendUrl);
+      
+      response = await fetch(backendUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store'
+        },
+        cache: 'no-store'
+      });
+    }
+    
+    console.log('Backend yanıt durumu:', response.status);
     
     if (!response.ok) {
-      // Hata durumunu yönet
-      console.error('Quests Backend API hatası:', response.status);
-      
       const responseText = await response.text();
+      console.error('Backend yanıt hatası:', responseText);
       
-      // HTML yanıt kontrolü
       if (responseText.trim().startsWith('<!DOCTYPE html>') || responseText.trim().startsWith('<html')) {
         console.error('HTML yanıtı alındı');
         return NextResponse.json(
@@ -76,11 +102,9 @@ export async function GET(request) {
       }
       
       try {
-        // JSON yanıtı dene
         const errorData = JSON.parse(responseText);
         return NextResponse.json(errorData, { status: response.status });
       } catch (e) {
-        // JSON parse edilemiyorsa text olarak
         return NextResponse.json(
           { error: 'API hatası', message: responseText.substring(0, 500) },
           { status: response.status }
@@ -90,10 +114,45 @@ export async function GET(request) {
     
     // JSON yanıtı al 
     const data = await response.json();
-    console.log('Quests Backend API yanıtı başarılı alındı');
+    console.log('Backend API yanıtı alındı. Veri yapısı:', Object.keys(data));
+    
+    // Dönen veriyi analiz et ve frontend'in beklediği formata dönüştür
+    let formattedResponse;
+    
+    // Olası veri yapıları için kontrol
+    if (Array.isArray(data)) {
+      // Eğer doğrudan dizi dönüyorsa
+      formattedResponse = {
+        quests: data,
+        totalCount: data.length
+      };
+      console.log('Array veri yapısı tespit edildi ve dönüştürüldü');
+    } else if (data.items) {
+      // admin/content API formatı
+      formattedResponse = {
+        quests: data.items,
+        totalCount: data.totalCount || data.items.length,
+        page: data.page || 1,
+        pageSize: data.pageSize || 20
+      };
+      console.log('Content API veri yapısı tespit edildi ve dönüştürüldü');
+    } else if (data.quests) {
+      // Zaten doğru format
+      formattedResponse = data;
+      console.log('Quests API veri yapısı tespit edildi');
+    } else {
+      // Bilinmeyen format, olduğu gibi dön
+      formattedResponse = {
+        quests: data.results || data,
+        totalCount: data.count || data.total || (data.results ? data.results.length : Object.keys(data).length)
+      };
+      console.log('Bilinmeyen veri yapısı, en iyi tahminle dönüştürüldü');
+    }
+    
+    console.log(`Formatlanmış yanıt: ${formattedResponse.quests.length} görev, toplam: ${formattedResponse.totalCount}`);
     
     // Frontend'e iletilecek yanıtı oluştur
-    return NextResponse.json(data, {
+    return NextResponse.json(formattedResponse, {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -103,7 +162,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Quests API Proxy hatası:', error);
     return NextResponse.json(
-      { error: 'Sunucu hatası', message: error.message },
+      { error: 'Sunucu hatası', message: error.message, stack: error.stack },
       { status: 500 }
     );
   }
@@ -130,9 +189,10 @@ export async function POST(request) {
     // İstek verisini al
     const requestData = await request.json();
     
-    // Backend API URL
-    const backendUrl = 'http://localhost:8000/api/admin/generate-quest/';
-    console.log('Quests Backend POST isteği yapılıyor:', backendUrl);
+    // AI ile quest oluşturma işlemi için API yolu
+    const backendUrl = 'http://localhost:8000/api/ai/admin/generate-quest/';
+    console.log('Quest oluşturma isteği yapılıyor:', backendUrl);
+    console.log('İstek verisi:', JSON.stringify(requestData, null, 2));
     
     // Backend'e API isteği
     const response = await fetch(backendUrl, {
@@ -145,10 +205,11 @@ export async function POST(request) {
       body: JSON.stringify(requestData)
     });
     
-    console.log('Quests Backend POST yanıt durumu:', response.status);
+    console.log('Quest oluşturma yanıt durumu:', response.status);
     
     if (!response.ok) {
       const responseText = await response.text();
+      console.error('Quest oluşturma hatası:', responseText);
       
       try {
         const errorData = JSON.parse(responseText);
@@ -163,15 +224,11 @@ export async function POST(request) {
     
     // JSON yanıtı al
     const data = await response.json();
-    console.log('Quests Backend POST yanıtı başarılı alındı');
+    console.log('Quest oluşturma başarılı.');
     
-    return NextResponse.json(data, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Quests API POST hatası:', error);
+    console.error('Quest oluşturma proxy hatası:', error);
     return NextResponse.json(
       { error: 'Sunucu hatası', message: error.message },
       { status: 500 }
@@ -179,7 +236,6 @@ export async function POST(request) {
   }
 }
 
-// Onaylama endpointi
 export async function PUT(request) {
   // Token bilgisini al
   let token = '';
@@ -198,24 +254,35 @@ export async function PUT(request) {
   }
   
   try {
+    // URL'den ID parametresini al
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split('/');
+    const questId = pathSegments[pathSegments.length - 1];
+    
     // İstek verisini al
     const requestData = await request.json();
-    const contentId = requestData.contentId;
     
-    if (!contentId) {
+    // Backend API URL
+    let backendUrl;
+    if (questId && !isNaN(questId)) {
+      // Belirli bir quest'i güncelleme
+      backendUrl = `http://localhost:8000/api/quests/${questId}/`;
+    } else if (requestData.contentId) {
+      // Content ID varsa, approve endpoint'ini kullan
+      backendUrl = `http://localhost:8000/api/ai/admin/approve-quest/${requestData.contentId}/`;
+    } else {
       return NextResponse.json(
-        { error: 'Content ID gerekli' },
+        { error: 'Quest ID veya Content ID gerekli' },
         { status: 400 }
       );
     }
     
-    // Backend API URL
-    const backendUrl = `http://localhost:8000/api/admin/approve-quest/${contentId}/`;
-    console.log('Quest Onaylama API isteği yapılıyor:', backendUrl);
+    console.log('Quest güncelleme isteği yapılıyor:', backendUrl);
+    console.log('İstek verisi:', JSON.stringify(requestData, null, 2));
     
     // Backend'e API isteği
     const response = await fetch(backendUrl, {
-      method: 'POST', // Django tarafında PUT yerine POST kullanıldığını varsayıyorum
+      method: backendUrl.includes('approve-quest') ? 'POST' : 'PUT', // Backend için gerekli metod
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -224,10 +291,11 @@ export async function PUT(request) {
       body: JSON.stringify(requestData)
     });
     
-    console.log('Quest Onaylama yanıt durumu:', response.status);
+    console.log('Quest güncelleme yanıt durumu:', response.status);
     
     if (!response.ok) {
       const responseText = await response.text();
+      console.error('Quest güncelleme hatası:', responseText);
       
       try {
         const errorData = JSON.parse(responseText);
@@ -242,15 +310,11 @@ export async function PUT(request) {
     
     // JSON yanıtı al
     const data = await response.json();
-    console.log('Quest Onaylama yanıtı başarılı alındı');
+    console.log('Quest güncelleme başarılı.');
     
-    return NextResponse.json(data, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Quest Onaylama API hatası:', error);
+    console.error('Quest güncelleme proxy hatası:', error);
     return NextResponse.json(
       { error: 'Sunucu hatası', message: error.message },
       { status: 500 }

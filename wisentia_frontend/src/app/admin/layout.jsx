@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider } from '@mui/material';
+import { createTheme } from '@mui/material/styles';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export default function AdminLayout({ children }) {
+  // Başlangıçta hydration için sabit değer kullan
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const router = useRouter();
@@ -44,53 +47,91 @@ export default function AdminLayout({ children }) {
   const toggleDarkMode = () => {
     const newMode = !darkMode;
     setDarkMode(newMode);
-    localStorage.setItem('adminThemeMode', newMode ? 'dark' : 'light');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('adminThemeMode', newMode ? 'dark' : 'light');
+    }
   };
 
-  // Load theme preference from local storage
+  // Client-side only operations in useEffect
   useEffect(() => {
-    const savedTheme = localStorage.getItem('adminThemeMode');
-    if (savedTheme) {
-      setDarkMode(savedTheme === 'dark');
-    } else {
-      // Check system preference
-      const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setDarkMode(prefersDarkMode);
+    setMounted(true);
+    
+    // Load theme preference from local storage - client-side only!
+    try {
+      const savedTheme = localStorage.getItem('adminThemeMode');
+      if (savedTheme) {
+        setDarkMode(savedTheme === 'dark');
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        // Check system preference
+        setDarkMode(true);
+      }
+    } catch (e) {
+      console.log('Could not access localStorage', e);
     }
   }, []);
 
+  // Check authentication after mounted
   useEffect(() => {
-    if (!isLoading) {
-      // Check if user is authenticated and has admin role
-      const userObj = user || JSON.parse(localStorage.getItem('user') || '{}');
-      if (!isAuthenticated() || userObj.role !== 'admin') {
-        router.push('/login?redirect=/admin/dashboard');
-      } else {
-        setLoading(false);
+    if (mounted && !isLoading) {
+      try {
+        // Check if user is authenticated and has admin role
+        const userObj = user || JSON.parse(localStorage.getItem('user') || '{}');
+        if (!isAuthenticated() || userObj.role !== 'admin') {
+          router.push('/login?redirect=/admin/dashboard');
+        } else {
+          setLoading(false);
+        }
+      } catch (e) {
+        console.log('Auth check error', e);
+        router.push('/login');
       }
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router, mounted]);
 
-  if (loading || isLoading) {
+  // Hydration: Return a simplified first render that will match server output
+  if (!mounted) {
     return (
       <ThemeProvider theme={theme}>
-        <Box sx={{ 
+        <div style={{ 
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
-          minHeight: '100vh', 
-          bgcolor: 'background.default'
+          minHeight: '100vh',
+          backgroundColor: '#f5f7fa'
         }}>
           <div className="loader"></div>
-        </Box>
+        </div>
       </ThemeProvider>
     );
   }
 
+  // Show loading after hydration
+  if (loading || isLoading) {
+    return (
+      <ThemeProvider theme={theme}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh',
+          backgroundColor: darkMode ? '#111827' : '#f5f7fa'
+        }}>
+          <div className="loader"></div>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  // Main layout (using div instead of Box)
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-        <CssBaseline />
+      <CssBaseline />
+      <div style={{ 
+        display: 'flex', 
+        height: '100vh', 
+        overflow: 'hidden',
+        backgroundColor: darkMode ? '#111827' : '#f5f7fa'
+      }}>
         <AdminSidebar 
           darkMode={darkMode} 
           toggleDarkMode={toggleDarkMode}
@@ -143,7 +184,7 @@ export default function AdminLayout({ children }) {
             background: ${darkMode ? '#718096' : '#555'};
           }
         `}</style>
-      </Box>
+      </div>
     </ThemeProvider>
   );
 }

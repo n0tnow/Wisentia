@@ -1,15 +1,51 @@
-// src/app/admin/subscriptions/page.jsx
+// src/app/admin/subscriptions/page.jsx - Hata gösterimi için eklemeler
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import AdminLayout from '@/components/admin/AdminLayout';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  FormControlLabel,
+  Grid,
+  IconButton,
+  Paper,
+  Snackbar,
+  Alert,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+  useTheme,
+  CircularProgress
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 export default function SubscriptionManagementPage() {
   const [plans, setPlans] = useState([]);
   const [subscriptionStats, setSubscriptionStats] = useState({});
   const [recentSubscriptions, setRecentSubscriptions] = useState([]);
-  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
   const [formData, setFormData] = useState({
     planName: '',
     description: '',
@@ -19,10 +55,38 @@ export default function SubscriptionManagementPage() {
     features: '',
     isActive: true,
   });
+  const [editingPlanId, setEditingPlanId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  
+  // Snackbar için state'ler
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'info' // 'error', 'warning', 'info', 'success'
+  });
+  
   const { user } = useAuth();
   const router = useRouter();
+  const theme = useTheme();
+
+  // Snackbar'ı kapatma fonksiyonu
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbar({...snackbar, open: false});
+  };
+
+  // Snackbar gösterme yardımcı fonksiyonu
+  const showSnackbar = (message, severity = 'info') => {
+    setSnackbar({
+      open: true,
+      message,
+      severity
+    });
+  };
 
   useEffect(() => {
     // Admin kontrolü
@@ -34,17 +98,21 @@ export default function SubscriptionManagementPage() {
     const fetchSubscriptionData = async () => {
       try {
         setLoading(true);
+        setError(null);
         const response = await fetch('/api/admin/subscriptions');
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch subscription data');
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Request failed with status ${response.status}`);
         }
 
         const data = await response.json();
-        setPlans(data.plans);
-        setSubscriptionStats(data.stats);
-        setRecentSubscriptions(data.recentSubscriptions);
+        setPlans(data.plans || []);
+        setSubscriptionStats(data.stats || {});
+        setRecentSubscriptions(data.recentSubscriptions || []);
       } catch (err) {
         setError(err.message);
+        showSnackbar(`Error loading subscription data: ${err.message}`, 'error');
       } finally {
         setLoading(false);
       }
@@ -55,22 +123,19 @@ export default function SubscriptionManagementPage() {
     }
   }, [user, router]);
 
-  const handleCreatePlan = async () => {
-    try {
-      // Reset form data
-      setFormData({
-        planName: '',
-        description: '',
-        durationDays: 30,
-        price: 0,
-        nftId: '',
-        features: '',
-        isActive: true,
-      });
-      setEditingPlanId('new');
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    }
+  const handleCreatePlan = () => {
+    // Reset form data
+    setFormData({
+      planName: '',
+      description: '',
+      durationDays: 30,
+      price: 0,
+      nftId: '',
+      features: '',
+      isActive: true,
+    });
+    setEditingPlanId('new');
+    setOpenDialog(true);
   };
 
   const handleEditPlan = (plan) => {
@@ -84,6 +149,7 @@ export default function SubscriptionManagementPage() {
       isActive: plan.IsActive,
     });
     setEditingPlanId(plan.PlanID);
+    setOpenDialog(true);
   };
 
   const handleInputChange = (e) => {
@@ -97,6 +163,7 @@ export default function SubscriptionManagementPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      setFormSubmitting(true);
       // Convert to correct types
       const dataToSend = {
         ...formData,
@@ -119,20 +186,29 @@ export default function SubscriptionManagementPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save subscription plan');
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to save plan: ${response.status}`);
       }
 
       // Refresh plans list
       const refreshResponse = await fetch('/api/admin/subscriptions');
       if (refreshResponse.ok) {
         const refreshData = await refreshResponse.json();
-        setPlans(refreshData.plans);
+        setPlans(refreshData.plans || []);
       }
 
+      setOpenDialog(false);
       setEditingPlanId(null);
-      alert(isNewPlan ? 'Plan created successfully' : 'Plan updated successfully');
+      
+      // Show success message
+      showSnackbar(
+        isNewPlan ? 'Subscription plan created successfully' : 'Subscription plan updated successfully', 
+        'success'
+      );
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      showSnackbar(`Error: ${err.message}`, 'error');
+    } finally {
+      setFormSubmitting(false);
     }
   };
 
@@ -149,260 +225,340 @@ export default function SubscriptionManagementPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update plan');
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to update plan: ${response.status}`);
       }
 
-      // Plan listesini güncelle
+      // Update plans list
       setPlans(plans.map(plan => 
         plan.PlanID === planId ? { ...plan, IsActive: !isActive } : plan
       ));
+      
+      showSnackbar(`Plan ${!isActive ? 'activated' : 'deactivated'} successfully`, 'success');
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      showSnackbar(`Error: ${err.message}`, 'error');
     }
   };
 
-  if (loading) return (
-    <MainLayout>
-      <div className="container mx-auto p-4">
-        <p>Loading subscription data...</p>
-      </div>
-    </MainLayout>
-  );
-
-  if (error) return (
-    <MainLayout>
-      <div className="container mx-auto p-4">
-        <p className="text-red-500">Error: {error}</p>
-      </div>
-    </MainLayout>
-  );
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+        <Typography variant="h6" sx={{ ml: 2 }}>Loading subscription data...</Typography>
+      </Box>
+    );
+  }
 
   return (
-    <MainLayout>
-      <div className="container mx-auto p-4">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Subscription Management</h1>
-          {!editingPlanId && (
-            <button
-              onClick={handleCreatePlan}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Create New Plan
-            </button>
-          )}
-        </div>
+    <Box sx={{ p: 3, maxWidth: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+          Subscription Management
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={handleCreatePlan}
+        >
+          Create New Plan
+        </Button>
+      </Box>
 
-        {/* Plan Form */}
-        {editingPlanId && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {editingPlanId === 'new' ? 'Create New Plan' : 'Edit Plan'}
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Plan Name*</label>
-                  <input
-                    type="text"
-                    name="planName"
-                    value={formData.planName}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration (days)*</label>
-                  <input
-                    type="number"
-                    name="durationDays"
-                    value={formData.durationDays}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    min="1"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">NFT ID</label>
-                  <input
-                    type="text"
-                    name="nftId"
-                    value={formData.nftId}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    rows="3"
-                  ></textarea>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Features (comma separated)</label>
-                  <textarea
-                    name="features"
-                    value={formData.features}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    rows="3"
-                    placeholder="Feature 1, Feature 2, Feature 3"
-                  ></textarea>
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isActive"
-                      checked={formData.isActive}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label className="ml-2 block text-sm text-gray-900">Active</label>
-                  </div>
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  type="submit"
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingPlanId(null)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
-        {/* Subscription Plans */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Subscription Plans</h2>
-          {plans.length === 0 ? (
-            <p className="text-gray-500">No subscription plans found</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NFT</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Subscribers</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {plans.map((plan) => (
-                    <tr key={plan.PlanID}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{plan.PlanName}</div>
-                        <div className="text-gray-500 text-sm truncate max-w-xs">{plan.Description}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{plan.DurationDays} days</td>
-                      <td className="px-6 py-4 whitespace-nowrap">${plan.Price.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{plan.NFTTitle || 'N/A'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          plan.IsActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {plan.IsActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+      {/* Subscription Plans Card */}
+      <Card sx={{ mb: 4 }}>
+        <CardHeader 
+          title="Subscription Plans" 
+          titleTypographyProps={{ variant: 'h5' }}
+          action={
+            <Tooltip title="Manage your subscription plans here">
+              <IconButton>
+                <InfoOutlinedIcon />
+              </IconButton>
+            </Tooltip>
+          }
+        />
+        <Divider />
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Plan Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Duration</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Price</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>NFT</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Active Subscribers</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {plans.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center">
+                      <Typography color="textSecondary">No subscription plans found</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  plans.map((plan) => (
+                    <TableRow key={plan.PlanID}>
+                      <TableCell>
+                        <Typography variant="subtitle2">{plan.PlanName}</Typography>
+                        <Typography variant="body2" color="textSecondary" 
+                          sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {plan.Description}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{plan.DurationDays} days</TableCell>
+                      <TableCell>${parseFloat(plan.Price).toFixed(2)}</TableCell>
+                      <TableCell>{plan.NFTTitle || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={plan.IsActive ? 'Active' : 'Inactive'}
+                          color={plan.IsActive ? 'success' : 'error'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
                         {subscriptionStats[plan.PlanID]?.activeCount || 0}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditPlan(plan)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleToggleActive(plan.PlanID, plan.IsActive)}
-                          className={`${plan.IsActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
-                        >
-                          {plan.IsActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Tooltip title="Edit Plan">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleEditPlan(plan)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={plan.IsActive ? 'Deactivate Plan' : 'Activate Plan'}>
+                          <IconButton
+                            size="small"
+                            color={plan.IsActive ? 'error' : 'success'}
+                            onClick={() => handleToggleActive(plan.PlanID, plan.IsActive)}
+                          >
+                            {plan.IsActive ? <BlockIcon /> : <CheckCircleIcon />}
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
 
-        {/* Recent Subscriptions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Recent Subscriptions</h2>
-          {recentSubscriptions.length === 0 ? (
-            <p className="text-gray-500">No recent subscriptions</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {recentSubscriptions.map((subscription) => (
-                    <tr key={subscription.SubscriptionID}>
-                      <td className="px-6 py-4 whitespace-nowrap">{subscription.Username}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{subscription.PlanName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+      {/* Recent Subscriptions Card */}
+      <Card>
+        <CardHeader 
+          title="Recent Subscriptions" 
+          titleTypographyProps={{ variant: 'h5' }}
+        />
+        <Divider />
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>User</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Plan</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Start Date</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>End Date</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {recentSubscriptions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Typography color="textSecondary">No recent subscriptions</Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  recentSubscriptions.map((subscription) => (
+                    <TableRow key={subscription.SubscriptionID}>
+                      <TableCell>{subscription.Username}</TableCell>
+                      <TableCell>{subscription.PlanName}</TableCell>
+                      <TableCell>
                         {new Date(subscription.StartDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      </TableCell>
+                      <TableCell>
                         {new Date(subscription.EndDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          subscription.IsActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {subscription.IsActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-    </MainLayout>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={subscription.IsActive ? 'Active' : 'Inactive'}
+                          color={subscription.IsActive ? 'success' : 'error'}
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
+
+      {/* Plan Form Dialog */}
+      <Dialog 
+        open={openDialog} 
+        onClose={() => !formSubmitting && setOpenDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {editingPlanId === 'new' ? 'Create New Subscription Plan' : 'Edit Subscription Plan'}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Plan Name"
+                name="planName"
+                value={formData.planName}
+                onChange={handleInputChange}
+                fullWidth
+                required
+                margin="normal"
+                error={formData.planName === ''}
+                helperText={formData.planName === '' ? 'Plan name is required' : ''}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Duration (days)"
+                name="durationDays"
+                type="number"
+                value={formData.durationDays}
+                onChange={handleInputChange}
+                fullWidth
+                required
+                margin="normal"
+                inputProps={{ min: 1 }}
+                error={!formData.durationDays || formData.durationDays < 1}
+                helperText={!formData.durationDays || formData.durationDays < 1 ? 'Duration must be at least 1 day' : ''}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Price ($)"
+                name="price"
+                type="number"
+                value={formData.price}
+                onChange={handleInputChange}
+                fullWidth
+                required
+                margin="normal"
+                inputProps={{ step: 0.01, min: 0 }}
+                error={formData.price < 0}
+                helperText={formData.price < 0 ? 'Price cannot be negative' : ''}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="NFT ID"
+                name="nftId"
+                value={formData.nftId}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                helperText="Leave empty if no NFT is associated (optional)"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                fullWidth
+                multiline
+                rows={3}
+                margin="normal"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Features (comma separated)"
+                name="features"
+                value={formData.features}
+                onChange={handleInputChange}
+                fullWidth
+                multiline
+                rows={3}
+                margin="normal"
+                placeholder="Feature 1, Feature 2, Feature 3"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isActive}
+                    onChange={handleInputChange}
+                    name="isActive"
+                    color="primary"
+                  />
+                }
+                label="Active"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setOpenDialog(false)} 
+            color="inherit"
+            disabled={formSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+            disabled={formSubmitting || !formData.planName || !formData.durationDays || formData.durationDays < 1 || formData.price < 0}
+          >
+            {formSubmitting ? (
+              <>
+                <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
+                Saving...
+              </>
+            ) : (
+              'Save'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity} 
+          sx={{ width: '100%' }}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
