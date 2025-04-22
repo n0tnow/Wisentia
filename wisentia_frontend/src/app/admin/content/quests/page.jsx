@@ -149,7 +149,7 @@ export default function QuestsManagementPage() {
   };
 
   const handleViewQuest = (id) => {
-    router.push(`/quests/${id}`);
+    router.push(`/admin/content/quests/${id}`);
   };
 
   const handleChangePage = (event, newPage) => {
