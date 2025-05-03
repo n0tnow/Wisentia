@@ -10,4 +10,11 @@ urlpatterns = [
     path('<int:subscription_id>/renew/', views.renew_subscription, name='renew-subscription'),
     path('trade-nfts/', views.trade_nfts_for_subscription, name='trade-nfts-for-subscription'),
     path('check-access/', views.check_subscription_access, name='check-subscription-access'),
+    path('plans/create/', views.create_subscription_plan, name='create-subscription-plan'),
+    path('plans/<int:plan_id>/update/', views.update_subscription_plan, name='update-subscription-plan'),
+    
+    path('admin/', views.admin_subscriptions, name='admin-subscriptions'), # Ana admin panel verisi
+    path('admin/plans/create/', views.create_subscription_plan, name='create-subscription-plan'),
+    path('admin/plans/<int:plan_id>/update/', views.update_subscription_plan, name='update-subscription-plan'),
+    #path('admin/stats/', views.subscription_stats, name='subscription-stats'),
 ]

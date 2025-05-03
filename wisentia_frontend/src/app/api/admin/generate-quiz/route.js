@@ -25,7 +25,7 @@ export async function POST(request) {
     const requestData = await request.json();
     
     // Backend API URL
-    const backendUrl = 'http://localhost:8000/api/admin/generate-quiz/';
+    const backendUrl = 'http://localhost:8000/api/ai/admin/generate-quiz/';
     console.log('Backend API isteği yapılıyor:', backendUrl);
     
     // Backend'e API isteği
