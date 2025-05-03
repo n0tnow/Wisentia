@@ -55,7 +55,7 @@ def generate_response(prompt, system_prompt=None, history=None, stream=False):
             json=data,
             headers={"Content-Type": "application/json"},
             stream=stream,
-            timeout=60  # 60 saniye timeout
+            timeout=180  # 180 saniye timeout
         )
         
         if response.status_code != 200:

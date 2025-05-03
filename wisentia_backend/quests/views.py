@@ -432,3 +432,108 @@ def check_quest_progress(request, quest_id):
         'isCompleted': is_completed,
         'conditions': conditions_progress
     })
+
+@api_view(['POST', 'PUT'])
+@permission_classes([IsAuthenticated])
+def update_quest(request, quest_id):
+    """API endpoint to update a quest"""
+    user_id = request.user.id
+    
+    # Admin check
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT UserRole FROM Users WHERE UserID = %s
+        """, [user_id])
+        
+        user_role = cursor.fetchone()
+        if not user_role or user_role[0] != 'admin':
+            return Response({'error': 'Only administrators can update quests'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        with connection.cursor() as cursor:
+            # Check if quest exists
+            cursor.execute("""
+                SELECT QuestID FROM Quests WHERE QuestID = %s
+            """, [quest_id])
+            
+            if not cursor.fetchone():
+                return Response({'error': 'Quest not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Get update fields from request
+            title = request.data.get('title')
+            description = request.data.get('description')
+            difficulty_level = request.data.get('difficultyLevel')
+            required_points = request.data.get('requiredPoints')
+            reward_points = request.data.get('rewardPoints')
+            is_active = request.data.get('isActive')
+            
+            # Build update query
+            update_parts = []
+            params = []
+            
+            if title:
+                update_parts.append("Title = %s")
+                params.append(title)
+            
+            if description:
+                update_parts.append("Description = %s")
+                params.append(description)
+            
+            if difficulty_level:
+                update_parts.append("DifficultyLevel = %s")
+                params.append(difficulty_level)
+            
+            if required_points is not None:
+                update_parts.append("RequiredPoints = %s")
+                params.append(required_points)
+            
+            if reward_points is not None:
+                update_parts.append("RewardPoints = %s")
+                params.append(reward_points)
+            
+            if is_active is not None:
+                update_parts.append("IsActive = %s")
+                params.append(1 if is_active else 0)
+            
+            if not update_parts:
+                return Response({'error': 'No fields to update'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Update the quest
+            update_sql = f"UPDATE Quests SET {', '.join(update_parts)} WHERE QuestID = %s"
+            params.append(quest_id)
+            
+            cursor.execute(update_sql, params)
+            
+            # Get the updated quest
+            cursor.execute("""
+                SELECT q.QuestID, q.Title, q.Description, q.RequiredPoints, 
+                       q.RewardPoints, q.DifficultyLevel, q.IsActive, q.IsAIGenerated,
+                       q.CreationDate
+                FROM Quests q
+                WHERE q.QuestID = %s
+            """, [quest_id])
+            
+            columns = [col[0] for col in cursor.description]
+            quest_data = cursor.fetchone()
+            
+            if not quest_data:
+                return Response({'error': 'Failed to fetch updated quest'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+            quest = dict(zip(columns, quest_data))
+            
+            # Get conditions for the quest
+            cursor.execute("""
+                SELECT ConditionID, ConditionType, TargetID, TargetValue, Description
+                FROM QuestConditions
+                WHERE QuestID = %s
+            """, [quest_id])
+            
+            columns = [col[0] for col in cursor.description]
+            conditions = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+            quest['conditions'] = conditions
+            
+            return Response(quest)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

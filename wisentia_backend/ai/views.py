@@ -11,7 +11,7 @@ from .llm import generate_response, generate_quest, generate_quiz
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def chat_message(request):
-    """Yapay zeka ile sohbet API endpoint'i"""
+    """AI chat API endpoint"""
     user_id = request.user.id
     message = request.data.get('message')
     session_id = request.data.get('sessionId')
@@ -21,19 +21,20 @@ def chat_message(request):
     
     try:
         with connection.cursor() as cursor:
-            # Oturum kontrolü/oluşturma
+            # Session check/creation
             if not session_id:
-                # Yeni oturum oluştur
+                # Create new session
                 cursor.execute("""
                     INSERT INTO ChatSessions
                     (UserID, StartTime, IsActive)
-                    VALUES (%s, GETDATE(), 1);
-                    SELECT SCOPE_IDENTITY();
+                    VALUES (%s, GETDATE(), 1)
                 """, [user_id])
                 
+                # Get session ID separately
+                cursor.execute("SELECT SCOPE_IDENTITY()")
                 session_id = cursor.fetchone()[0]
             else:
-                # Mevcut oturumu kontrol et
+                # Check existing session
                 cursor.execute("""
                     SELECT SessionID
                     FROM ChatSessions
@@ -41,33 +42,34 @@ def chat_message(request):
                 """, [session_id, user_id])
                 
                 if not cursor.fetchone():
-                    # Oturum bulunamadı veya aktif değil, yeni oluştur
+                    # Session not found or not active, create new
                     cursor.execute("""
                         INSERT INTO ChatSessions
                         (UserID, StartTime, IsActive)
-                        VALUES (%s, GETDATE(), 1);
-                        SELECT SCOPE_IDENTITY();
+                        VALUES (%s, GETDATE(), 1)
                     """, [user_id])
                     
+                    # Get session ID separately
+                    cursor.execute("SELECT SCOPE_IDENTITY()")
                     session_id = cursor.fetchone()[0]
             
-            # Kullanıcı mesajını kaydet
+            # Save user message
             cursor.execute("""
                 INSERT INTO ChatMessages
                 (SessionID, SenderType, MessageContent, Timestamp)
                 VALUES (%s, 'user', %s, GETDATE())
             """, [session_id, message])
         
-        # Özel sistem prompt oluştur
+        # Create special system prompt
         system_prompt = "You are Wisentia AI, an educational assistant. Help users with their educational questions and guide them through their learning journey."
         
-        # llm.py dosyasındaki fonksiyonu kullan
+        # Use function from llm.py
         result = generate_response(message, system_prompt)
         
         if result['success']:
             ai_response = result['response']
             
-            # Yapay zeka yanıtını kaydet
+            # Save AI response
             with connection.cursor() as cursor:
                 cursor.execute("""
                     INSERT INTO ChatMessages
@@ -83,7 +85,7 @@ def chat_message(request):
         else:
             return Response({
                 'error': result.get('error', 'Unknown error'),
-                'message': "Üzgünüm, şu anda isteğinizi işlemekte sorun yaşıyorum.",
+                'message': "I'm sorry, I'm currently having trouble processing your request.",
                 'success': False
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
@@ -97,7 +99,7 @@ def chat_message(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def chat_message_stream(request):
-    """Yapay zeka ile sohbet API endpoint'i (streaming)"""
+    """AI chat API endpoint with streaming responses"""
     user_id = request.user.id
     message = request.data.get('message')
     session_id = request.data.get('sessionId')
@@ -105,22 +107,23 @@ def chat_message_stream(request):
     if not message:
         return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Oturum işlemleri
+    # Session operations
     try:
         with connection.cursor() as cursor:
-            # Oturum kontrolü/oluşturma
+            # Session check/creation
             if not session_id:
-                # Yeni oturum oluştur
+                # Create new session
                 cursor.execute("""
                     INSERT INTO ChatSessions
                     (UserID, StartTime, IsActive)
-                    VALUES (%s, GETDATE(), 1);
-                    SELECT SCOPE_IDENTITY();
+                    VALUES (%s, GETDATE(), 1)
                 """, [user_id])
                 
+                # Get session ID separately
+                cursor.execute("SELECT SCOPE_IDENTITY()")
                 session_id = cursor.fetchone()[0]
             else:
-                # Mevcut oturumu kontrol et
+                # Check existing session
                 cursor.execute("""
                     SELECT SessionID
                     FROM ChatSessions
@@ -128,38 +131,39 @@ def chat_message_stream(request):
                 """, [session_id, user_id])
                 
                 if not cursor.fetchone():
-                    # Oturum bulunamadı veya aktif değil, yeni oluştur
+                    # Session not found or not active, create new
                     cursor.execute("""
                         INSERT INTO ChatSessions
                         (UserID, StartTime, IsActive)
-                        VALUES (%s, GETDATE(), 1);
-                        SELECT SCOPE_IDENTITY();
+                        VALUES (%s, GETDATE(), 1)
                     """, [user_id])
                     
+                    # Get session ID separately
+                    cursor.execute("SELECT SCOPE_IDENTITY()")
                     session_id = cursor.fetchone()[0]
             
-            # Kullanıcı mesajını kaydet
+            # Save user message
             cursor.execute("""
                 INSERT INTO ChatMessages
                 (SessionID, SenderType, MessageContent, Timestamp)
                 VALUES (%s, 'user', %s, GETDATE())
             """, [session_id, message])
         
-        # Özel sistem prompt oluştur
+        # Create special system prompt
         system_prompt = "You are Wisentia AI, an educational assistant. Help users with their educational questions and guide them through their learning journey."
         
-        # Stream yanıt oluştur
+        # Create streaming response
         def stream_response():
             full_response = ""
             
-            # llm.py'deki stream fonksiyonunu kullan
+            # Use streaming function from llm.py
             stream_generator = generate_response(message, system_prompt, stream=True)
             
             for chunk in stream_generator:
                 full_response += chunk
                 yield f"data: {json.dumps({'chunk': chunk, 'sessionId': session_id})}\n\n"
             
-            # Yanıt tamamlandığında veritabanına kaydet
+            # Save complete response to database
             with connection.cursor() as cursor:
                 cursor.execute("""
                     INSERT INTO ChatMessages
@@ -184,17 +188,17 @@ def chat_message_stream(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def chat_message_simple(request):
-    """Test için basitleştirilmiş yapay zeka sohbet API endpoint'i"""
+    """Simplified AI chat API endpoint for testing"""
     message = request.data.get('message')
     
     if not message:
         return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        # Özel sistem prompt oluştur
+        # Create special system prompt
         system_prompt = "You are Wisentia AI, an educational assistant. Help users with their educational questions and guide them through their learning journey."
         
-        # llm.py dosyasındaki fonksiyonu kullan
+        # Use function from llm.py
         result = generate_response(message, system_prompt)
         
         if result['success']:
@@ -205,7 +209,7 @@ def chat_message_simple(request):
         else:
             return Response({
                 'error': result.get('error', 'Unknown error'),
-                'message': "Üzgünüm, şu anda isteğinizi işlemekte sorun yaşıyorum.",
+                'message': "I'm sorry, I'm currently having trouble processing your request.",
                 'success': False
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
@@ -219,12 +223,12 @@ def chat_message_simple(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_chat_history(request, session_id=None):
-    """Kullanıcının sohbet geçmişini getiren API endpoint'i"""
+    """API endpoint to retrieve user's chat history"""
     user_id = request.user.id
     
     with connection.cursor() as cursor:
         if session_id:
-            # Belirli bir oturumun mesajlarını getir
+            # Get messages from a specific session
             cursor.execute("""
                 SELECT cs.SessionID
                 FROM ChatSessions cs
@@ -249,7 +253,7 @@ def get_chat_history(request, session_id=None):
                 'messages': messages
             })
         else:
-            # Tüm oturumları getir
+            # Get all sessions
             cursor.execute("""
                 SELECT cs.SessionID, cs.StartTime, cs.EndTime, cs.IsActive,
                        (SELECT TOP 1 cm.MessageContent 
@@ -272,11 +276,11 @@ def get_chat_history(request, session_id=None):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def end_chat_session(request, session_id):
-    """Sohbet oturumunu sonlandıran API endpoint'i"""
+    """API endpoint to end a chat session"""
     user_id = request.user.id
     
     with connection.cursor() as cursor:
-        # Oturumu kontrol et
+        # Check session
         cursor.execute("""
             SELECT SessionID
             FROM ChatSessions
@@ -286,7 +290,7 @@ def end_chat_session(request, session_id):
         if not cursor.fetchone():
             return Response({'error': 'Session not found or already ended'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Oturumu sonlandır
+        # End session
         cursor.execute("""
             UPDATE ChatSessions
             SET EndTime = GETDATE(), IsActive = 0
@@ -298,11 +302,11 @@ def end_chat_session(request, session_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_recommendations(request):
-    """Kullanıcı için öneriler sunan API endpoint'i"""
+    """API endpoint providing recommendations for the user"""
     user_id = request.user.id
     
     with connection.cursor() as cursor:
-        # Mevcut önerileri getir
+        # Get existing recommendations
         cursor.execute("""
             SELECT r.RecommendationID, r.RecommendationType, r.TargetID,
                    r.RecommendationReason, r.CreationDate, r.IsViewed
@@ -319,7 +323,7 @@ def get_recommendations(request):
             rec_type = recommendation['RecommendationType']
             target_id = recommendation['TargetID']
             
-            # Öneri tipine göre hedef bilgilerini ekle
+            # Add target information based on recommendation type
             if rec_type == 'course':
                 cursor.execute("""
                     SELECT Title, Category, Difficulty, ThumbnailURL
@@ -372,11 +376,11 @@ def get_recommendations(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def dismiss_recommendation(request, recommendation_id):
-    """Öneriyi reddeden API endpoint'i"""
+    """API endpoint to dismiss a recommendation"""
     user_id = request.user.id
     
     with connection.cursor() as cursor:
-        # Öneriyi kontrol et
+        # Check recommendation
         cursor.execute("""
             SELECT RecommendationID
             FROM AIRecommendations
@@ -386,7 +390,7 @@ def dismiss_recommendation(request, recommendation_id):
         if not cursor.fetchone():
             return Response({'error': 'Recommendation not found'}, status=status.HTTP_404_NOT_FOUND)
         
-        # Öneriyi reddet
+        # Dismiss recommendation
         cursor.execute("""
             UPDATE AIRecommendations
             SET IsDismissed = 1
@@ -395,15 +399,15 @@ def dismiss_recommendation(request, recommendation_id):
     
     return Response({'message': 'Recommendation dismissed successfully'})
 
-# Admin için yapay zeka oluşturma fonksiyonları
+# Admin AI generation functions
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ai_generate_quest(request):
-    """Yapay zeka ile quest oluşturan API endpoint'i (sadece admin)"""
+    """API endpoint to generate quests with AI (admin only)"""
     user_id = request.user.id
     
-    # Admin kontrolü
+    # Admin check
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT UserRole FROM Users WHERE UserID = %s
@@ -414,13 +418,13 @@ def ai_generate_quest(request):
             return Response({'error': 'Only administrators can generate quests'}, 
                            status=status.HTTP_403_FORBIDDEN)
     
-    # Parametereleri al
+    # Get parameters
     difficulty = request.data.get('difficulty', 'intermediate')
     category = request.data.get('category', 'General Learning')
     points_required = request.data.get('pointsRequired', 100)
     points_reward = request.data.get('pointsReward')
     
-    # Yapay zeka ile quest oluştur
+    # Generate quest with AI
     result = generate_quest(difficulty, category, points_required, points_reward)
     
     if not result['success']:
@@ -431,13 +435,13 @@ def ai_generate_quest(request):
     
     quest_data = result['data']
     
-    # Yapay zeka tarafından oluşturulan içeriği kaydet
+    # Save AI-generated content
     with connection.cursor() as cursor:
+        # First, execute INSERT
         cursor.execute("""
             INSERT INTO AIGeneratedContent
             (ContentType, Content, GenerationParams, CreationDate, ApprovalStatus)
-            VALUES ('quest', %s, %s, GETDATE(), 'pending');
-            SELECT SCOPE_IDENTITY();
+            VALUES ('quest', %s, %s, GETDATE(), 'pending')
         """, [
             json.dumps(quest_data),
             json.dumps({
@@ -448,6 +452,8 @@ def ai_generate_quest(request):
             })
         ])
         
+        # Then, get the ID in a separate query
+        cursor.execute("SELECT SCOPE_IDENTITY()")
         content_id = cursor.fetchone()[0]
     
     return Response({
@@ -459,10 +465,10 @@ def ai_generate_quest(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def approve_generated_quest(request, content_id):
-    """Yapay zeka tarafından oluşturulan quest'i onaylayan API endpoint'i (sadece admin)"""
+    """API endpoint to approve AI-generated quests (admin only)"""
     user_id = request.user.id
     
-    # Admin kontrolü
+    # Admin check
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT UserRole FROM Users WHERE UserID = %s
@@ -473,9 +479,9 @@ def approve_generated_quest(request, content_id):
             return Response({'error': 'Only administrators can approve quests'}, 
                            status=status.HTTP_403_FORBIDDEN)
     
-    # Quest'i veritabanına kaydet
+    # Save quest to database
     with connection.cursor() as cursor:
-        # İçeriği kontrol et
+        # Check content
         cursor.execute("""
             SELECT ContentType, Content, ApprovalStatus
             FROM AIGeneratedContent
@@ -498,26 +504,28 @@ def approve_generated_quest(request, content_id):
         try:
             quest_data = json.loads(content_json)
             
-            # Quest oluştur
+            # Create quest
             title = quest_data.get('title')
             description = quest_data.get('description')
             reward_points = request.data.get('rewardPoints', 50)
             required_points = request.data.get('requiredPoints', 0)
             difficulty_level = request.data.get('difficultyLevel', 'intermediate')
             
+            # First, execute INSERT
             cursor.execute("""
                 INSERT INTO Quests
                 (Title, Description, RequiredPoints, RewardPoints, DifficultyLevel, 
                  IsActive, IsAIGenerated, CreationDate)
-                VALUES (%s, %s, %s, %s, %s, 1, 1, GETDATE());
-                SELECT SCOPE_IDENTITY();
+                VALUES (%s, %s, %s, %s, %s, 1, 1, GETDATE())
             """, [
                 title, description, required_points, reward_points, difficulty_level
             ])
             
+            # Then, get the ID in a separate query
+            cursor.execute("SELECT SCOPE_IDENTITY()")
             quest_id = cursor.fetchone()[0]
             
-            # Quest koşullarını ekle
+            # Add quest conditions
             conditions = quest_data.get('conditions', [])
             for condition in conditions:
                 condition_type = request.data.get('conditionType', 'total_points')
@@ -533,7 +541,7 @@ def approve_generated_quest(request, content_id):
                     quest_id, condition_type, target_id, target_value, condition_description
                 ])
             
-            # İçeriği onaylandı olarak işaretle
+            # Mark content as approved
             cursor.execute("""
                 UPDATE AIGeneratedContent
                 SET ApprovalStatus = 'approved', ApprovalDate = GETDATE(), ApprovedBy = %s
@@ -551,10 +559,10 @@ def approve_generated_quest(request, content_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ai_generate_quiz(request):
-    """Yapay zeka ile quiz oluşturan API endpoint'i (sadece admin)"""
+    """API endpoint to generate quizzes with AI (admin only)"""
     user_id = request.user.id
     
-    # Admin kontrolü
+    # Admin check
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT UserRole FROM Users WHERE UserID = %s
@@ -565,7 +573,7 @@ def ai_generate_quiz(request):
             return Response({'error': 'Only administrators can generate quizzes'}, 
                            status=status.HTTP_403_FORBIDDEN)
     
-    # Parametereleri al
+    # Get parameters
     video_id = request.data.get('videoId')
     video_title = request.data.get('videoTitle')
     video_content = request.data.get('videoContent', '')
@@ -577,7 +585,7 @@ def ai_generate_quiz(request):
             'error': 'Video ID and title are required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Yapay zeka ile quiz oluştur
+    # Generate quiz with AI
     result = generate_quiz(video_id, video_title, video_content, num_questions, difficulty)
     
     if not result['success']:
@@ -588,13 +596,13 @@ def ai_generate_quiz(request):
     
     quiz_data = result['data']
     
-    # Yapay zeka tarafından oluşturulan içeriği kaydet
+    # Save AI-generated content
     with connection.cursor() as cursor:
+        # First, execute INSERT
         cursor.execute("""
             INSERT INTO AIGeneratedContent
             (ContentType, Content, GenerationParams, CreationDate, ApprovalStatus)
-            VALUES ('quiz', %s, %s, GETDATE(), 'pending');
-            SELECT SCOPE_IDENTITY();
+            VALUES ('quiz', %s, %s, GETDATE(), 'pending')
         """, [
             json.dumps(quiz_data),
             json.dumps({
@@ -605,6 +613,8 @@ def ai_generate_quiz(request):
             })
         ])
         
+        # Then, get the ID in a separate query
+        cursor.execute("SELECT SCOPE_IDENTITY()")
         content_id = cursor.fetchone()[0]
     
     return Response({
@@ -616,10 +626,10 @@ def ai_generate_quiz(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def approve_generated_quiz(request, content_id):
-    """Yapay zeka tarafından oluşturulan quiz'i onaylayan API endpoint'i (sadece admin)"""
+    """API endpoint to approve AI-generated quizzes (admin only)"""
     user_id = request.user.id
     
-    # Admin kontrolü
+    # Admin check
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT UserRole FROM Users WHERE UserID = %s
@@ -630,9 +640,9 @@ def approve_generated_quiz(request, content_id):
             return Response({'error': 'Only administrators can approve quizzes'}, 
                            status=status.HTTP_403_FORBIDDEN)
     
-    # Quiz'i veritabanına kaydet
+    # Save quiz to database
     with connection.cursor() as cursor:
-        # İçeriği kontrol et
+        # Check content
         cursor.execute("""
             SELECT ContentType, Content, ApprovalStatus
             FROM AIGeneratedContent
@@ -655,41 +665,45 @@ def approve_generated_quiz(request, content_id):
         try:
             quiz_data = json.loads(content_json)
             
-            # Quiz oluştur
+            # Create quiz
             title = quiz_data.get('title')
             description = quiz_data.get('description')
             passing_score = quiz_data.get('passing_score', 70)
             video_id = quiz_data.get('video_id')
             
+            # First, execute INSERT
             cursor.execute("""
                 INSERT INTO Quizzes
                 (VideoID, Title, Description, PassingScore, IsActive)
-                VALUES (%s, %s, %s, %s, 1);
-                SELECT SCOPE_IDENTITY();
+                VALUES (%s, %s, %s, %s, 1)
             """, [
                 video_id, title, description, passing_score
             ])
             
+            # Then, get the ID in a separate query
+            cursor.execute("SELECT SCOPE_IDENTITY()")
             quiz_id = cursor.fetchone()[0]
             
-            # Quiz sorularını ekle
+            # Add quiz questions
             questions = quiz_data.get('questions', [])
             for i, question in enumerate(questions):
                 question_text = question.get('question_text')
                 question_type = question.get('question_type', 'multiple_choice')
                 
+                # First, execute INSERT
                 cursor.execute("""
                     INSERT INTO QuizQuestions
                     (QuizID, QuestionText, QuestionType, OrderInQuiz)
-                    VALUES (%s, %s, %s, %s);
-                    SELECT SCOPE_IDENTITY();
+                    VALUES (%s, %s, %s, %s)
                 """, [
                     quiz_id, question_text, question_type, i + 1
                 ])
                 
+                # Then, get the ID in a separate query
+                cursor.execute("SELECT SCOPE_IDENTITY()")
                 question_id = cursor.fetchone()[0]
                 
-                # Soru seçeneklerini ekle
+                # Add question options
                 options = question.get('options', [])
                 for j, option in enumerate(options):
                     option_text = option.get('text')
@@ -703,7 +717,7 @@ def approve_generated_quiz(request, content_id):
                         question_id, option_text, is_correct, j + 1
                     ])
             
-            # İçeriği onaylandı olarak işaretle
+            # Mark content as approved
             cursor.execute("""
                 UPDATE AIGeneratedContent
                 SET ApprovalStatus = 'approved', ApprovalDate = GETDATE(), ApprovedBy = %s
@@ -721,10 +735,10 @@ def approve_generated_quiz(request, content_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_pending_content(request):
-    """Onay bekleyen AI içerikleri listeleyen API endpoint'i (sadece admin)"""
+    """API endpoint to list pending AI content (admin only)"""
     user_id = request.user.id
     
-    # Admin kontrolü
+    # Admin check
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT UserRole FROM Users WHERE UserID = %s
@@ -735,7 +749,7 @@ def get_pending_content(request):
             return Response({'error': 'Only administrators can view pending content'}, 
                            status=status.HTTP_403_FORBIDDEN)
         
-        # Onay bekleyen içerikleri getir
+        # Get pending content
         cursor.execute("""
             SELECT ContentID, ContentType, Content, GenerationParams, CreationDate
             FROM AIGeneratedContent
@@ -749,16 +763,16 @@ def get_pending_content(request):
         for row in cursor.fetchall():
             content = dict(zip(columns, row))
             
-            # JSON veriyi ayrıştır
+            # Parse JSON data
             try:
                 content['Content'] = json.loads(content['Content'])
             except json.JSONDecodeError:
-                content['Content'] = content['Content']  # JSON ayrıştırılamıyorsa metni olduğu gibi tut
+                content['Content'] = content['Content']  # Keep text as is if JSON parsing fails
                 
             try:
                 content['GenerationParams'] = json.loads(content['GenerationParams'])
             except json.JSONDecodeError:
-                content['GenerationParams'] = content['GenerationParams']  # JSON ayrıştırılamıyorsa metni olduğu gibi tut
+                content['GenerationParams'] = content['GenerationParams']  # Keep text as is if JSON parsing fails
             
             pending_contents.append(content)
     
