@@ -6801,3 +6801,127 @@ INFO 2025-05-02 21:22:21,122 basehttp 37676 36068 "GET /api/community/categories
 INFO 2025-05-02 21:22:21,129 basehttp 37676 33616 "GET /api/community/posts/?page=1&page_size=20&category=&search=&status= HTTP/1.1" 200 62
 INFO 2025-05-02 21:22:21,161 basehttp 37676 33616 "GET /api/community/categories/ HTTP/1.1" 200 2
 INFO 2025-05-02 21:22:21,167 basehttp 37676 36068 "GET /api/community/posts/?page=1&page_size=20&category=&search=&status= HTTP/1.1" 200 62
+INFO 2025-05-05 02:48:43,213 autoreload 61620 64456 Watching for file changes with StatReloader
+INFO 2025-05-05 02:50:53,062 basehttp 61620 61784 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-05-05 02:50:53,407 basehttp 61620 29040 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-05-05 02:57:50,934 basehttp 61620 64604 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 02:57:55,715 basehttp 61620 64604 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 02:57:55,740 basehttp 61620 64604 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 02:58:07,850 basehttp 61620 43644 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 02:58:07,877 basehttp 61620 43644 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 02:58:51,557 basehttp 61620 63608 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 02:58:51,592 basehttp 61620 63608 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:00:31,989 basehttp 61620 56188 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:00:32,017 basehttp 61620 56188 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:00:40,740 basehttp 61620 51516 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:00:41,692 basehttp 61620 51516 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:00:41,711 basehttp 61620 51516 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:04:47,324 basehttp 61620 53984 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:04:47,360 basehttp 61620 53984 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:05:04,232 basehttp 61620 49644 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:05:11,977 basehttp 61620 55788 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:40:20,959 basehttp 61620 43260 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:41:17,762 basehttp 61620 57292 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:41:23,204 basehttp 61620 16360 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:41:25,668 basehttp 61620 16360 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:42:10,050 basehttp 61620 53196 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:45:52,622 basehttp 61620 50408 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:45:52,679 basehttp 61620 50408 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+WARNING 2025-05-05 03:50:14,349 log 61620 46628 Not Found: /api/nfts/
+WARNING 2025-05-05 03:50:14,350 basehttp 61620 46628 "GET /api/nfts/ HTTP/1.1" 404 5334
+WARNING 2025-05-05 03:50:40,186 log 61620 60948 Not Found: /api/nfts/
+WARNING 2025-05-05 03:50:40,187 basehttp 61620 60948 "GET /api/nfts/ HTTP/1.1" 404 5334
+WARNING 2025-05-05 03:50:48,455 log 61620 60972 Not Found: /api/nfts/
+WARNING 2025-05-05 03:50:48,455 basehttp 61620 60972 "GET /api/nfts/ HTTP/1.1" 404 5334
+WARNING 2025-05-05 03:50:49,401 log 61620 61728 Not Found: /api/nfts/
+WARNING 2025-05-05 03:50:49,402 basehttp 61620 61728 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-05-05 03:50:49,405 basehttp 61620 60972 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:50:49,430 basehttp 61620 60972 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+WARNING 2025-05-05 03:51:33,051 log 61620 62696 Not Found: /api/nfts/
+WARNING 2025-05-05 03:51:33,051 basehttp 61620 62696 "GET /api/nfts/ HTTP/1.1" 404 5334
+WARNING 2025-05-05 03:51:38,373 log 61620 56752 Not Found: /api/nfts/
+WARNING 2025-05-05 03:51:38,374 basehttp 61620 56752 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-05-05 03:51:38,418 basehttp 61620 56752 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+WARNING 2025-05-05 03:51:38,424 log 61620 60160 Not Found: /api/nfts/
+WARNING 2025-05-05 03:51:38,425 basehttp 61620 60160 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-05-05 03:51:38,451 basehttp 61620 56752 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+WARNING 2025-05-05 03:56:29,558 log 61620 39580 Not Found: /api/nfts/
+WARNING 2025-05-05 03:56:29,559 basehttp 61620 39580 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-05-05 03:56:29,567 basehttp 61620 46940 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+WARNING 2025-05-05 03:56:29,617 log 61620 46940 Not Found: /api/nfts/
+WARNING 2025-05-05 03:56:29,618 basehttp 61620 46940 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-05-05 03:56:29,622 basehttp 61620 39580 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 03:56:36,159 basehttp 61620 64492 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+WARNING 2025-05-05 03:56:36,167 log 61620 61416 Not Found: /api/nfts/
+WARNING 2025-05-05 03:56:36,171 basehttp 61620 61416 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-05-05 03:56:36,217 basehttp 61620 64492 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+WARNING 2025-05-05 03:56:36,230 log 61620 61416 Not Found: /api/nfts/
+WARNING 2025-05-05 03:56:36,231 basehttp 61620 61416 "GET /api/nfts/ HTTP/1.1" 404 5334
+WARNING 2025-05-05 03:56:55,220 log 61620 64388 Not Found: /api/nfts/
+WARNING 2025-05-05 03:56:55,222 basehttp 61620 64388 "GET /api/nfts/ HTTP/1.1" 404 5334
+WARNING 2025-05-05 03:57:39,070 log 61620 61268 Not Found: /api/nfts/
+WARNING 2025-05-05 03:57:39,070 basehttp 61620 61268 "GET /api/nfts/ HTTP/1.1" 404 5334
+WARNING 2025-05-05 03:57:40,401 log 61620 61268 Not Found: /favicon.ico
+WARNING 2025-05-05 03:57:40,402 basehttp 61620 61268 "GET /favicon.ico HTTP/1.1" 404 4131
+INFO 2025-05-05 04:00:15,391 basehttp 61620 64952 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:00:15,690 basehttp 61620 64952 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 04:00:16,916 basehttp 61620 64952 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 04:00:16,943 basehttp 61620 52576 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:00:16,944 basehttp 61620 62620 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:00:16,971 basehttp 61620 64952 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:00:51,271 basehttp 61620 64536 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:00:51,311 basehttp 61620 64536 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:00:56,352 basehttp 61620 64536 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:00:56,391 basehttp 61620 64536 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:07,796 basehttp 61620 65376 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:07,834 basehttp 61620 65376 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 04:01:07,860 basehttp 61620 65376 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:07,970 basehttp 61620 61216 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:07,980 basehttp 61620 65376 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 04:01:08,166 basehttp 61620 65376 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:39,137 basehttp 61620 65476 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 04:01:41,739 basehttp 61620 65476 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:41,786 basehttp 61620 65476 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 04:01:41,906 basehttp 61620 65476 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:41,929 basehttp 61620 24984 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 04:01:41,957 basehttp 61620 65476 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 09:28:37,414 basehttp 61620 8744 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+INFO 2025-05-05 09:28:37,737 basehttp 61620 59208 "POST /api/auth/logout/ HTTP/1.1" 200 36
+WARNING 2025-05-05 09:28:40,880 log 61620 40264 Forbidden: /api/nfts/available/
+WARNING 2025-05-05 09:28:40,881 basehttp 61620 40264 "GET /api/nfts/available/ HTTP/1.1" 403 58
+WARNING 2025-05-05 09:28:51,750 log 61620 44772 Forbidden: /api/nfts/available/
+WARNING 2025-05-05 09:28:51,750 basehttp 61620 44772 "GET /api/nfts/available/ HTTP/1.1" 403 58
+WARNING 2025-05-05 09:28:51,896 log 61620 44772 Forbidden: /api/nfts/available/
+WARNING 2025-05-05 09:28:51,897 basehttp 61620 44772 "GET /api/nfts/available/ HTTP/1.1" 403 58
+INFO 2025-05-05 09:34:26,887 autoreload 61620 64456 C:\WISENTIA_Q\wisentia\wisentia_backend\nfts\views.py changed, reloading.
+INFO 2025-05-05 09:34:28,201 autoreload 66528 28556 Watching for file changes with StatReloader
+INFO 2025-05-05 09:36:19,007 autoreload 66528 28556 C:\WISENTIA_Q\wisentia\wisentia_backend\nfts\views.py changed, reloading.
+INFO 2025-05-05 09:36:20,055 autoreload 65548 45924 Watching for file changes with StatReloader
+INFO 2025-05-05 09:54:01,404 autoreload 65548 45924 C:\WISENTIA_Q\wisentia\wisentia_backend\subscriptions\views.py changed, reloading.
+INFO 2025-05-05 09:54:02,433 autoreload 55696 70168 Watching for file changes with StatReloader
+INFO 2025-05-05 10:01:03,889 basehttp 55696 33112 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:01:25,125 basehttp 55696 62616 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:02:15,553 basehttp 55696 57680 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:03:43,106 basehttp 55696 61192 "GET /api/nfts/available/ HTTP/1.1" 200 2
+WARNING 2025-05-05 10:12:54,160 log 55696 67944 Not Found: /api/nfts/
+WARNING 2025-05-05 10:12:54,161 basehttp 55696 67944 "GET /api/nfts/ HTTP/1.1" 404 5334
+INFO 2025-05-05 10:19:39,787 basehttp 55696 59464 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:19:39,924 basehttp 55696 59464 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:21:55,922 basehttp 55696 62244 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:21:56,063 basehttp 55696 62244 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:21:56,738 basehttp 55696 62244 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:22:21,894 basehttp 55696 36236 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:22:27,039 basehttp 55696 36236 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:25:59,521 basehttp 55696 66556 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:25:59,695 basehttp 55696 66556 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:28:51,427 basehttp 55696 64332 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:28:51,480 basehttp 55696 64332 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:32:27,287 basehttp 55696 29500 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-05-05 10:32:27,620 basehttp 55696 58656 "POST /api/auth/login/ HTTP/1.1" 200 502
+INFO 2025-05-05 10:32:36,799 basehttp 55696 55436 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 10:32:36,832 basehttp 55696 55436 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 10:32:43,063 basehttp 55696 56404 "GET /api/subscriptions/check-access/ HTTP/1.1" 200 60
+INFO 2025-05-05 10:32:43,066 basehttp 55696 29344 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:32:43,103 basehttp 55696 29344 "GET /api/nfts/available/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:32:44,035 basehttp 55696 29344 "GET /api/nfts/user/ HTTP/1.1" 200 2
+INFO 2025-05-05 10:32:44,065 basehttp 55696 29344 "GET /api/nfts/user/ HTTP/1.1" 200 2

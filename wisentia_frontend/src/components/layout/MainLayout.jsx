@@ -5,17 +5,20 @@ import { Box } from '@mui/material';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 export default function MainLayout({ children }) {
   const pathname = usePathname();
   const [showHeaderFooter, setShowHeaderFooter] = useState(true);
+  const [showChatWidget, setShowChatWidget] = useState(true);
   
-  // Login, register ve admin sayfalarında header ve footer'ı gizle
+  // Hide header, footer, and chat widget on login, register and admin pages
   useEffect(() => {
     const excludePaths = ['/login', '/register', '/auth/login', '/auth/register'];
     const isAdminPage = pathname?.startsWith('/admin');
     
     setShowHeaderFooter(!excludePaths.includes(pathname) && !isAdminPage);
+    setShowChatWidget(!excludePaths.includes(pathname) && !isAdminPage);
   }, [pathname]);
   
   return (
@@ -24,25 +27,28 @@ export default function MainLayout({ children }) {
       display: 'flex', 
       flexDirection: 'column'
     }}>
-      {/* Header'ı koşullu olarak render et */}
+      {/* Header */}
       {showHeaderFooter && <Header />}
       
-      {/* Ana içerik */}
+      {/* Main content */}
       <Box 
         component="main" 
         sx={{ 
           flexGrow: 1, 
           display: 'flex', 
           flexDirection: 'column',
-          // Header varsa sayfanın üst kısmına padding ekleyin (AppBar yüksekliği)
+          // Add padding if header is shown
           pt: showHeaderFooter ? { xs: '56px', sm: '64px' } : 0,
         }}
       >
         {children}
       </Box>
       
-      {/* Footer'ı koşullu olarak render et */}
+      {/* Footer */}
       {showHeaderFooter && <Footer />}
+      
+      {/* Chat Widget */}
+      {showChatWidget && <ChatWidget />}
     </Box>
   );
 }

@@ -594,12 +594,62 @@ def create_subscription_plan(request):
         return Response({'error': 'Invalid data format'}, status=status.HTTP_400_BAD_REQUEST)
     
     plan_id = None
+    created_nft_id = None  # Yeni oluşturulan NFT ID'si
     
     # Veritabanı işlemleri
     try:
         with connection.cursor() as cursor:
-            # NFT ID kontrolü
-            if nft_id:
+            # Eğer NFT ID verilmemişse, yeni bir NFT oluştur
+            if not nft_id:
+                # Subscription NFT type ID'sini al
+                cursor.execute("""
+                    SELECT NFTTypeID FROM NFTTypes WHERE TypeName = 'subscription'
+                """)
+                
+                nft_type_id_result = cursor.fetchone()
+                if not nft_type_id_result:
+                    return Response({
+                        'error': 'Subscription NFT type not found in the database. Please add it first.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                nft_type_id = nft_type_id_result[0]
+                
+                # Abonelik için NFT oluştur
+                image_uri = request.data.get('imageUri', '/placeholder-subscription.png')
+                
+                try:
+                    cursor.execute("""
+                        INSERT INTO NFTs
+                        (NFTTypeID, Title, Description, ImageURI, BlockchainMetadata, TradeValue, SubscriptionDays, IsActive)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, 1);
+                        SELECT SCOPE_IDENTITY();
+                    """, [
+                        nft_type_id,
+                        plan_name,  # Plan adı NFT adı olarak kullanılıyor
+                        description,  # Plan açıklaması NFT açıklaması olarak kullanılıyor
+                        image_uri,
+                        '{}',  # Boş blockchain metadata
+                        price,  # NFT değeri = plan fiyatı
+                        duration_days
+                    ])
+                    
+                    created_nft_id_result = cursor.fetchone()
+                    created_nft_id = created_nft_id_result[0] if created_nft_id_result else None
+                    
+                    if not created_nft_id:
+                        print("NFT ID alınamadı")
+                        return Response({'error': 'Failed to create NFT for subscription plan'}, 
+                                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    
+                    # Oluşturulan NFT ID'sini kullan
+                    nft_id = created_nft_id
+                    
+                except Exception as nft_error:
+                    print(f"NFT oluşturma hatası: {str(nft_error)}")
+                    return Response({'error': f'Failed to create NFT: {str(nft_error)}'}, 
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            else:
+                # Belirtilen NFT'nin varlığını kontrol et
                 cursor.execute("SELECT NFTID FROM NFTs WHERE NFTID = %s", [nft_id])
                 if not cursor.fetchone():
                     return Response({
@@ -694,10 +744,20 @@ def create_subscription_plan(request):
                 plan = plan_basic
         
         # Basit JSON yanıtı hazırla
-        return Response({
+        response_data = {
             'message': 'Subscription plan created successfully',
             'plan': plan
-        }, status=status.HTTP_201_CREATED)
+        }
+        
+        # Eğer yeni bir NFT oluşturulmuşsa, bunu da yanıta ekle
+        if created_nft_id:
+            response_data['createdNFT'] = {
+                'nftId': created_nft_id,
+                'title': plan_name,
+                'type': 'subscription'
+            }
+        
+        return Response(response_data, status=status.HTTP_201_CREATED)
         
     except Exception as e:
         print(f"Genel hata: {str(e)}")
