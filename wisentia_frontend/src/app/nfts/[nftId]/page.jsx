@@ -34,58 +34,27 @@ export default function NFTDetailPage({ params }) {
   const [copySuccess, setCopySuccess] = useState(false);
   
   // Fetch NFT details
-  useEffect(() => {
-    const fetchNFTDetails = async () => {
-      setLoading(true);
-      try {
-        // In a real application, fetch from API:
-        // const response = await fetch(`/api/nfts/${nftId}/`);
-        // const data = await response.json();
-        
-        // Mock data for this example
-        const mockNFT = {
-          userNftId: 1,
-          nftId: nftId,
-          title: 'Blockchain Pioneer',
-          description: 'This exclusive NFT certifies your foundational knowledge in blockchain technology. It represents the successful completion of the Blockchain Pioneer quest, demonstrating your understanding of blockchain fundamentals, consensus mechanisms, and basic cryptography concepts.',
-          imageUri: '/placeholder-nft1.jpg',
-          type: 'achievement',
-          acquisitionDate: '2023-08-01',
-          expiryDate: null,
-          isMinted: true,
-          transactionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-          blockchainData: {
-            tokenId: '42',
-            contract: '0x7C5EA36004F5958B0332954D6D5bf4A9c0C4A965',
-            network: 'EduChain',
-            attributes: [
-              { trait_type: 'Type', value: 'Achievement' },
-              { trait_type: 'Rarity', value: 'Uncommon' },
-              { trait_type: 'Issued By', value: 'Wisentia Academy' },
-              { trait_type: 'Quest', value: 'Blockchain Pioneer' }
-            ]
-          },
-          relatedQuest: {
-            id: 1,
-            title: 'Blockchain Pioneer',
-            completionDate: '2023-08-01'
-          }
-        };
-        
-        // Simulate API delay
-        setTimeout(() => {
-          setNft(mockNFT);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Failed to fetch NFT details:', error);
-        setError('Failed to load NFT details. Please try again later.');
-        setLoading(false);
+  // NFT detay sayfasında useEffect'i şu şekilde güncelleyelim:
+useEffect(() => {
+  const fetchNFTDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/nfts/${nftId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch NFT details: ${response.status}`);
       }
-    };
-    
-    fetchNFTDetails();
-  }, [nftId]);
+      const data = await response.json();
+      setNft(data);
+    } catch (error) {
+      console.error('Failed to fetch NFT details:', error);
+      setError('Failed to load NFT details. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  fetchNFTDetails();
+}, [nftId]);
   
   const getNftTypeColor = (type) => {
     switch (type) {

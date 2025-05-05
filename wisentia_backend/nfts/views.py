@@ -2,7 +2,7 @@ from datetime import datetime
 from django.db import connection
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response
 from .serializers import NFTSerializer
 from drf_yasg.utils import swagger_auto_schema
@@ -106,7 +106,7 @@ def mint_nft(request, user_nft_id):
     return Response({'message': 'NFT minted successfully'})
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def available_nfts(request):
     """Mağazada satın alınabilecek NFT'leri listeleyen API endpoint'i"""
     

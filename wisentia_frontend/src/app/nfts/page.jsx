@@ -72,10 +72,12 @@ const USER_NFT_MOCK_DATA = [
 ];
 
 // NFT kategorileri
+// NFT kategorilerini güncelle
 const NFT_CATEGORIES = [
+  // Abonelik NFT'lerini en başa koy
+  { id: 'subscriptions', title: 'Subscription Plans', icon: <StarIcon />, type: 'subscription' },
   { id: 'achievements', title: 'Achievement NFTs', icon: <EmojiEventsIcon />, type: 'achievement' },
   { id: 'courses', title: 'Course Completion NFTs', icon: <LocalFireDepartmentIcon />, type: 'course_completion' },
-  { id: 'subscriptions', title: 'Subscription NFTs', icon: <StarIcon />, type: 'subscription' },
   { id: 'minted', title: 'Minted NFTs', icon: <VerifiedIcon />, condition: nft => nft.isMinted },
   { id: 'rare', title: 'Rare & Legendary NFTs', icon: <AutoAwesomeIcon />, condition: nft => ['Rare', 'Epic', 'Legendary'].includes(nft.rarity) }
 ];
@@ -190,26 +192,57 @@ export default function NFTsPage() {
   };
   
   // Veri yükleme
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setPageLoading(true);
-        setPublicNfts(PUBLIC_NFT_MOCK_DATA);
-        
-        if (isAuthenticated()) {
-          setNfts(USER_NFT_MOCK_DATA);
-          if (user?.walletAddress) setWalletAddress(user.walletAddress);
-        }
-      } catch (err) {
-        console.error("NFT verilerini yüklerken hata:", err);
-        setError('NFT verilerini yüklerken bir hata oluştu. Lütfen sayfayı yenileyin.');
-      } finally {
-        setPageLoading(false);
+  // Ana NFT sayfasındaki useEffect fonksiyonunu güncelle
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      setPageLoading(true);
+      
+      // Tüm NFT'leri getir
+      const publicNftsResponse = await fetch('/api/normal-user/nfts/available');
+      if (!publicNftsResponse.ok) {
+        throw new Error(`Failed to fetch NFTs: ${publicNftsResponse.status}`);
       }
-    };
-    
-    loadData();
-  }, []);
+      const publicNftsData = await publicNftsResponse.json();
+      
+      // API yanıtını normalize et (field adlarındaki farklılıkları düzelt)
+      const formattedPublicNfts = publicNftsData.map(nft => ({
+        nftId: nft.nftId,
+        title: nft.title,
+        description: nft.description,
+        imageUri: nft.imageUri,
+        type: nft.type,
+        rarity: nft.rarity,
+        collection: nft.collection,
+        price: nft.price || nft.tradeValue,
+        isPublic: true,
+        planId: nft.planId // Abonelik planı ID'si (varsa)
+      }));
+      
+      setPublicNfts(formattedPublicNfts);
+      
+      if (isAuthenticated()) {
+        // Kullanıcının NFT'lerini getir
+        const userNftsResponse = await fetch('/api/normal-user/nfts/user');
+        if (userNftsResponse.ok) {
+          const userNftsData = await userNftsResponse.json();
+          setNfts(userNftsData);
+        } else {
+          console.error(`Failed to fetch user NFTs: ${userNftsResponse.status}`);
+        }
+        
+        if (user?.walletAddress) setWalletAddress(user.walletAddress);
+      }
+    } catch (err) {
+      console.error("Error loading NFT data:", err);
+      setError('An error occurred while loading NFT data. Please refresh the page.');
+    } finally {
+      setPageLoading(false);
+    }
+  };
+  
+  loadData();
+}, [isAuthenticated, user]);
   
   // Yardımcı fonksiyonlar
   const toggleCategory = (categoryId) => {
@@ -401,13 +434,37 @@ export default function NFTsPage() {
       if (!walletAddress) {
         throw new Error('Wallet address is required');
       }
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Rastgele transaction hash oluştur (gerçek projelerde blockchain işlemi yapılır)
       const transactionHash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+      
+      const response = await fetch('/api/normal-user/nfts/mint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userNftId: selectedNft.userNftId,
+          transactionHash
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to mint NFT');
+      }
+      
+      // Kullanıcının NFT listesini güncelle
       setNfts(prevNfts => 
         prevNfts.map(nft => 
-          nft.userNftId === selectedNft.userNftId ? { ...nft, isMinted: true, transactionHash } : nft
+          nft.userNftId === selectedNft.userNftId ? { 
+            ...nft, 
+            isMinted: true, 
+            transactionHash 
+          } : nft
         )
       );
+      
       setMintSuccess(true);
       showSnackbar('NFT successfully minted to blockchain!', 'success');
       setTimeout(() => {
@@ -463,7 +520,13 @@ export default function NFTsPage() {
       setLoginDialogOpen(true);
       return;
     }
-    router.push('/subscriptions');
+    
+    // Eğer bu bir abonelik planı ise planId değerini kullan
+    if (nft.planId) {
+      router.push(`/subscriptions?planId=${nft.planId}`);
+    } else {
+      router.push('/subscriptions');
+    }
   };
   
   const handleClaimFreeNFT = (nft, event) => {

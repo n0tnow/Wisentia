@@ -16,44 +16,45 @@ export default function NFTTradePage() {
   const [totalOfferedValue, setTotalOfferedValue] = useState(0);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Get user's NFTs
-        const userNFTsResponse = await fetch('/api/nfts/user');
-        if (!userNFTsResponse.ok) {
-          throw new Error('Failed to fetch user NFTs');
-        }
-        const userNFTsData = await userNFTsResponse.json();
-        setUserNFTs(userNFTsData);
-        
-        // Get available NFTs
-        const availableNFTsResponse = await fetch('/api/nfts/available');
-        if (!availableNFTsResponse.ok) {
-          throw new Error('Failed to fetch available NFTs');
-        }
-        const availableNFTsData = await availableNFTsResponse.json();
-        setAvailableNFTs(availableNFTsData);
-        
-        // Get trade history
-        const tradeHistoryResponse = await fetch('/api/nfts/trade/history');
-        if (tradeHistoryResponse.ok) {
-          const tradeHistoryData = await tradeHistoryResponse.json();
-          setTradeHistory(tradeHistoryData);
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+  // Trade sayfasında useEffect'i şu şekilde güncelleyelim:
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      // Kullanıcının NFT'lerini getir
+      const userNFTsResponse = await fetch('/api/nfts/user');
+      if (!userNFTsResponse.ok) {
+        throw new Error('Failed to fetch user NFTs');
       }
-    };
-
-    if (user) {
-      fetchData();
+      const userNFTsData = await userNFTsResponse.json();
+      setUserNFTs(userNFTsData);
+      
+      // Takas için mevcut NFT'leri getir
+      const availableNFTsResponse = await fetch('/api/nfts?type=subscription');
+      if (!availableNFTsResponse.ok) {
+        throw new Error('Failed to fetch available NFTs');
+      }
+      const availableNFTsData = await availableNFTsResponse.json();
+      setAvailableNFTs(availableNFTsData);
+      
+      // Takas geçmişini getir
+      const tradeHistoryResponse = await fetch('/api/nfts/trade/history');
+      if (tradeHistoryResponse.ok) {
+        const tradeHistoryData = await tradeHistoryResponse.json();
+        setTradeHistory(tradeHistoryData);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  }, [user]);
+  };
+
+  if (user) {
+    fetchData();
+  }
+}, [user]);
 
   useEffect(() => {
     // Calculate total offered value
@@ -108,7 +109,8 @@ export default function NFTTradePage() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to initiate trade');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to initiate trade');
       }
       
       const data = await response.json();
