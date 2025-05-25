@@ -123,177 +123,38 @@ export default function DashboardPage() {
       setError(null);
       
       try {
-        console.log("Loading dashboard with mock data");
+        // Get access token for API requests
+        const token = localStorage.getItem('access_token');
         
-        // Mock stats veri
-        const mockStats = {
-          completedCourses: 5,
-          completedVideos: 32,
-          completedQuests: 8,
-          earnedNFTs: 4,
-          totalPoints: 1450,
-          streakDays: 7
-        };
-        setStats(mockStats);
+        // Fetch all data in parallel for performance
+        const [statsData, progressData, timeData, activityData] = await Promise.all([
+          fetchUserStats(token),
+          fetchLearningProgress(token),
+          fetchTimeSpent(token),
+          fetchActivitySummary(token)
+        ]);
         
-        // Mock learning progress veri
-        const mockLearningProgress = {
-          ongoingCourses: [
-            {
-              CourseID: 1,
-              Title: "Blockchain Fundamentals",
-              CompletionPercentage: 65,
-              LastAccessDate: new Date().toISOString(),
-              Category: "Blockchain",
-              Difficulty: "intermediate",
-              ThumbnailURL: null
-            },
-            {
-              CourseID: 2,
-              Title: "Web3 Development",
-              CompletionPercentage: 30,
-              LastAccessDate: new Date().toISOString(),
-              Category: "Development",
-              Difficulty: "advanced",
-              ThumbnailURL: null
-            }
-          ],
-          completedCourses: [
-            {
-              CourseID: 3,
-              Title: "Crypto Basics",
-              CompletionDate: new Date(Date.now() - 7*24*60*60*1000).toISOString(),
-              Category: "Cryptocurrency",
-              Difficulty: "beginner",
-              Rating: 4.5,
-              ThumbnailURL: null
-            }
-          ],
-          ongoingQuests: [
-            {
-              QuestID: 1,
-              Title: "Blockchain Explorer",
-              DifficultyLevel: "medium",
-              CurrentProgress: 70,
-              RequiredPoints: 100
-            },
-            {
-              QuestID: 2,
-              Title: "Smart Contract Master",
-              DifficultyLevel: "hard",
-              CurrentProgress: 30,
-              RequiredPoints: 150
-            }
-          ],
-          categoryStats: {
-            "Blockchain": 3,
-            "Development": 2,
-            "Cryptocurrency": 1,
-            "Web3": 2
-          }
-        };
-        setLearningProgress(mockLearningProgress);
+        // Update state with real data
+        setStats(statsData);
+        setLearningProgress(progressData);
+        setTimeSpent(timeData);
+        setActivitySummary(activityData);
         
-        // Mock time spent veri
-        const mockTimeSpent = {
-          totalHours: 45,
-          lastWeekHours: 8,
-          dailyAverage: 1.2,
-          weekdayDistribution: {
-            "Monday": 2.5,
-            "Tuesday": 1.5,
-            "Wednesday": 1.8,
-            "Thursday": 2.0,
-            "Friday": 1.2,
-            "Saturday": 3.5,
-            "Sunday": 2.0
-          }
-        };
-        setTimeSpent(mockTimeSpent);
-        
-        // Mock activity summary 
-        const mockActivitySummary = {
-          recentActivities: [
-            {
-              id: 1,
-              type: "course_completion",
-              description: "Completed 'Crypto Basics' course",
-              timestamp: new Date(Date.now() - 2*24*60*60*1000).toISOString(),
-              points: 200
-            },
-            {
-              id: 2,
-              type: "quest_progress",
-              description: "Made progress on 'Blockchain Explorer' quest",
-              timestamp: new Date(Date.now() - 1*24*60*60*1000).toISOString(),
-              points: 50
-            },
-            {
-              id: 3,
-              type: "video_watched",
-              description: "Watched 'Smart Contract Introduction'",
-              timestamp: new Date(Date.now() - 12*60*60*1000).toISOString(),
-              points: 10
-            }
-          ],
-          monthlyPointsEarned: 350,
-          weeklyPointsEarned: 120
-        };
-        setActivitySummary(mockActivitySummary);
-        
-        // Mock AI recommendations (premium content)
+        // Fetch premium AI content if subscription is active
         if (subscriptionActive) {
-          const mockAiRecommendations = [
-            {
-              RecommendationID: 1,
-              RecommendationType: "course",
-              TargetID: 4,
-              RecommendationReason: "Based on your interest in blockchain",
-              Confidence: 0.85,
-              target: {
-                title: "Smart Contract Development",
-                category: "Development",
-                difficulty: "advanced",
-                thumbnailURL: null
-              }
-            },
-            {
-              RecommendationID: 2,
-              RecommendationType: "course",
-              TargetID: 5,
-              RecommendationReason: "Popular among users with similar learning patterns",
-              Confidence: 0.78,
-              target: {
-                title: "NFT Marketplace Creation",
-                category: "Blockchain",
-                difficulty: "intermediate",
-                thumbnailURL: null
-              }
-            },
-            {
-              RecommendationID: 3,
-              RecommendationType: "course",
-              TargetID: 6,
-              RecommendationReason: "Complements your completed courses",
-              Confidence: 0.92,
-              target: {
-                title: "Web3 Authentication",
-                category: "Development",
-                difficulty: "intermediate",
-                thumbnailURL: null
-              }
-            }
-          ];
-          setAiRecommendations(mockAiRecommendations);
-          
-          const mockAiAnalytics = {
-            learningStyle: "Visual",
-            strengthAreas: JSON.stringify(["Blockchain Concepts", "Cryptocurrency Fundamentals", "DApp Development"]),
-            weaknessAreas: JSON.stringify(["Smart Contract Security", "Solidity Advanced Features", "Cross-chain Technology"])
-          };
-          setAiAnalytics(mockAiAnalytics);
+          try {
+            const [aiRecommendationsData, aiAnalyticsData] = await Promise.all([
+              fetchAiRecommendations(token),
+              fetchAiAnalytics(token)
+            ]);
+            
+            setAiRecommendations(aiRecommendationsData);
+            setAiAnalytics(aiAnalyticsData);
+          } catch (aiError) {
+            console.error("Error loading AI data:", aiError);
+            // AI data is not critical, so we don't show an error to the user
+          }
         }
-        
       } catch (err) {
         console.error("Error loading dashboard data:", err);
         setError("Failed to load data. Please try again later.");
@@ -303,266 +164,124 @@ export default function DashboardPage() {
     };
     
     loadDashboardData();
-  }, [isAuthenticated, authChecked]); // Remove subscriptionActive from dependencies
+  }, [isAuthenticated, authChecked, subscriptionActive]);
   
   // API call functions
-  const fetchUserStats = async () => {
-    try {
-      // Backend API'ye erişmeye çalış
-      try {
-        const response = await fetch(`${API_BASE_URL}/analytics/user-stats/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          },
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setStats(data);
-      } catch (apiError) {
-        console.error("User stats API error:", apiError);
-        
-        // Mock veri kullan
-        console.log("Using mock user stats data");
-        const mockStats = {
-          completedCourses: 5,
-          completedVideos: 32,
-          completedQuests: 8,
-          earnedNFTs: 4,
-          totalPoints: 1450,
-          streakDays: 7
-        };
-        
-        setStats(mockStats);
+  const fetchUserStats = async (token) => {
+    const response = await fetch('/api/analytics/user-stats', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       }
-    } catch (error) {
-      console.error("Error fetching user statistics:", error);
-      throw error;
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user stats: ${response.status}`);
     }
+    
+    return await response.json();
   };
   
-  const fetchLearningProgress = async () => {
-    try {
-      try {
-        const response = await fetch(`${API_BASE_URL}/analytics/learning-progress/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          },
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setLearningProgress(data);
-      } catch (apiError) {
-        console.error("Learning progress API error:", apiError);
-        
-        // Mock veri
-        const mockLearningProgress = {
-          ongoingCourses: [
-            {
-              CourseID: 1,
-              Title: "Blockchain Fundamentals",
-              CompletionPercentage: 65,
-              LastAccessDate: new Date().toISOString(),
-              Category: "Blockchain",
-              Difficulty: "intermediate",
-              ThumbnailURL: null
-            },
-            {
-              CourseID: 2,
-              Title: "Web3 Development",
-              CompletionPercentage: 30,
-              LastAccessDate: new Date().toISOString(),
-              Category: "Development",
-              Difficulty: "advanced",
-              ThumbnailURL: null
-            }
-          ],
-          completedCourses: [
-            {
-              CourseID: 3,
-              Title: "Crypto Basics",
-              CompletionDate: new Date(Date.now() - 7*24*60*60*1000).toISOString(),
-              Category: "Cryptocurrency",
-              Difficulty: "beginner",
-              Rating: 4.5,
-              ThumbnailURL: null
-            }
-          ],
-          ongoingQuests: [
-            {
-              QuestID: 1,
-              Title: "Blockchain Explorer",
-              DifficultyLevel: "medium",
-              CurrentProgress: 70,
-              RequiredPoints: 100
-            },
-            {
-              QuestID: 2,
-              Title: "Smart Contract Master",
-              DifficultyLevel: "hard",
-              CurrentProgress: 30,
-              RequiredPoints: 150
-            }
-          ],
-          categoryStats: {
-            "Blockchain": 3,
-            "Development": 2,
-            "Cryptocurrency": 1,
-            "Web3": 2
-          }
-        };
-        
-        setLearningProgress(mockLearningProgress);
+  const fetchLearningProgress = async (token) => {
+    const response = await fetch('/api/analytics/learning-progress', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       }
-    } catch (error) {
-      console.error("Error fetching learning progress:", error);
-      throw error;
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch learning progress: ${response.status}`);
     }
+    
+    return await response.json();
   };
   
-  const fetchTimeSpent = async () => {
-    try {
-      try {
-        const response = await fetch(`${API_BASE_URL}/analytics/time-spent/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          },
-          credentials: 'include'
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setTimeSpent(data);
-      } catch (apiError) {
-        console.error("Time spent API error:", apiError);
-        
-        // Mock veri
-        const mockTimeSpent = {
-          totalHours: 45,
-          lastWeekHours: 8,
-          dailyAverage: 1.2,
-          weekdayDistribution: {
-            "Monday": 2.5,
-            "Tuesday": 1.5,
-            "Wednesday": 1.8,
-            "Thursday": 2.0,
-            "Friday": 1.2,
-            "Saturday": 3.5,
-            "Sunday": 2.0
-          }
-        };
-        
-        setTimeSpent(mockTimeSpent);
+  const fetchTimeSpent = async (token) => {
+    const response = await fetch('/api/analytics/time-spent', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       }
-    } catch (error) {
-      console.error("Error fetching time statistics:", error);
-      throw error;
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch time spent data: ${response.status}`);
     }
+    
+    return await response.json();
   };
   
-  const fetchActivitySummary = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/analytics/user-activity-summary/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+  const fetchActivitySummary = async (token) => {
+    const response = await fetch('/api/analytics/activity-summary', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       }
-      
-      const data = await response.json();
-      setActivitySummary(data);
-    } catch (error) {
-      console.error("Error fetching activity summary:", error);
-      throw error;
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch activity summary: ${response.status}`);
     }
+    
+    return await response.json();
   };
   
-  const fetchAiRecommendations = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/ai/recommendations/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+  const fetchAiRecommendations = async (token) => {
+    const response = await fetch('/api/ai/recommendations', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       }
-      
-      const data = await response.json();
-      setAiRecommendations(data);
-    } catch (error) {
-      console.error("Error fetching AI recommendations:", error);
-      // This error won't prevent dashboard from working, just the AI recommendations section won't be shown
-      setAiRecommendations(null);
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch AI recommendations: ${response.status}`);
     }
+    
+    return await response.json();
   };
   
-  const fetchAiAnalytics = async () => {
-    try {
-      // This endpoint might be different in your actual API
-      const response = await fetch(`${API_BASE_URL}/ai/user-analytics/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+  const fetchAiAnalytics = async (token) => {
+    const response = await fetch('/api/ai/user-analytics', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       }
-      
-      const data = await response.json();
-      setAiAnalytics(data);
-    } catch (error) {
-      console.error("Error fetching AI analytics:", error);
-      // This error won't prevent dashboard from working, just the AI analytics section won't be shown
-      setAiAnalytics(null);
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch AI analytics: ${response.status}`);
     }
+    
+    return await response.json();
   };
   
   const dismissRecommendation = async (recommendationId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/recommendations/${recommendationId}/dismiss/`, {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`/api/ai/recommendations/${recommendationId}/dismiss`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({})
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`Failed to dismiss recommendation: ${response.status}`);
       }
       
-      // If successful, reload recommendations
-      await fetchAiRecommendations();
+      // If successful, refresh recommendations
+      const recommendations = await fetchAiRecommendations(token);
+      setAiRecommendations(recommendations);
     } catch (error) {
       console.error("Error dismissing recommendation:", error);
     }
@@ -721,84 +440,200 @@ export default function DashboardPage() {
       
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ 
             height: '100%',
             transition: 'transform 0.3s, box-shadow 0.3s',
             '&:hover': {
               transform: 'translateY(-5px)',
               boxShadow: 6
-            }
+            },
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 2,
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
           }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <SchoolIcon color="primary" fontSize="large" />
-              <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
-                {stats?.completedCourses || 0} / {learningProgress?.ongoingCourses?.length + (stats?.completedCourses || 0)}
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.05)}, ${alpha(theme.palette.primary.main, 0.1)})`
+            }} />
+            <CardContent sx={{ 
+              textAlign: 'center',
+              position: 'relative',
+              zIndex: 1,
+              p: 3
+            }}>
+              <Avatar 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.primary.main, 0.1), 
+                  color: 'primary.main',
+                  width: 60,
+                  height: 60,
+                  mx: 'auto',
+                  mb: 1.5,
+                  boxShadow: `0 4px 8px ${alpha(theme.palette.primary.main, 0.2)}`
+                }}
+              >
+                <SchoolIcon fontSize="large" />
+              </Avatar>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                {stats?.completedCourses || 0} / {(learningProgress?.ongoingCourses?.length || 0) + (stats?.completedCourses || 0)}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 Courses Completed
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ 
             height: '100%',
             transition: 'transform 0.3s, box-shadow 0.3s',
             '&:hover': {
               transform: 'translateY(-5px)',
               boxShadow: 6
-            }
+            },
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 2,
+            border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
           }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <EmojiEventsIcon color="primary" fontSize="large" />
-              <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: `linear-gradient(135deg, ${alpha(theme.palette.secondary.light, 0.05)}, ${alpha(theme.palette.secondary.main, 0.1)})`
+            }} />
+            <CardContent sx={{ 
+              textAlign: 'center',
+              position: 'relative',
+              zIndex: 1,
+              p: 3
+            }}>
+              <Avatar 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.secondary.main, 0.1), 
+                  color: 'secondary.main',
+                  width: 60,
+                  height: 60,
+                  mx: 'auto',
+                  mb: 1.5,
+                  boxShadow: `0 4px 8px ${alpha(theme.palette.secondary.main, 0.2)}`
+                }}
+              >
+                <EmojiEventsIcon fontSize="large" />
+              </Avatar>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 {stats?.completedQuests || 0}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 Quests Completed
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ 
             height: '100%',
             transition: 'transform 0.3s, box-shadow 0.3s',
             '&:hover': {
               transform: 'translateY(-5px)',
               boxShadow: 6
-            }
+            },
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 2,
+            border: `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
           }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <TokenIcon color="primary" fontSize="large" />
-              <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: `linear-gradient(135deg, ${alpha(theme.palette.success.light, 0.05)}, ${alpha(theme.palette.success.main, 0.1)})`
+            }} />
+            <CardContent sx={{ 
+              textAlign: 'center',
+              position: 'relative',
+              zIndex: 1,
+              p: 3
+            }}>
+              <Avatar 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.success.main, 0.1), 
+                  color: 'success.main',
+                  width: 60,
+                  height: 60,
+                  mx: 'auto',
+                  mb: 1.5,
+                  boxShadow: `0 4px 8px ${alpha(theme.palette.success.main, 0.2)}`
+                }}
+              >
+                <TokenIcon fontSize="large" />
+              </Avatar>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 {stats?.earnedNFTs || 0}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 NFTs Owned
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         
-        <Grid item xs={6} sm={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ 
             height: '100%',
             transition: 'transform 0.3s, box-shadow 0.3s',
             '&:hover': {
               transform: 'translateY(-5px)',
               boxShadow: 6
-            }
+            },
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 2,
+            border: `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
           }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <TrendingUpIcon color="primary" fontSize="large" />
-              <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: `linear-gradient(135deg, ${alpha(theme.palette.warning.light, 0.05)}, ${alpha(theme.palette.warning.main, 0.1)})`
+            }} />
+            <CardContent sx={{ 
+              textAlign: 'center',
+              position: 'relative',
+              zIndex: 1,
+              p: 3
+            }}>
+              <Avatar 
+                sx={{ 
+                  bgcolor: alpha(theme.palette.warning.main, 0.1), 
+                  color: 'warning.main',
+                  width: 60,
+                  height: 60,
+                  mx: 'auto',
+                  mb: 1.5,
+                  boxShadow: `0 4px 8px ${alpha(theme.palette.warning.main, 0.2)}`
+                }}
+              >
+                <TrendingUpIcon fontSize="large" />
+              </Avatar>
+              <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                 {stats?.totalPoints || 0}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body1" color="text.secondary">
                 Points Earned
               </Typography>
             </CardContent>
@@ -839,7 +674,7 @@ export default function DashboardPage() {
         
         {!subscriptionActive ? (
           <Box sx={{ textAlign: 'center', py: 3 }}>
-            <Typography variant="body1" paragraph>
+            <Typography variant="h6" paragraph color="text.secondary" fontWeight="medium">
               AI insights and personalized learning recommendations are exclusive to premium members.
             </Typography>
             <Button 
@@ -849,11 +684,13 @@ export default function DashboardPage() {
               sx={{ 
                 borderRadius: 8,
                 px: 3,
+                py: 1,
+                fontSize: '1rem',
                 background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                 boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`,
               }}
             >
-              Go Premium
+              Unlock with NFTs
             </Button>
           </Box>
         ) : (
@@ -973,25 +810,47 @@ export default function DashboardPage() {
       
       {/* Active Quests */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-          <ExtensionIcon sx={{ mr: 1 }} />
+        <Typography variant="h5" sx={{ 
+          mb: 3, 
+          fontWeight: 'bold', 
+          display: 'flex', 
+          alignItems: 'center',
+          borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+          pb: 1
+        }}>
+          <ExtensionIcon sx={{ mr: 1, color: 'primary.main' }} />
           Active Quests
         </Typography>
         <Grid container spacing={3}>
           {learningProgress?.ongoingQuests?.length > 0 ? (
             learningProgress.ongoingQuests.map((quest) => (
-              <Grid item xs={12} sm={6} key={quest.QuestID}>
+              <Grid item xs={12} sm={6} md={6} key={quest.QuestID}>
                 <Card sx={{ 
                   height: '100%',
                   transition: 'transform 0.3s, box-shadow 0.3s',
                   '&:hover': {
                     transform: 'translateY(-5px)',
                     boxShadow: 6
-                  }
+                  },
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(
+                    quest.DifficultyLevel === 'easy' ? theme.palette.success.main : 
+                    quest.DifficultyLevel === 'hard' ? theme.palette.error.main : theme.palette.warning.main,
+                    0.2
+                  )}`,
                 }}>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main', mr: 1.5 }}>
+                      <Avatar sx={{ 
+                        bgcolor: alpha(
+                          quest.DifficultyLevel === 'easy' ? theme.palette.success.main : 
+                          quest.DifficultyLevel === 'hard' ? theme.palette.error.main : theme.palette.warning.main,
+                          0.1
+                        ), 
+                        color: quest.DifficultyLevel === 'easy' ? 'success.main' : 
+                               quest.DifficultyLevel === 'hard' ? 'error.main' : 'warning.main',
+                        mr: 1.5 
+                      }}>
                         <ExtensionIcon />
                       </Avatar>
                       <Box sx={{ flex: 1 }}>
@@ -1013,17 +872,25 @@ export default function DashboardPage() {
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
                         <span>Progress:</span>
-                        <span>{quest.CurrentProgress} / {quest.RequiredPoints} points</span>
+                        <span><b>{quest.CurrentProgress}</b> / {quest.RequiredPoints} points</span>
                       </Typography>
                       <LinearProgress 
                         variant="determinate" 
                         value={(quest.CurrentProgress / quest.RequiredPoints) * 100} 
                         sx={{ 
-                          height: 8, 
-                          borderRadius: 4,
-                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                          height: 10, 
+                          borderRadius: 5,
+                          backgroundColor: alpha(
+                            quest.DifficultyLevel === 'easy' ? theme.palette.success.main : 
+                            quest.DifficultyLevel === 'hard' ? theme.palette.error.main : theme.palette.warning.main,
+                            0.1
+                          ),
                           '& .MuiLinearProgress-bar': {
-                            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+                            background: quest.DifficultyLevel === 'easy' ? 
+                              `linear-gradient(90deg, ${theme.palette.success.light}, ${theme.palette.success.main})` :
+                              quest.DifficultyLevel === 'hard' ?
+                              `linear-gradient(90deg, ${theme.palette.error.light}, ${theme.palette.error.main})` :
+                              `linear-gradient(90deg, ${theme.palette.warning.light}, ${theme.palette.warning.main})`
                           }
                         }}
                       />
@@ -1037,15 +904,23 @@ export default function DashboardPage() {
                             label={`${quest.RequiredPoints * 2} Points Reward`}
                             size="small"
                             variant="outlined"
-                            color="secondary"
+                            color={
+                              quest.DifficultyLevel === 'easy' ? 'success' : 
+                              quest.DifficultyLevel === 'hard' ? 'error' : 'warning'
+                            }
                           />
                         </Tooltip>
                       </Box>
                       <Button 
                         size="small" 
-                        variant="outlined"
+                        variant="contained"
+                        color={
+                          quest.DifficultyLevel === 'easy' ? 'success' : 
+                          quest.DifficultyLevel === 'hard' ? 'error' : 'warning'
+                        }
                         onClick={() => router.push(`/quests/${quest.QuestID}`)}
                         endIcon={<DoubleArrowIcon />}
+                        sx={{ borderRadius: 2 }}
                       >
                         View Quest
                       </Button>
@@ -1062,16 +937,21 @@ export default function DashboardPage() {
                   py: 4,
                   px: 2,
                   bgcolor: alpha(theme.palette.background.paper, 0.6),
-                  border: `1px dashed ${alpha(theme.palette.divider, 0.5)}`
+                  border: `1px dashed ${alpha(theme.palette.divider, 0.5)}`,
+                  borderRadius: 2
                 }}
               >
-                <Typography variant="body1" paragraph>
+                <Box sx={{ mb: 2 }}>
+                  <ExtensionIcon sx={{ fontSize: 60, color: alpha(theme.palette.text.secondary, 0.3) }} />
+                </Box>
+                <Typography variant="h6" paragraph fontWeight="medium">
                   You don't have any active quests yet.
                 </Typography>
                 <Button 
                   variant="contained" 
                   color="primary"
                   onClick={() => router.push('/quests')}
+                  sx={{ borderRadius: 2, px: 3 }}
                 >
                   Explore Quests
                 </Button>
@@ -1195,11 +1075,24 @@ export default function DashboardPage() {
       
       {/* Course Progress */}
       <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" sx={{ 
+          mb: 1, 
+          fontWeight: 'bold', 
+          display: 'flex', 
+          alignItems: 'center',
+          borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+          pb: 1
+        }}>
+          <SchoolIcon sx={{ mr: 1, color: 'primary.main' }} />
+          Course Progress
+        </Typography>
+        
         <Tabs 
           value={activeTab} 
           onChange={handleTabChange}
           sx={{ 
             mb: 3,
+            mt: 1,
             '& .MuiTabs-indicator': {
               height: 3,
               borderRadius: 1.5,
@@ -1212,8 +1105,26 @@ export default function DashboardPage() {
             },
           }}
         >
-          <Tab label="In Progress" icon={<SchoolIcon />} iconPosition="start" />
-          <Tab label="Completed" icon={<VerifiedIcon />} iconPosition="start" />
+          <Tab 
+            label="In Progress" 
+            icon={<SchoolIcon />} 
+            iconPosition="start" 
+            sx={{
+              '&.Mui-selected': {
+                color: 'primary.main',
+              }
+            }}
+          />
+          <Tab 
+            label="Completed" 
+            icon={<VerifiedIcon />} 
+            iconPosition="start"
+            sx={{
+              '&.Mui-selected': {
+                color: 'success.main',
+              }
+            }}
+          />
         </Tabs>
         
         <Grid container spacing={3}>
@@ -1227,7 +1138,10 @@ export default function DashboardPage() {
                     '&:hover': {
                       transform: 'translateY(-5px)',
                       boxShadow: 6
-                    }
+                    },
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                   }}>
                     <Box sx={{ position: 'relative' }}>
                       <Box
@@ -1236,7 +1150,7 @@ export default function DashboardPage() {
                         alt={course.Title}
                         sx={{
                           width: '100%',
-                          height: 140,
+                          height: 160,
                           objectFit: 'cover'
                         }}
                       />
@@ -1245,15 +1159,19 @@ export default function DashboardPage() {
                         bottom: 0, 
                         left: 0, 
                         width: '100%', 
-                        p: 1,
+                        p: 1.5,
                         backgroundColor: 'rgba(0,0,0,0.7)'
                       }}>
+                        <Typography variant="body2" color="white" sx={{ mb: 1, fontWeight: 'bold' }}>
+                          Progress: {Math.round(course.CompletionPercentage)}%
+                        </Typography>
                         <LinearProgress
                           variant="determinate"
                           value={course.CompletionPercentage}
                           sx={{ 
                             height: 10, 
                             borderRadius: 5,
+                            backgroundColor: alpha(theme.palette.common.white, 0.2),
                             '& .MuiLinearProgress-bar': {
                               background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
                             }
@@ -1269,35 +1187,39 @@ export default function DashboardPage() {
                           position: 'absolute', 
                           top: 10, 
                           right: 10,
-                          backgroundColor: alpha(theme.palette.primary.main, 0.8)
+                          backgroundColor: alpha(theme.palette.primary.main, 0.8),
+                          fontWeight: 'bold'
                         }} 
                       />
                     </Box>
                     
                     <CardContent>
-                      <Typography variant="h6" gutterBottom fontWeight="bold">
+                      <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ 
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        minHeight: '60px'
+                      }}>
                         {course.Title}
                       </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <AccessTimeIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="caption" color="text.secondary">
-                            Last viewed: {new Date(course.LastAccessDate).toLocaleDateString()}
-                          </Typography>
-                        </Box>
-                        <Typography variant="caption" fontWeight="bold" color="primary">
-                          {Math.round(course.CompletionPercentage)}%
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <AccessTimeIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
+                        <Typography variant="caption" color="text.secondary">
+                          Last viewed: {new Date(course.LastAccessDate).toLocaleDateString()}
                         </Typography>
                       </Box>
                       
                       <Chip 
-                        label={`Difficulty: ${course.Difficulty}`}
+                        label={`${course.Difficulty}`}
                         size="small"
                         color={
                           course.Difficulty === 'beginner' ? 'success' : 
                           course.Difficulty === 'advanced' ? 'error' : 'warning'
                         }
-                        sx={{ mb: 2 }}
+                        sx={{ mb: 2, fontWeight: 'medium' }}
                       />
                       
                       <Button
@@ -1307,7 +1229,8 @@ export default function DashboardPage() {
                         startIcon={<PlayArrowIcon />}
                         sx={{ 
                           mt: 1,
-                          borderRadius: '8px',
+                          borderRadius: 2,
+                          py: 1,
                           background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                           boxShadow: `0 4px 10px ${alpha(theme.palette.primary.main, 0.3)}`,
                           transition: 'all 0.3s',
@@ -1317,7 +1240,7 @@ export default function DashboardPage() {
                         }}
                         onClick={() => router.push(`/courses/${course.CourseID}`)}
                       >
-                        Continue
+                        Continue Learning
                       </Button>
                     </CardContent>
                   </Card>
@@ -1328,19 +1251,24 @@ export default function DashboardPage() {
                 <Paper 
                   sx={{ 
                     textAlign: 'center', 
-                    py: 4,
-                    px: 2,
+                    py: 5,
+                    px: 3,
                     bgcolor: alpha(theme.palette.background.paper, 0.6),
-                    border: `1px dashed ${alpha(theme.palette.divider, 0.5)}`
+                    border: `1px dashed ${alpha(theme.palette.divider, 0.5)}`,
+                    borderRadius: 2
                   }}
                 >
-                  <Typography variant="body1" paragraph>
+                  <Box sx={{ mb: 2 }}>
+                    <SchoolIcon sx={{ fontSize: 60, color: alpha(theme.palette.text.secondary, 0.3) }} />
+                  </Box>
+                  <Typography variant="h6" paragraph fontWeight="medium">
                     You haven't started any courses yet.
                   </Typography>
                   <Button 
                     variant="contained" 
                     color="primary"
                     onClick={() => router.push('/courses')}
+                    sx={{ borderRadius: 2, px: 3 }}
                   >
                     Explore Courses
                   </Button>
@@ -1518,12 +1446,12 @@ export default function DashboardPage() {
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Typography variant="h5" component="div" fontWeight="bold">
-            Upgrade to Premium
+            Unlock Premium Features with NFTs
           </Typography>
         </DialogTitle>
         <DialogContent>
           <Typography variant="body1" paragraph>
-            With Premium subscription, you can enjoy these benefits:
+            Purchase or earn special NFTs to unlock premium features:
           </Typography>
           <List>
             <ListItem>
@@ -1568,7 +1496,7 @@ export default function DashboardPage() {
             color="primary"
             onClick={() => {
               setSubscriptionDialog(false);
-              router.push('/subscription');
+              router.push('/nfts');
             }}
             sx={{ 
               borderRadius: 8,
@@ -1576,7 +1504,7 @@ export default function DashboardPage() {
               background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             }}
           >
-            View Subscription Plans
+            Explore NFTs
           </Button>
         </DialogActions>
       </Dialog>

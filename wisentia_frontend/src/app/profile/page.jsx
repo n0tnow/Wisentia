@@ -36,7 +36,8 @@ import {
   Tooltip,
   alpha,
   useTheme,
-  Stack
+  Stack,
+  LinearProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -194,6 +195,32 @@ export default function ProfilePage() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(0); // 0: overview, 1: courses, 2: quests, 3: nfts
   
+  // Add missing state variables for courses data
+  const [userCourses, setUserCourses] = useState({
+    ongoing: [],
+    completed: [],
+    categoryStats: {}
+  });
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [coursesFetchError, setCoursesFetchError] = useState(null);
+  
+  // Add missing state variables for quests data
+  const [userQuests, setUserQuests] = useState({
+    ongoing: [],
+    completed: []
+  });
+  const [questsLoading, setQuestsLoading] = useState(false);
+  const [questsFetchError, setQuestsFetchError] = useState(null);
+  
+  // Add missing state variables for NFTs data
+  const [userNFTs, setUserNFTs] = useState([]);
+  const [nftsLoading, setNFTsLoading] = useState(false);
+  const [nftsFetchError, setNFTsFetchError] = useState(null);
+  
+  // Add loading state for profile updates
+  const [profileUpdateLoading, setProfileUpdateLoading] = useState(false);
+  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false);
+  
   const [editMode, setEditMode] = useState(false);
   const [profileForm, setProfileForm] = useState({
     username: '',
@@ -238,84 +265,208 @@ export default function ProfilePage() {
   // Tab change handler
   const handleTabChange = (newValue) => {
     setActiveTab(newValue);
+    
+    // Load the appropriate data based on the active tab
+    if (newValue === 1 && (!userCourses || userCourses.ongoing.length === 0)) {
+      fetchUserCourses();
+    } else if (newValue === 2 && (!userQuests || userQuests.ongoing.length === 0)) {
+      fetchUserQuests();
+    } else if (newValue === 3 && (!userNFTs || userNFTs.length === 0)) {
+      fetchUserNFTs();
+    }
   };
   
   const fetchProfileData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Try to call API
-      try {
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-        const token = localStorage.getItem('access_token');
-        
-        const response = await axios.get(`${API_BASE_URL}/auth/profile/`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true
-        });
-        
-        console.log("API Response:", response.data);
-        setProfileData(response.data);
-        setProfileForm({
-          username: response.data.username,
-          email: response.data.email,
-          profileImage: response.data.profileImage || ''
-        });
-      } catch (apiError) {
-        console.error('API Error:', apiError);
-        
-        // Use mock data in case of API error
-        console.log("Using mock data due to API error");
-        const mockProfileData = {
-          id: 1,
-          username: user?.username || "wisentia_user",
-          email: user?.email || "user@wisentia.com",
-          walletAddress: "",
-          joinDate: new Date().toISOString(),
-          lastLogin: new Date().toISOString(),
-          role: user?.role || "regular",
-          profileImage: "",
-          themePreference: "light",
-          totalPoints: 1250
-        };
-        
-        setProfileData(mockProfileData);
-        setProfileForm({
-          username: mockProfileData.username,
-          email: mockProfileData.email,
-          profileImage: mockProfileData.profileImage || ''
-        });
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+      
+      // Fetch user profile data
+      const response = await fetch('/api/auth/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch profile: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Profile data from API:", data);
+      
+      setProfileData(data);
+      setProfileForm({
+        username: data.username || '',
+        email: data.email || '',
+        profileImage: data.profileImage || ''
+      });
+      
+      // Also fetch user stats
+      await fetchUserStats();
+      
+      // Also fetch user courses, quests, and NFTs based on active tab
+      if (activeTab === 1) {
+        await fetchUserCourses();
+      } else if (activeTab === 2) {
+        await fetchUserQuests();
+      } else if (activeTab === 3) {
+        await fetchUserNFTs();
       }
       
       setLoading(false);
     } catch (err) {
       console.error('Profile data fetch error:', err);
-      setError('Error loading profile data.');
+      setError('Error loading profile data: ' + err.message);
       setLoading(false);
     }
   };
   
   const fetchUserStats = async () => {
     try {
-      // Add your real API here when ready
-      // For now using sample data
-      setTimeout(() => {
-        setStats({
-          completedCourses: 3,
-          completedVideos: 24,
-          completedQuests: 7,
-          earnedNFTs: 5,
-          totalPoints: 1250
-        });
-      }, 1000);
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
       
-      // Real API call:
-      // const response = await axios.get('/api/analytics/user-stats/');
-      // setStats(response.data);
+      const response = await fetch('/api/profile/stats', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user stats: ${response.status}`);
+      }
+      
+      const statsData = await response.json();
+      console.log("User stats data from API:", statsData);
+      
+      setStats({
+        completedCourses: statsData.completedCourses || 0,
+        completedVideos: statsData.completedVideos || 0,
+        completedQuests: statsData.completedQuests || 0,
+        earnedNFTs: statsData.earnedNFTs || 0,
+        totalPoints: statsData.totalPoints || 0
+      });
     } catch (err) {
       console.error('User stats fetch error:', err);
+      // Not throwing error here as this is not critical
+    }
+  };
+  
+  const fetchUserCourses = async () => {
+    try {
+      setCoursesLoading(true);
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+      
+      const response = await fetch('/api/profile/courses', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch courses: ${response.status}`);
+      }
+      
+      const coursesData = await response.json();
+      console.log("User courses data from API:", coursesData);
+      
+      setUserCourses({
+        ongoing: coursesData.ongoingCourses || [],
+        completed: coursesData.completedCourses || [],
+        categoryStats: coursesData.categoryStats || {}
+      });
+    } catch (err) {
+      console.error('User courses fetch error:', err);
+      setCoursesFetchError('Failed to load courses data');
+    } finally {
+      setCoursesLoading(false);
+    }
+  };
+  
+  const fetchUserQuests = async () => {
+    try {
+      setQuestsLoading(true);
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+      
+      const response = await fetch('/api/profile/quests', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch quests: ${response.status}`);
+      }
+      
+      const questsData = await response.json();
+      console.log("User quests data from API:", questsData);
+      
+      setUserQuests({
+        ongoing: questsData.ongoingQuests || [],
+        completed: questsData.completedQuests || []
+      });
+    } catch (err) {
+      console.error('User quests fetch error:', err);
+      setQuestsFetchError('Failed to load quests data');
+    } finally {
+      setQuestsLoading(false);
+    }
+  };
+  
+  const fetchUserNFTs = async () => {
+    try {
+      setNFTsLoading(true);
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
+      
+      const response = await fetch('/api/profile/nfts', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch NFTs: ${response.status}`);
+      }
+      
+      const nftsData = await response.json();
+      console.log("User NFTs data from API:", nftsData);
+      
+      setUserNFTs(nftsData || []);
+    } catch (err) {
+      console.error('User NFTs fetch error:', err);
+      setNFTsFetchError('Failed to load NFTs data');
+    } finally {
+      setNFTsLoading(false);
     }
   };
   
@@ -331,18 +482,49 @@ export default function ProfilePage() {
     e.preventDefault();
     
     try {
-      const response = await axios.put('/api/auth/profile/update/', profileForm);
-      setProfileData(response.data);
+      setProfileUpdateLoading(true);
+      setError(null);
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        setError('Authentication token missing');
+        setProfileUpdateLoading(false);
+        return;
+      }
+      
+      const response = await fetch('/api/auth/profile/update', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profileForm)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update profile: ${response.status}`);
+      }
+      
+      const updatedData = await response.json();
+      
+      setProfileData(updatedData);
       setEditMode(false);
+      
+      // Update user in auth context
       updateUser({
         ...user,
-        username: response.data.username,
-        email: response.data.email,
-        profileImage: response.data.profileImage
+        username: updatedData.username,
+        email: updatedData.email,
+        profileImage: updatedData.profileImage
       });
+      
+      setProfileUpdateSuccess(true);
+      setTimeout(() => setProfileUpdateSuccess(false), 3000);
     } catch (err) {
-      setError('Error updating profile.');
+      setError('Error updating profile: ' + err.message);
       console.error('Profile update error:', err);
+    } finally {
+      setProfileUpdateLoading(false);
     }
   };
   
@@ -370,20 +552,36 @@ export default function ProfilePage() {
     formData.append('image', file);
     
     try {
-      const response = await axios.post('/api/files/profile-image/upload/', formData, {
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        setImageError('Authentication token missing');
+        setUploadingImage(false);
+        return;
+      }
+      
+      const response = await fetch('/api/files/profile-image/upload', {
+        method: 'POST',
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to upload image: ${response.status}`);
+      }
+      
+      const data = await response.json();
       
       setProfileForm(prev => ({
         ...prev,
-        profileImage: response.data.url
+        profileImage: data.url
       }));
       
       setUploadingImage(false);
     } catch (err) {
-      setImageError('Error uploading image.');
+      setImageError('Error uploading image: ' + err.message);
       setUploadingImage(false);
       console.error('Image upload error:', err);
     }
@@ -1320,31 +1518,92 @@ export default function ProfilePage() {
                 My Courses
               </Typography>
               
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
-                In Progress
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12}>
-                  <Typography color="text.secondary">
-                    Your in-progress courses will be listed here.
+              {coursesLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : coursesFetchError ? (
+                <Alert severity="error" sx={{ my: 2 }}>
+                  {coursesFetchError}
+                  <Button 
+                    size="small" 
+                    color="inherit" 
+                    sx={{ ml: 2 }}
+                    onClick={fetchUserCourses}
+                  >
+                    Retry
+                  </Button>
+                </Alert>
+              ) : (
+                <>
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
+                    In Progress
                   </Typography>
-                </Grid>
-              </Grid>
-              
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
-                Completed
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Typography color="text.secondary">
-                    Your completed courses will be listed here.
+                  <Divider sx={{ mb: 3 }} />
+                  
+                  <Grid container spacing={3} sx={{ mb: 4 }}>
+                    {userCourses.ongoing && userCourses.ongoing.length > 0 ? (
+                      userCourses.ongoing.map(course => (
+                        <Grid item xs={12} sm={6} md={4} key={course.CourseID || course.id}>
+                          <Card sx={{ height: '100%', borderRadius: 2 }}>
+                            <CardContent>
+                              <Typography variant="h6" gutterBottom>
+                                {course.Title || course.title}
+                              </Typography>
+                              <Box sx={{ mt: 2 }}>
+                                <Typography variant="body2" gutterBottom>
+                                  Progress: {Math.round(course.CompletionPercentage || 0)}%
+                                </Typography>
+                                <LinearProgress 
+                                  variant="determinate" 
+                                  value={course.CompletionPercentage || 0} 
+                                  sx={{ height: 8, borderRadius: 4 }}
+                                />
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))
+                    ) : (
+                      <Grid item xs={12}>
+                        <Typography color="text.secondary">
+                          You haven't started any courses yet.
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                  
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
+                    Completed
                   </Typography>
-                </Grid>
-              </Grid>
+                  <Divider sx={{ mb: 3 }} />
+                  
+                  <Grid container spacing={3}>
+                    {userCourses.completed && userCourses.completed.length > 0 ? (
+                      userCourses.completed.map(course => (
+                        <Grid item xs={12} sm={6} md={4} key={course.CourseID || course.id}>
+                          <Card sx={{ height: '100%', borderRadius: 2 }}>
+                            <CardContent>
+                              <Typography variant="h6" gutterBottom>
+                                {course.Title || course.title}
+                              </Typography>
+                              <Typography variant="body2" color="success.main">
+                                Completed on: {new Date(course.CompletionDate).toLocaleDateString()}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))
+                    ) : (
+                      <Grid item xs={12}>
+                        <Typography color="text.secondary">
+                          You haven't completed any courses yet.
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </>
+              )}
               
               <Box sx={{ mt: 4, textAlign: 'center' }}>
                 <Button 
@@ -1379,31 +1638,92 @@ export default function ProfilePage() {
                 My Quests
               </Typography>
               
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
-                Active Quests
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12}>
-                  <Typography color="text.secondary">
-                    Your active quests will be listed here.
+              {questsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : questsFetchError ? (
+                <Alert severity="error" sx={{ my: 2 }}>
+                  {questsFetchError}
+                  <Button 
+                    size="small" 
+                    color="inherit" 
+                    sx={{ ml: 2 }}
+                    onClick={fetchUserQuests}
+                  >
+                    Retry
+                  </Button>
+                </Alert>
+              ) : (
+                <>
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
+                    Active Quests
                   </Typography>
-                </Grid>
-              </Grid>
-              
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
-                Completed Quests
-              </Typography>
-              <Divider sx={{ mb: 3 }} />
-              
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Typography color="text.secondary">
-                    Your completed quests will be listed here.
+                  <Divider sx={{ mb: 3 }} />
+                  
+                  <Grid container spacing={3} sx={{ mb: 4 }}>
+                    {userQuests.ongoing && userQuests.ongoing.length > 0 ? (
+                      userQuests.ongoing.map(quest => (
+                        <Grid item xs={12} sm={6} key={quest.QuestID || quest.id}>
+                          <Card sx={{ height: '100%', borderRadius: 2 }}>
+                            <CardContent>
+                              <Typography variant="h6" gutterBottom>
+                                {quest.Title || quest.title}
+                              </Typography>
+                              <Box sx={{ mt: 2 }}>
+                                <Typography variant="body2" gutterBottom>
+                                  Progress: {quest.CurrentProgress || 0} / {quest.RequiredPoints || 100} points
+                                </Typography>
+                                <LinearProgress 
+                                  variant="determinate" 
+                                  value={((quest.CurrentProgress || 0) / (quest.RequiredPoints || 100)) * 100} 
+                                  sx={{ height: 8, borderRadius: 4 }}
+                                />
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))
+                    ) : (
+                      <Grid item xs={12}>
+                        <Typography color="text.secondary">
+                          You don't have any active quests.
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                  
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
+                    Completed Quests
                   </Typography>
-                </Grid>
-              </Grid>
+                  <Divider sx={{ mb: 3 }} />
+                  
+                  <Grid container spacing={3}>
+                    {userQuests.completed && userQuests.completed.length > 0 ? (
+                      userQuests.completed.map(quest => (
+                        <Grid item xs={12} sm={6} key={quest.QuestID || quest.id}>
+                          <Card sx={{ height: '100%', borderRadius: 2 }}>
+                            <CardContent>
+                              <Typography variant="h6" gutterBottom>
+                                {quest.Title || quest.title}
+                              </Typography>
+                              <Typography variant="body2" color="success.main">
+                                Completed on: {new Date(quest.CompletionDate).toLocaleDateString()}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))
+                    ) : (
+                      <Grid item xs={12}>
+                        <Typography color="text.secondary">
+                          You haven't completed any quests yet.
+                        </Typography>
+                      </Grid>
+                    )}
+                  </Grid>
+                </>
+              )}
               
               <Box sx={{ mt: 4, textAlign: 'center' }}>
                 <Button 
@@ -1471,6 +1791,22 @@ export default function ProfilePage() {
                     </Box>
                   </CardContent>
                 </Card>
+              ) : nftsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : nftsFetchError ? (
+                <Alert severity="error" sx={{ my: 2 }}>
+                  {nftsFetchError}
+                  <Button 
+                    size="small" 
+                    color="inherit" 
+                    sx={{ ml: 2 }}
+                    onClick={fetchUserNFTs}
+                  >
+                    Retry
+                  </Button>
+                </Alert>
               ) : (
                 <>
                   <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, mt: 3 }}>
@@ -1479,34 +1815,65 @@ export default function ProfilePage() {
                   <Divider sx={{ mb: 3 }} />
                   
                   <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                      <Typography color="text.secondary">
-                        Your NFTs will be listed here.
-                      </Typography>
-                    </Grid>
+                    {userNFTs && userNFTs.length > 0 ? (
+                      userNFTs.map(nft => (
+                        <Grid item xs={12} sm={6} md={4} key={nft.NFTID || nft.id}>
+                          <Card sx={{ height: '100%', borderRadius: 2 }}>
+                            <CardContent>
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <Avatar 
+                                  src={nft.ImageURI || nft.imageUrl} 
+                                  alt={nft.Title || nft.title}
+                                  sx={{ width: 120, height: 120, mb: 2 }}
+                                  variant="rounded"
+                                />
+                                <Typography variant="h6" align="center" gutterBottom>
+                                  {nft.Title || nft.title}
+                                </Typography>
+                                <Chip 
+                                  label={nft.Rarity || nft.rarity || 'Common'} 
+                                  color={
+                                    (nft.Rarity || nft.rarity) === 'Legendary' ? 'error' :
+                                    (nft.Rarity || nft.rarity) === 'Rare' ? 'primary' : 
+                                    'default'
+                                  }
+                                  size="small"
+                                />
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      ))
+                    ) : (
+                      <Grid item xs={12}>
+                        <Typography color="text.secondary">
+                          You don't have any NFTs yet.
+                        </Typography>
+                      </Grid>
+                    )}
                   </Grid>
-                  
-                  <Box sx={{ mt: 4, textAlign: 'center' }}>
-                    <Button 
-                      component={Link}
-                      href="/nfts"
-                      variant="contained" 
-                      color="primary"
-                      sx={{ 
-                        borderRadius: 8, 
-                        fontWeight: 'bold',
-                        px: 4,
-                        py: 1.2,
-                        background: theme.palette.mode === 'dark'
-                          ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
-                          : 'linear-gradient(to right, #4158D0, #8E49E8)',
-                      }}
-                    >
-                      Explore All NFTs
-                    </Button>
-                  </Box>
                 </>
               )}
+              
+              <Box sx={{ mt: 4, textAlign: 'center' }}>
+                <Button 
+                  component={Link}
+                  href="/nfts"
+                  variant="contained" 
+                  color="primary"
+                  sx={{ 
+                    borderRadius: 8, 
+                    fontWeight: 'bold',
+                    px: 4,
+                    py: 1.2,
+                    background: theme.palette.mode === 'dark'
+                      ? 'linear-gradient(to right, #3f51b5, #9c27b0)'
+                      : 'linear-gradient(to right, #4158D0, #8E49E8)',
+                  }}
+                >
+                  Explore All NFTs
+                </Button>
+              </Box>
             </MotionBox>
           )}
         </Paper>

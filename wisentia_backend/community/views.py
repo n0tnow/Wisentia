@@ -173,32 +173,44 @@ def create_post(request):
                 WHERE UserID = %s
             """, [points_cost, user_id])
         
-        # Gönderiyi oluştur
-        cursor.execute("""
-            INSERT INTO CommunityPosts
-            (UserID, Title, Content, CreationDate, Category, PointsCost, Likes, Views, IsActive)
-            VALUES (%s, %s, %s, GETDATE(), %s, %s, 0, 0, 1);
-            SELECT SCOPE_IDENTITY();
-        """, [user_id, title, content, category, points_cost])
-        
-        post_id = cursor.fetchone()[0]
-        
-        # Etkinlik logu ekle
-        cursor.execute("""
-            INSERT INTO ActivityLogs
-            (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
-            VALUES (%s, 'post_created', %s, GETDATE(), %s, %s)
-        """, [
-            user_id, 
-            f"Created post: {title}", 
-            request.META.get('REMOTE_ADDR', ''),
-            request.META.get('HTTP_USER_AGENT', '')
-        ])
-    
-    return Response({
-        'message': 'Post created successfully',
-        'postId': post_id
-    }, status=status.HTTP_201_CREATED)
+        try:
+            # Gönderiyi oluştur - Sorguları ayır
+            cursor.execute("""
+                INSERT INTO CommunityPosts
+                (UserID, Title, Content, CreationDate, Category, PointsCost, Likes, Views, IsActive)
+                VALUES (%s, %s, %s, GETDATE(), %s, %s, 0, 0, 1)
+            """, [user_id, title, content, category, points_cost])
+            
+            # Ayrı bir sorgu ile ID'yi al - MS SQL Server için uygun format
+            cursor.execute("SELECT CAST(SCOPE_IDENTITY() AS INT) AS PostID")
+            result = cursor.fetchone()
+            
+            if not result:
+                raise Exception("Failed to get post ID after insert")
+                
+            post_id = result[0]
+            
+            # Etkinlik logu ekle
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                VALUES (%s, 'post_created', %s, GETDATE(), %s, %s)
+            """, [
+                user_id, 
+                f"Created post: {title}", 
+                request.META.get('REMOTE_ADDR', ''),
+                request.META.get('HTTP_USER_AGENT', '')
+            ])
+            
+            return Response({
+                'message': 'Post created successfully',
+                'postId': post_id
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'error': f'Database error: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -233,20 +245,32 @@ def create_comment(request, post_id):
             if not cursor.fetchone():
                 return Response({'error': 'Parent comment not found'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Yorumu oluştur
-        cursor.execute("""
-            INSERT INTO CommunityComments
-            (PostID, UserID, Content, CreationDate, ParentCommentID, Likes, IsActive)
-            VALUES (%s, %s, %s, GETDATE(), %s, 0, 1);
-            SELECT SCOPE_IDENTITY();
-        """, [post_id, user_id, content, parent_comment_id])
-        
-        comment_id = cursor.fetchone()[0]
-    
-    return Response({
-        'message': 'Comment created successfully',
-        'commentId': comment_id
-    }, status=status.HTTP_201_CREATED)
+        try:
+            # Yorumu oluştur - Sorguları ayır
+            cursor.execute("""
+                INSERT INTO CommunityComments
+                (PostID, UserID, Content, CreationDate, ParentCommentID, Likes, IsActive)
+                VALUES (%s, %s, %s, GETDATE(), %s, 0, 1)
+            """, [post_id, user_id, content, parent_comment_id])
+            
+            # Ayrı bir sorgu ile ID'yi al - MS SQL Server için uygun format
+            cursor.execute("SELECT CAST(SCOPE_IDENTITY() AS INT) AS CommentID")
+            result = cursor.fetchone()
+            
+            if not result:
+                raise Exception("Failed to get comment ID after insert")
+                
+            comment_id = result[0]
+            
+            return Response({
+                'message': 'Comment created successfully',
+                'commentId': comment_id
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'error': f'Database error: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

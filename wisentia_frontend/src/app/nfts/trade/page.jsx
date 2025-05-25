@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function NFTTradePage() {
   const [userNFTs, setUserNFTs] = useState([]);
@@ -14,47 +15,54 @@ export default function NFTTradePage() {
   const [error, setError] = useState(null);
   const [tradePossible, setTradePossible] = useState(false);
   const [totalOfferedValue, setTotalOfferedValue] = useState(0);
+  const [successMessage, setSuccessMessage] = useState('');
   const { user } = useAuth();
+  const router = useRouter();
 
-  // Trade sayfasında useEffect'i şu şekilde güncelleyelim:
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Kullanıcının NFT'lerini getir
-      const userNFTsResponse = await fetch('/api/nfts/user');
-      if (!userNFTsResponse.ok) {
-        throw new Error('Failed to fetch user NFTs');
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Kullanıcının NFT'lerini getir
+        const userNFTsResponse = await fetch('/api/nfts/user/');
+        if (!userNFTsResponse.ok) {
+          throw new Error('Failed to fetch user NFTs');
+        }
+        const userNFTsData = await userNFTsResponse.json();
+        setUserNFTs(userNFTsData);
+        
+        // Takas için mevcut NFT'leri getir (sadece abonelik NFT'leri)
+        const availableNFTsResponse = await fetch('/api/nfts/available/');
+        if (!availableNFTsResponse.ok) {
+          throw new Error('Failed to fetch available NFTs');
+        }
+        const availableNFTsData = await availableNFTsResponse.json();
+        
+        // Sadece abonelik tipindeki NFT'leri filtrele
+        const subscriptionNFTs = availableNFTsData.filter(nft => 
+          nft.NFTType?.toLowerCase() === 'subscription' || nft.NFTTypeID === 2
+        );
+        
+        setAvailableNFTs(subscriptionNFTs);
+        
+        // Takas geçmişini getir
+        const tradeHistoryResponse = await fetch('/api/nfts/trade/history/');
+        if (tradeHistoryResponse.ok) {
+          const tradeHistoryData = await tradeHistoryResponse.json();
+          setTradeHistory(tradeHistoryData);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
-      const userNFTsData = await userNFTsResponse.json();
-      setUserNFTs(userNFTsData);
-      
-      // Takas için mevcut NFT'leri getir
-      const availableNFTsResponse = await fetch('/api/nfts?type=subscription');
-      if (!availableNFTsResponse.ok) {
-        throw new Error('Failed to fetch available NFTs');
-      }
-      const availableNFTsData = await availableNFTsResponse.json();
-      setAvailableNFTs(availableNFTsData);
-      
-      // Takas geçmişini getir
-      const tradeHistoryResponse = await fetch('/api/nfts/trade/history');
-      if (tradeHistoryResponse.ok) {
-        const tradeHistoryData = await tradeHistoryResponse.json();
-        setTradeHistory(tradeHistoryData);
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    };
+
+    if (user) {
+      fetchData();
     }
-  };
-
-  if (user) {
-    fetchData();
-  }
-}, [user]);
+  }, [user]);
 
   useEffect(() => {
     // Calculate total offered value
@@ -97,7 +105,9 @@ useEffect(() => {
     
     try {
       setLoading(true);
-      const response = await fetch('/api/nfts/trade', {
+      setError(null);
+      
+      const response = await fetch('/api/nfts/trade/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,26 +120,66 @@ useEffect(() => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to initiate trade');
+        throw new Error(errorData.message || 'Failed to complete trade');
       }
       
       const data = await response.json();
-      alert('Trade request submitted successfully!');
+      console.log("Trade result:", data);
+      
+      // Otomatik tamamlanan ticaret için başarı mesajını ayarla
+      setSuccessMessage(`Trade completed successfully! You have acquired "${data.targetNftTitle}".`);
       
       // Reset selections
       setSelectedUserNFTs([]);
       setTargetNFT(null);
       
-      // Refresh trade history
-      const tradeHistoryResponse = await fetch('/api/nfts/trade/history');
+      // Refresh data
+      fetchTradeData();
+      
+      // İlgili sayfaya yönlendirme için timeout ayarla
+      if (data.clientRedirect) {
+        setTimeout(() => {
+          router.push(data.clientRedirect);
+        }, 3000);
+      }
+    } catch (err) {
+      setError(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verileri yeniden yüklemeyi kolaylaştırmak için yardımcı fonksiyon
+  const fetchTradeData = async () => {
+    try {
+      // Kullanıcının NFT'lerini getir
+      const userNFTsResponse = await fetch('/api/nfts/user/');
+      if (userNFTsResponse.ok) {
+        const userNFTsData = await userNFTsResponse.json();
+        setUserNFTs(userNFTsData);
+      }
+      
+      // Takas için mevcut NFT'leri getir (sadece abonelik NFT'leri)
+      const availableNFTsResponse = await fetch('/api/nfts/available/');
+      if (availableNFTsResponse.ok) {
+        const availableNFTsData = await availableNFTsResponse.json();
+        
+        // Sadece abonelik tipindeki NFT'leri filtrele
+        const subscriptionNFTs = availableNFTsData.filter(nft => 
+          nft.NFTType?.toLowerCase() === 'subscription' || nft.NFTTypeID === 2
+        );
+        
+        setAvailableNFTs(subscriptionNFTs);
+      }
+      
+      // Takas geçmişini getir
+      const tradeHistoryResponse = await fetch('/api/nfts/trade/history/');
       if (tradeHistoryResponse.ok) {
         const tradeHistoryData = await tradeHistoryResponse.json();
         setTradeHistory(tradeHistoryData);
       }
     } catch (err) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setLoading(false);
+      console.error("Error refreshing data:", err);
     }
   };
 
@@ -158,8 +208,12 @@ useEffect(() => {
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-6">NFT Trading Platform</h1>
         
+        <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-6" role="alert">
+          <p className="font-bold">Trading Information</p>
+          <p>You can trade your earned NFTs for subscription NFTs to access premium content. Only subscription NFTs can be acquired through trading.</p>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Left Column - Your NFTs */}
           <div>
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">Your Available NFTs</h2>
@@ -210,14 +264,14 @@ useEffect(() => {
           {/* Right Column - Target NFTs */}
           <div>
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Available NFTs to Acquire</h2>
+              <h2 className="text-xl font-semibold mb-4">Available Subscription NFTs</h2>
               
               {availableNFTs.length === 0 ? (
-                <p className="text-gray-500">No NFTs available for trading at the moment</p>
+                <p className="text-gray-500">No subscription NFTs available for trading at the moment</p>
               ) : (
                 <div className="space-y-4">
                   <p className="text-sm text-gray-600 mb-2">
-                    Select the NFT you want to acquire
+                    Select the subscription NFT you want to acquire
                   </p>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -259,6 +313,22 @@ useEffect(() => {
         {/* Trade Summary */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Trade Summary</h2>
+          
+          {/* Başarı mesajını göster */}
+          {successMessage && (
+            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
+              <p className="font-medium">Success!</p>
+              <p>{successMessage}</p>
+            </div>
+          )}
+          
+          {/* Hata mesajını göster */}
+          {error && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+              <p className="font-medium">Error</p>
+              <p>{error}</p>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -322,9 +392,17 @@ useEffect(() => {
             <button
               onClick={handleInitiateTrade}
               disabled={!tradePossible || loading}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 flex items-center"
             >
-              {loading ? 'Processing...' : 'Initiate Trade'}
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : 'Complete Trade Now'}
             </button>
             <button
               onClick={handleClearSelection}

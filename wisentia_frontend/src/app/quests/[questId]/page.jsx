@@ -1,60 +1,156 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Paper,
-  Grid,
-  Chip,
-  Avatar,
-  LinearProgress,
-  IconButton,
-  useTheme,
-  alpha,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import React, { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Box, Container, Typography, Button, Grid, Paper, LinearProgress, Chip, Card, CardContent, List, ListItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import StarIcon from '@mui/icons-material/Star';
+import PublicIcon from '@mui/icons-material/Public';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
+import GlowingStarsBackground from '@/components/GlowingStarsBackground';
+import Head from 'next/head';
+import { green, orange, red } from '@mui/material/colors';
+import Image from 'next/image';
+import RewardModal from '@/components/shared/RewardModal';
+import Link from 'next/link';
+import { alpha, useTheme, IconButton, Avatar } from '@mui/material';
 import TokenIcon from '@mui/icons-material/Token';
 
-// Bu sayfa herhangi bir kimlik doğrulama/yetkilendirme mekanizması olmadan çalışacak 
-// ve sorunun giderilmesi için statik içerik gösterecek
-
-export default function StaticQuestPage() {
+export default function QuestDetailPage() {
   const { questId } = useParams();
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const toast = useToast();
   const theme = useTheme();
   
-  // Basit durum yönetimi
+  const [quest, setQuest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [completedConditions, setCompletedConditions] = useState([]);
+  const [showRewardModal, setShowRewardModal] = useState(false);
   const [showContent, setShowContent] = useState(false);
   
-  // Sayfa yüklendiğinde içeriği kısa bir gecikme ile göster (animasyon etkisi için)
+  // İlk yükleme
   useEffect(() => {
-    console.log("Static Quest Page loaded for ID:", questId);
+    const fetchQuestDetails = async () => {
+      try {
+        const response = await fetch(`/api/quests/${questId}`);
+        
+        if (!response.ok) {
+          throw new Error(`API hatası: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setQuest(data);
+        
+        // İlerleme durumunda tamamlanan koşulları ayarla
+        if (data.progress?.currentProgress > 0) {
+          // Burada basitleştirilmiş bir yaklaşım kullanıyoruz
+          // Backend'den hangi koşulların tamamlandığını almalıyız
+          const completedCount = data.progress.currentProgress;
+          const completedIds = data.conditions.slice(0, completedCount).map(c => c.conditionId);
+          setCompletedConditions(completedIds);
+        }
+        
+        // İçeriği göster
+        setTimeout(() => {
+          setShowContent(true);
+        }, 800);
+      } catch (error) {
+        console.error("Quest detayları yüklenemedi:", error);
+        toast.error("Quest detayları yüklenemedi. Lütfen tekrar deneyin.");
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // içeriği 800ms gecikme ile göster
-    const timer = setTimeout(() => {
-      setShowContent(true);
-    }, 800);
-    
-    return () => clearTimeout(timer);
-  }, [questId]);
+    if (questId) {
+      fetchQuestDetails();
+    }
+  }, [questId, toast]);
   
-  // Basit içerik, sabit mock veri kullanıyoruz
-  const quest = {
-    id: questId || 1,
-    title: "Static Quest Example",
-    description: "This is a completely static quest page that doesn't rely on authentication or external data loading. It's meant to help debug the routing issues.",
-    difficulty: "easy",
-    rewardPoints: 500,
-    progress: {
-      completionPercentage: 60,
-      isCompleted: false
+  // Koşulun tamamlanma durumunu değiştir
+  const toggleCondition = async (conditionId) => {
+    if (!isAuthenticated) {
+      toast.warn("Bu işlemi yapmak için giriş yapmalısınız.");
+      return;
+    }
+    
+    let newCompletedConditions;
+    
+    // Koşulu tamamla veya tamamlanmış durumdan çıkar
+    if (completedConditions.includes(conditionId)) {
+      newCompletedConditions = completedConditions.filter(id => id !== conditionId);
+    } else {
+      newCompletedConditions = [...completedConditions, conditionId];
+    }
+    
+    setCompletedConditions(newCompletedConditions);
+    
+    try {
+      // İlerlemeyi kaydet
+      const response = await fetch(`/api/quests/${questId}/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          completedConditionIds: newCompletedConditions
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API hatası: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Tüm koşullar tamamlandıysa ödül göster
+      if (data.progress?.isCompleted) {
+        setShowRewardModal(true);
+      }
+      
+    } catch (error) {
+      console.error("İlerleme güncellenemedi:", error);
+      toast.error("İlerleme kaydedilemedi. Lütfen tekrar deneyin.");
     }
   };
+
+  // Ödül talebi
+  const claimReward = async () => {
+    try {
+      const response = await fetch(`/api/quests/${questId}/claim-reward`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API hatası: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      toast.success("Ödülünüz başarıyla talep edildi!");
+      setShowRewardModal(true);
+      
+    } catch (error) {
+      console.error("Ödül talebi başarısız:", error);
+      toast.error("Ödül talep edilemedi. Lütfen tekrar deneyin.");
+    }
+  };
+
+  // Yükleme durumunda veya quest bulunamadığında
+  if (loading || !quest) {
+    return (
+      <Container maxWidth="lg" sx={{ pt: 8, pb: 8, textAlign: 'center' }}>
+        <Typography variant="h5">Yükleniyor...</Typography>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ pt: 8, pb: 8 }}>
@@ -68,7 +164,7 @@ export default function StaticQuestPage() {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h4" fontWeight="bold">
-          Quest Details (Static Version)
+          Quest Details
         </Typography>
       </Box>
       
@@ -86,26 +182,26 @@ export default function StaticQuestPage() {
           {/* Sol Sütun - Ana İçerik */}
           <Grid item xs={12} md={8}>
             <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-              {quest.title}
+              {quest.title || "Quest Title"}
             </Typography>
             
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
               <Chip 
-                label={quest.difficulty.charAt(0).toUpperCase() + quest.difficulty.slice(1)} 
+                label={(quest.difficulty || "easy").charAt(0).toUpperCase() + (quest.difficulty || "easy").slice(1)} 
                 color="primary"
                 size="small"
               />
               
               <Chip 
                 icon={<TokenIcon />}
-                label={`${quest.rewardPoints} Points`}
+                label={`${quest.rewardPoints || 0} Points`}
                 size="small"
                 color="secondary"
               />
             </Box>
             
             <Typography variant="body1" paragraph>
-              {quest.description}
+              {quest.description || "Quest description"}
             </Typography>
             
             {/* İlerleme Çubuğu */}
@@ -115,12 +211,12 @@ export default function StaticQuestPage() {
                   Completion
                 </Typography>
                 <Typography variant="body2" fontWeight="bold">
-                  {quest.progress.completionPercentage}%
+                  {quest.progress?.completionPercentage || 0}%
                 </Typography>
               </Box>
               <LinearProgress 
                 variant="determinate" 
-                value={quest.progress.completionPercentage}
+                value={quest.progress?.completionPercentage || 0}
                 sx={{ 
                   height: 10, 
                   borderRadius: 5,
@@ -134,9 +230,9 @@ export default function StaticQuestPage() {
             </Typography>
             
             <Box sx={{ mb: 3 }}>
-              {['Condition 1', 'Condition 2', 'Condition 3'].map((condition, index) => (
+              {(quest.conditions || []).map((condition, index) => (
                 <Box 
-                  key={index}
+                  key={condition.conditionId || index}
                   sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
@@ -146,14 +242,15 @@ export default function StaticQuestPage() {
                     bgcolor: alpha(theme.palette.background.paper, 0.5),
                     border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
                   }}
+                  onClick={() => toggleCondition(condition.conditionId)}
                 >
-                  {index === 0 ? (
+                  {completedConditions.includes(condition.conditionId) ? (
                     <CheckCircleIcon color="success" sx={{ mr: 2 }} />
                   ) : (
-                    <CheckCircleIcon color="disabled" sx={{ mr: 2 }} />
+                    <RadioButtonUncheckedIcon color="disabled" sx={{ mr: 2 }} />
                   )}
                   <Typography variant="body1">
-                    {condition}
+                    {condition.description}
                   </Typography>
                 </Box>
               ))}
@@ -209,18 +306,27 @@ export default function StaticQuestPage() {
                 variant="contained"
                 fullWidth
                 size="large"
-                disabled={!quest.progress.isCompleted}
+                onClick={claimReward}
+                disabled={!quest.progress?.isCompleted}
                 sx={{
                   borderRadius: 2,
                   py: 1.5,
                 }}
               >
-                {quest.progress.isCompleted ? 'Claim Reward' : 'Complete All Conditions'}
+                {quest.progress?.isCompleted ? 'Claim Reward' : 'Complete All Conditions'}
               </Button>
             </Paper>
           </Grid>
         </Grid>
       </Paper>
+      
+      {/* Ödül Modal */}
+      <RewardModal
+        open={showRewardModal}
+        onClose={() => setShowRewardModal(false)}
+        rewardPoints={quest.rewardPoints}
+        rewardNft={quest.rewardNft}
+      />
     </Container>
   );
 }

@@ -35,7 +35,7 @@ export function middleware(request) {
   const adminRoutes = ['/admin'];
   
   // Geçerli yol
-  const { pathname } = request.nextUrl;
+  const pathname = request.nextUrl.pathname;
 
   // Admin sayfalarını kontrol et
   if (adminRoutes.some(route => pathname.startsWith(route))) {
@@ -73,6 +73,6 @@ export function middleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|images).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|nft-placeholder.png).*)',
   ],
 };

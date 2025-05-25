@@ -1,59 +1,45 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Box,
-  Chip,
-  Button,
-  LinearProgress,
-  Tabs,
-  Tab,
-  Divider,
-  Alert,
-  useTheme,
-  alpha,
-  IconButton,
-  Paper,
-  Avatar,
-  TextField,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Collapse,
-  Pagination,
-  Modal,
-  Fade,
-  Backdrop,
-  Stack,
-  CircularProgress
+  Box, Container, Typography, Button, Grid, Card, CardContent, 
+  CardActions, CardMedia, Divider, TextField, CircularProgress, 
+  Modal, Fade, Backdrop, IconButton, Stack, Chip, Avatar, Paper,
+  LinearProgress, Drawer, Switch, FormGroup, FormControlLabel,
+  Select, MenuItem, FormControl, InputLabel, Pagination,
+  useMediaQuery, Tabs, Tab, List, ListItem, ListItemText, useTheme, alpha,
+  Collapse, Alert
 } from '@mui/material';
-import TokenIcon from '@mui/icons-material/Token';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ExtensionIcon from '@mui/icons-material/Extension';
-import CloseIcon from '@mui/icons-material/Close';
-import InfoIcon from '@mui/icons-material/Info';
-import StarIcon from '@mui/icons-material/Star';
-import SchoolIcon from '@mui/icons-material/School';
-import QuizIcon from '@mui/icons-material/Quiz';
-import DifficultyIcon from '@mui/icons-material/SignalCellularAlt';
+
+import MenuIcon from '@mui/icons-material/Menu';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SearchIcon from '@mui/icons-material/Search';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import LockIcon from '@mui/icons-material/Lock';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ExtensionIcon from '@mui/icons-material/Extension';
+import CloseIcon from '@mui/icons-material/Close';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import StarIcon from '@mui/icons-material/Star';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import TokenIcon from '@mui/icons-material/Token';
+import CategoryIcon from '@mui/icons-material/Category';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import TuneIcon from '@mui/icons-material/Tune';
+import QuizIcon from '@mui/icons-material/Quiz';
+import SchoolIcon from '@mui/icons-material/School';
+import LoopIcon from '@mui/icons-material/Loop';
+import InfoIcon from '@mui/icons-material/Info';
+import CircleIcon from '@mui/icons-material/Circle';
+import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import InputAdornment from '@mui/material/InputAdornment';
+
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { useToast } from '@/contexts/ToastContext';
 
 // Background animation
 const ParticleBackground = () => {
@@ -170,12 +156,18 @@ const ParticleBackground = () => {
 };
 
 // Quest card component with similar design to course cards
-const QuestCard = ({ quest, onClick }) => {
+const QuestCard = ({ quest, onClick, onEnroll, isAuthenticated }) => {
   const theme = useTheme();
   const [hover, setHover] = useState(false);
   
+  if (!quest) {
+    return null;
+  }
+  
   // Helper function to get color based on difficulty
   const getDifficultyColor = (difficulty) => {
+    if (!difficulty) return theme.palette.primary.main;
+    
     switch (difficulty.toLowerCase()) {
       case 'easy':
         return theme.palette.success.main;
@@ -185,6 +177,29 @@ const QuestCard = ({ quest, onClick }) => {
         return theme.palette.error.main;
       default:
         return theme.palette.primary.main;
+    }
+  };
+
+  // Safely get values with fallbacks - check all possible property names
+  const difficulty = quest.difficulty || quest.DifficultyLevel || quest.difficultyLevel || '';
+  const title = quest.title || quest.Title || '';
+  const description = quest.description || quest.Description || '';
+  const rewardPoints = quest.rewardPoints || quest.RewardPoints || 0;
+  const category = quest.category || quest.Category || '';
+  const progress = quest.progress || {};
+  const completionPercentage = progress.completionPercentage || 0;
+  const isStarted = progress.currentProgress !== undefined;
+  const isCompleted = progress.isCompleted || false;
+  const questId = quest.QuestID || quest.id || quest.questId;
+
+  // Determine if we should show the start button
+  const showStartButton = isAuthenticated && !isStarted && !isCompleted;
+
+  // Handle start button click
+  const handleStartClick = (e) => {
+    e.stopPropagation(); // Prevent card click from triggering
+    if (onEnroll && questId) {
+      onEnroll(questId);
     }
   };
 
@@ -201,7 +216,7 @@ const QuestCard = ({ quest, onClick }) => {
         boxShadow: hover ? 6 : 2,
         cursor: 'pointer',
         bgcolor: theme.palette.background.paper,
-        border: hover ? `1px solid ${alpha(getDifficultyColor(quest.difficulty), 0.3)}` : 'none',
+        border: hover ? `1px solid ${alpha(getDifficultyColor(difficulty), 0.3)}` : 'none',
       }}
       onClick={onClick}
       onMouseEnter={() => setHover(true)}
@@ -211,7 +226,7 @@ const QuestCard = ({ quest, onClick }) => {
       <Box sx={{ 
         position: 'relative',
         height: 140, // Fixed height instead of aspect ratio
-        background: `linear-gradient(135deg, ${alpha(getDifficultyColor(quest.difficulty), 0.8)}, ${alpha(theme.palette.secondary.main, 0.7)})`,
+        background: `linear-gradient(135deg, ${alpha(getDifficultyColor(difficulty), 0.8)}, ${alpha(theme.palette.secondary.main, 0.7)})`,
       }}>
         {/* Pattern overlay with low opacity */}
         <Box sx={{
@@ -225,8 +240,9 @@ const QuestCard = ({ quest, onClick }) => {
         }} />
         
         {/* Difficulty and category chips */}
+        {difficulty && (
         <Chip 
-          label={quest.difficulty.charAt(0).toUpperCase() + quest.difficulty.slice(1)} 
+            label={difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} 
           size="small" 
           sx={{ 
             position: 'absolute',
@@ -240,9 +256,11 @@ const QuestCard = ({ quest, onClick }) => {
             '& .MuiChip-label': { px: 1 }
           }} 
         />
+        )}
         
+        {category && (
         <Chip 
-          label={quest.category || 'General'} 
+            label={category} 
           size="small" 
           sx={{ 
             position: 'absolute',
@@ -255,6 +273,7 @@ const QuestCard = ({ quest, onClick }) => {
             '& .MuiChip-label': { px: 1 }
           }} 
         />
+        )}
         
         {/* Reward points badge */}
         <Box 
@@ -272,12 +291,12 @@ const QuestCard = ({ quest, onClick }) => {
         >
           <TokenIcon fontSize="small" sx={{ color: 'white', fontSize: 14, mr: 0.5 }} />
           <Typography variant="caption" sx={{ color: 'white', fontWeight: 'bold' }}>
-            {quest.rewardPoints} pts
+            {rewardPoints} pts
           </Typography>
         </Box>
         
         {/* Play button on hover */}
-        {hover && (
+        {hover && !showStartButton && (
           <Box 
             sx={{
               position: 'absolute',
@@ -333,7 +352,7 @@ const QuestCard = ({ quest, onClick }) => {
             height: '1.4rem'
           }}
         >
-          {quest.title}
+          {title}
         </Typography>
         
         <Typography 
@@ -350,113 +369,245 @@ const QuestCard = ({ quest, onClick }) => {
             height: '2.4rem'
           }}
         >
-          {quest.description}
+          {description}
         </Typography>
         
-        {/* Progress bar */}
-        <Box sx={{ mt: 'auto', mb: 0 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-              Progress
-            </Typography>
-            <Typography variant="caption" color="text.primary" fontWeight="bold" sx={{ fontSize: '0.7rem' }}>
-              {quest.progress ? quest.progress.completionPercentage : 0}%
-            </Typography>
-          </Box>
-          <LinearProgress 
-            variant="determinate" 
-            value={quest.progress ? quest.progress.completionPercentage : 0}
+        {/* Progress indicator or status chip */}
+        {isCompleted ? (
+          <Chip 
+            icon={<CheckCircleIcon fontSize="small" />}
+            label="Completed" 
+            size="small"
             sx={{ 
-              height: 4, 
-              borderRadius: 2,
-              background: alpha(theme.palette.grey[300], 0.5),
-              '& .MuiLinearProgress-bar': {
-                background: `linear-gradient(90deg, ${getDifficultyColor(quest.difficulty)}, ${theme.palette.secondary.main})`,
+              bgcolor: alpha(theme.palette.success.main, 0.1),
+              color: theme.palette.success.main,
+              borderRadius: 1,
+              fontWeight: 'medium',
+              fontSize: '0.7rem',
+              mt: 'auto',
+              alignSelf: 'flex-start'
+            }}
+          />
+        ) : isStarted ? (
+          <Box sx={{ mt: 'auto' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>Progress</Typography>
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 'bold' }}>
+                {completionPercentage}%
+              </Typography>
+            </Box>
+            <LinearProgress 
+              variant="determinate" 
+              value={completionPercentage} 
+              sx={{ 
+                height: 4, 
                 borderRadius: 2,
+                bgcolor: alpha(theme.palette.primary.main, 0.1)
+              }} 
+            />
+          </Box>
+        ) : showStartButton ? (
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<PlayArrowIcon />}
+            onClick={handleStartClick}
+            sx={{
+              mt: 'auto',
+              textTransform: 'none',
+              fontWeight: 'bold',
+              fontSize: '0.75rem',
+              borderRadius: 1.5,
+              boxShadow: 2,
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+              '&:hover': {
+                background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                boxShadow: 3,
               }
             }}
-          />
-        </Box>
-      </CardContent>
-      
-      {/* Card footer */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        p: 1.5,
-        pt: 0.5,
-        borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-      }}>
-        {/* Reward icon and name */}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar 
-            variant="rounded"
-            sx={{ 
-              width: 20, 
-              height: 20, 
-              mr: 0.5,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: theme.palette.primary.main
-            }}
           >
-            <StarIcon sx={{ fontSize: 12 }} />
-          </Avatar>
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: '0.7rem' }}>
-            {quest.rewardNft?.title || "NFT Reward"}
-          </Typography>
-        </Box>
-        
-        {/* Status chip */}
-        {quest.progress && quest.progress.isCompleted ? (
-          <Chip 
-            icon={<CheckCircleIcon fontSize="small" />} 
-            label={quest.progress.rewardClaimed ? "Completed" : "Claim"} 
-            color={quest.progress.rewardClaimed ? "default" : "success"} 
-            size="small"
-            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.7rem' } }}
-          />
-        ) : (
-          <Typography variant="caption" color="text.secondary" sx={{ bgcolor: alpha(theme.palette.grey[100], 0.5), px: 1, py: 0.5, borderRadius: 1, fontSize: '0.7rem' }}>
-            {quest.difficulty}
-          </Typography>
-        )}
-      </Box>
+            Start Quest
+          </Button>
+        ) : null}
+      </CardContent>
     </Card>
   );
 };
 
-// Quest Detail Modal Component - Netflix style
-const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onClaimReward }) => {
+// Get bottom section of QuestDetailModal with enrollment/claim buttons
+const QuestDetailActionsSection = ({ quest, isAuthenticated, onEnroll, onClaimReward, loading }) => {
   const theme = useTheme();
-  const [loading, setLoading] = useState(false);
   
-  if (!quest) return null;
+  // Safely get progress data
+  const progress = quest.progress || {};
+  const isCompleted = progress.isCompleted || false;
+  const rewardClaimed = progress.rewardClaimed || false;
   
-  const handleClaimReward = async () => {
-    if (!isAuthenticated) return;
+  if (!isAuthenticated) {
+    return (
+      <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Button
+          variant="contained"
+          color="primary"
+          component={Link}
+          href="/login?redirect=/quests"
+          sx={{
+            px: 4,
+            py: 1.5,
+            borderRadius: 2,
+            fontWeight: 'bold',
+            fontSize: '1rem',
+            textTransform: 'none',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+          }}
+        >
+          Login to Start Quest
+        </Button>
+      </Box>
+    );
+  }
+  
+  // User enrolled, completed but not claimed
+  if (isCompleted && !rewardClaimed) {
+    return (
+      <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Button 
+          variant="contained"
+          color="secondary"
+          onClick={onClaimReward}
+          disabled={loading}
+          startIcon={<EmojiEventsIcon />}
+          sx={{
+            px: 4,
+            py: 1.5,
+            borderRadius: 2,
+            fontWeight: 'bold',
+            fontSize: '1rem',
+            textTransform: 'none',
+            background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.light})`,
+            boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+          }}
+        >
+          {loading ? <CircularProgress size={24} color="inherit" /> : 'Claim Reward'}
+        </Button>
+      </Box>
+    );
+  }
+  
+  // User enrolled and claimed reward
+  if (isCompleted && rewardClaimed) {
+    return (
+      <Box sx={{ mt: 3, textAlign: 'center' }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            bgcolor: alpha(theme.palette.success.main, 0.1),
+            border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+            borderRadius: 2,
+        display: 'flex', 
+        alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1
+          }}
+        >
+          <CheckCircleIcon color="success" />
+          <Typography color="success.main" fontWeight="medium">
+            Quest completed and reward claimed!
+          </Typography>
+        </Paper>
+        </Box>
+    );
+  }
+  
+  // User enrolled but not completed
+  if (progress.currentProgress !== undefined) {
+    const percentage = Math.min(100, Math.max(0, progress.currentProgress));
     
-    setLoading(true);
-    try {
-      await onClaimReward(quest.id);
-      // Show success message
-    } catch (error) {
-      console.error("Failed to claim reward:", error);
-      // Show error message
-    } finally {
-      setLoading(false);
-    }
-  };
+    return (
+      <Box sx={{ mt: 3 }}>
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="body2" color="text.secondary">
+              Quest Progress
+            </Typography>
+            <Typography variant="body2" fontWeight="medium">
+              {percentage}%
+            </Typography>
+          </Box>
+          <LinearProgress 
+            variant="determinate" 
+            value={percentage} 
+            sx={{ 
+              mt: 1, 
+              height: 8, 
+              borderRadius: 4,
+              bgcolor: alpha(theme.palette.primary.main, 0.1)
+            }} 
+          />
+        </Box>
+        
+        <Typography variant="body2" color="text.secondary" paragraph>
+          Complete the conditions above to earn your reward.
+          </Typography>
+      </Box>
+    );
+  }
   
-  const handleEnroll = () => {
-    if (isAuthenticated) {
-      onEnroll(quest.id);
-    }
-  };
+  // Default: Not enrolled
+  return (
+    <Box sx={{ mt: 3, textAlign: 'center' }}>
+      <Button 
+        variant="contained"
+        onClick={onEnroll}
+        disabled={loading}
+        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PlayArrowIcon />}
+        sx={{
+          px: 4,
+          py: 1.5,
+          borderRadius: 2,
+          fontWeight: 'bold',
+          fontSize: '1rem',
+          textTransform: 'none',
+          background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+          boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+        }}
+      >
+        {loading ? 'Starting...' : 'Start Quest'}
+      </Button>
+    </Box>
+  );
+};
+
+// Quest Detail Modal Component - Netflix style
+const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onClaimReward, loading }) => {
+  const theme = useTheme();
+  
+  // If quest is not defined, don't render anything
+  if (!quest) {
+    return null;
+  }
+  
+  // Safely extract properties with fallbacks
+  const title = quest.title || quest.Title || '';
+  const description = quest.description || quest.Description || '';
+  const difficulty = quest.difficulty || quest.DifficultyLevel || '';
+  const rewardPoints = quest.rewardPoints || quest.RewardPoints || 0;
+  // Make sure conditions is always an array
+  const conditions = Array.isArray(quest.conditions) 
+    ? quest.conditions 
+    : Array.isArray(quest.Conditions) 
+      ? quest.Conditions 
+      : [];
+  const progress = quest.progress || {};
+  const completionPercentage = progress.completionPercentage || 0;
+  const rewardNft = quest.rewardNft || {};
   
   // Helper function to get color based on difficulty
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty.toLowerCase()) {
+  const getDifficultyColor = (diff) => {
+    if (!diff) return theme.palette.primary.main;
+    
+    switch (diff.toLowerCase()) {
       case 'easy':
         return theme.palette.success.main;
       case 'intermediate':
@@ -465,6 +616,47 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
         return theme.palette.error.main;
       default:
         return theme.palette.primary.main;
+    }
+  };
+
+  // Extract topic from conditions or description
+  const getTopic = () => {
+    // First check conditions
+    if (conditions && conditions.length > 0) {
+      const conditionTypes = conditions.map(c => c.conditionType || c.type).filter(Boolean);
+      if (conditionTypes.includes('course_completion')) return 'Learning';
+      if (conditionTypes.includes('quiz_score')) return 'Quiz';
+    }
+    
+    // Then check description for keywords
+    if (description) {
+      if (/\bweb3\b|\bblockchain\b|\bcrypto\b|\bnft\b/i.test(description)) {
+        return 'Web3';
+      }
+      if (/\bcoding\b|\bprogramming\b|\bdevelop(er|ment)?\b/i.test(description)) {
+        return 'Coding';
+      }
+      if (/\bdesign\b|\bui\b|\bux\b/i.test(description)) {
+        return 'Design';
+      }
+    }
+    
+    return 'General';
+  };
+  
+  // Basic handler for enrollment - calls parent handler
+  const handleEnroll = () => {
+    const questId = quest.QuestID || quest.id || quest.questId; 
+    if (onEnroll && questId) {
+      onEnroll(questId);
+    }
+  };
+  
+  // Basic handler for reward claiming - calls parent handler
+  const handleClaimReward = () => {
+    const questId = quest.QuestID || quest.id || quest.questId;
+    if (onClaimReward && questId) {
+      onClaimReward(questId);
     }
   };
   
@@ -513,7 +705,7 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
             <Box
               sx={{
                 height: 200,
-                background: `linear-gradient(135deg, ${alpha(getDifficultyColor(quest.difficulty), 0.8)}, ${alpha(theme.palette.secondary.main, 0.8)})`,
+                background: `linear-gradient(135deg, ${alpha(getDifficultyColor(difficulty), 0.8)}, ${alpha(theme.palette.secondary.main, 0.8)})`,
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
@@ -537,7 +729,7 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
               <Avatar
                 sx={{
                   bgcolor: 'white',
-                  color: getDifficultyColor(quest.difficulty),
+                  color: getDifficultyColor(difficulty),
                   width: 64,
                   height: 64,
                   boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
@@ -555,12 +747,13 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
                 color="white"
                 sx={{ textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
               >
-                {quest.title}
+                {title}
               </Typography>
               
               <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                {difficulty && (
                 <Chip 
-                  label={quest.difficulty.charAt(0).toUpperCase() + quest.difficulty.slice(1)} 
+                    label={difficulty.charAt(0).toUpperCase() + difficulty.slice(1)} 
                   size="small" 
                   sx={{ 
                     bgcolor: alpha('#fff', 0.3),
@@ -568,10 +761,11 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
                     fontWeight: 'bold',
                   }}
                 />
+                )}
                 
                 <Chip 
                   icon={<TokenIcon sx={{ color: 'white !important', fontSize: '0.8rem' }} />}
-                  label={`${quest.rewardPoints} Points`}
+                  label={`${rewardPoints} Points`}
                   size="small" 
                   sx={{ 
                     bgcolor: alpha('#fff', 0.3),
@@ -582,6 +776,17 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
                     }
                   }}
                 />
+                
+                {/* Add topic tag */}
+                <Chip 
+                  label={getTopic()}
+                  size="small" 
+                  sx={{ 
+                    bgcolor: alpha('#fff', 0.3),
+                    color: 'white',
+                    fontWeight: 'bold',
+                  }}
+                />
               </Stack>
             </Box>
           </Box>
@@ -590,7 +795,7 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
           <Box sx={{ p: 3 }}>
             {/* Quest description */}
             <Typography variant="body1" paragraph>
-              {quest.description}
+              {description}
             </Typography>
             
             <Divider sx={{ my: 2 }} />
@@ -601,9 +806,16 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
             </Typography>
             
             <Box sx={{ mb: 3 }}>
-              {quest.conditions && quest.conditions.map((condition, index) => (
+              {conditions && conditions.length > 0 ? (
+                conditions.map((condition, index) => {
+                  // Extract condition properties safely
+                  const conditionId = condition.conditionId || condition.ConditionID || index;
+                  const conditionType = condition.conditionType || condition.ConditionType || '';
+                  const conditionDescription = condition.description || condition.Description || 'Complete this condition';
+                  
+                  return (
                 <Paper 
-                  key={index}
+                      key={conditionId}
                   elevation={0}
                   sx={{ 
                     p: 2, 
@@ -615,206 +827,75 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
                     alignItems: 'center'
                   }}
                 >
-                  {condition.type === 'course_completion' ? (
-                    <SchoolIcon sx={{ color: theme.palette.primary.main, mr: 2 }} />
-                  ) : condition.type === 'quiz_score' ? (
-                    <QuizIcon sx={{ color: theme.palette.secondary.main, mr: 2 }} />
-                  ) : (
-                    <CheckCircleIcon sx={{ color: theme.palette.success.main, mr: 2 }} />
-                  )}
-                  
-                  <Box>
-                    <Typography variant="body2" fontWeight="bold">
-                      {condition.description}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {condition.type === 'course_completion' 
-                        ? 'Complete the course' 
-                        : condition.type === 'quiz_score' 
-                          ? `Pass the quiz with at least ${condition.targetValue}% score` 
-                          : 'Complete the task'}
-                    </Typography>
-                  </Box>
-                </Paper>
-              ))}
-            </Box>
-            
-            <Divider sx={{ my: 2 }} />
-            
-            {/* Rewards Section */}
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              Completion Rewards
-            </Typography>
-            
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6}>
-                <Paper
-                  elevation={0}
+                      <Box 
                   sx={{ 
-                    p: 2,
-                    height: '100%',
-                    bgcolor: alpha(theme.palette.primary.main, 0.05),
-                    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                    borderRadius: 2,
+                          mr: 2, 
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          borderRadius: '50%',
+                          width: 40,
+                          height: 40,
                     display: 'flex',
-                    alignItems: 'center'
+                          alignItems: 'center',
+                          justifyContent: 'center'
                   }}
                 >
-                  <Avatar 
+                        {progress?.isCompleted ? (
+                          <CheckCircleIcon color="success" />
+                        ) : (
+                          <CircleIcon 
                     sx={{ 
-                      bgcolor: alpha(theme.palette.primary.main, 0.1),
-                      color: theme.palette.primary.main,
-                      mr: 2
-                    }}
-                  >
-                    <TokenIcon />
-                  </Avatar>
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {quest.rewardPoints} Points
+                              fontSize: 24, 
+                              color: alpha(theme.palette.text.secondary, 0.5)
+                            }} 
+                          />
+                        )}
+                      </Box>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                          {conditionDescription}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Platform points to use
+                        {conditionType && (
+                          <Typography variant="caption" color="text.secondary">
+                            {conditionType.charAt(0).toUpperCase() + conditionType.slice(1).replace('_', ' ')}
                     </Typography>
+                        )}
                   </Box>
                 </Paper>
-              </Grid>
-              
-              {quest.rewardNft && (
-                <Grid item xs={12} sm={6}>
+                  );
+                })
+              ) : (
                   <Paper 
                     elevation={0}
                     sx={{ 
-                      p: 2,
-                      height: '100%',
-                      bgcolor: alpha(theme.palette.secondary.main, 0.05),
-                      border: `1px solid ${alpha(theme.palette.secondary.main, 0.1)}`,
+                    p: 3,
+                    mb: 2,
+                    bgcolor: alpha(theme.palette.info.main, 0.05),
+                    border: `1px dashed ${alpha(theme.palette.info.main, 0.3)}`,
                       borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <Avatar 
-                      sx={{ 
-                        bgcolor: alpha(theme.palette.secondary.main, 0.1),
-                        color: theme.palette.secondary.main,
-                        mr: 2
-                      }}
-                    >
-                      <StarIcon />
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        {quest.rewardNft.title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Special collector NFT
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Grid>
-              )}
-            </Grid>
-            
-            {/* Progress Section - For authenticated users */}
-            {isAuthenticated && quest.progress && (
-              <>
-                <Divider sx={{ my: 2 }} />
-                
-                <Typography variant="h6" gutterBottom fontWeight="bold">
-                  Progress Status
-                </Typography>
-                
-                <Box sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Completion: {quest.progress.completionPercentage}%
-                    </Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {quest.progress.currentProgress} / {quest.conditions?.length || 1}
-                    </Typography>
-                  </Box>
-                  
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={quest.progress.completionPercentage}
-                    sx={{ 
-                      height: 8, 
-                      borderRadius: 4,
-                      mb: 2,
-                      background: alpha(theme.palette.grey[300], 0.5),
-                      '& .MuiLinearProgress-bar': {
-                        background: `linear-gradient(90deg, ${getDifficultyColor(quest.difficulty)}, ${theme.palette.secondary.main})`,
-                        borderRadius: 4,
-                      }
-                    }}
-                  />
-                </Box>
-              </>
-            )}
-            
-            {/* Action buttons */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-              <Button 
-                variant="outlined" 
-                onClick={onClose}
-                startIcon={<CloseIcon />}
-              >
-                Close
-              </Button>
-              
-              {isAuthenticated ? (
-                quest.progress && quest.progress.isCompleted && !quest.progress.rewardClaimed ? (
-                  <Button 
-                    variant="contained" 
-                    color="success"
-                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircleIcon />}
-                    onClick={handleClaimReward}
-                    disabled={loading}
-                  >
-                    Claim Reward
-                  </Button>
-                ) : quest.progress && quest.progress.isCompleted ? (
-                  <Button 
-                    variant="outlined" 
-                    color="success"
-                    startIcon={<CheckCircleIcon />}
-                    disabled
-                  >
-                    Completed
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="contained" 
-                    onClick={handleEnroll}
-                    endIcon={<ArrowForwardIcon />}
-                    sx={{
-                      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      '&:hover': {
-                        background: `linear-gradient(90deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                      }
-                    }}
-                  >
-                    Start Quest
-                  </Button>
-                )
-              ) : (
-                <Button 
-                  variant="contained" 
-                  component={Link}
-                  href="/login"
-                  startIcon={<LockIcon />}
-                  sx={{
-                    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                    '&:hover': {
-                      background: `linear-gradient(90deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                    }
+                    textAlign: 'center'
                   }}
                 >
-                  Login
-                </Button>
+                  <InfoIcon sx={{ color: theme.palette.info.main, mb: 1, fontSize: 32 }} />
+                  <Typography variant="body1" paragraph>
+                    This quest has no specific conditions to complete.
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                    Just start the quest to participate and earn your reward.
+                      </Typography>
+                  </Paper>
               )}
             </Box>
+            
+                <Divider sx={{ my: 2 }} />
+                
+            {/* Action Buttons */}
+            <QuestDetailActionsSection 
+              quest={quest} 
+              isAuthenticated={isAuthenticated}
+              onEnroll={handleEnroll}
+              onClaimReward={handleClaimReward}
+              loading={loading}
+            />
           </Box>
         </Box>
       </Fade>
@@ -823,11 +904,18 @@ const QuestDetailModal = ({ open, onClose, quest, isAuthenticated, onEnroll, onC
 };
 
 // Category Section Component
-const CategorySection = ({ title, quests, onQuestClick }) => {
+const CategorySection = ({ title, quests, onQuestClick, onEnroll, isAuthenticated }) => {
   const theme = useTheme();
   const scrollContainerRef = useRef(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
+  
+  // Format title with proper capitalization
+  const formattedTitle = title ? (
+    title.split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ')
+  ) : '';
   
   const updateArrowVisibility = () => {
     if (scrollContainerRef.current) {
@@ -876,7 +964,7 @@ const CategorySection = ({ title, quests, onQuestClick }) => {
         fontWeight="bold" 
         sx={{ mb: 2 }}
       >
-        {title}
+        {formattedTitle}
       </Typography>
       
       <Box sx={{ position: 'relative', width: '100%' }}>
@@ -940,7 +1028,7 @@ const CategorySection = ({ title, quests, onQuestClick }) => {
         >
           {quests.map((quest) => (
             <Box 
-              key={quest.id} 
+              key={quest.QuestID || quest.id || quest.questId || Math.random().toString(36).substring(2, 9)} 
               sx={{ 
                 minWidth: { xs: '80%', sm: '40%', md: '25%', lg: '22%' },
                 maxWidth: { xs: '80%', sm: '40%', md: '25%', lg: '22%' },
@@ -948,7 +1036,12 @@ const CategorySection = ({ title, quests, onQuestClick }) => {
                 flexShrink: 0,
               }}
             >
-              <QuestCard quest={quest} onClick={() => onQuestClick(quest)} />
+              <QuestCard 
+                quest={quest} 
+                onClick={() => onQuestClick(quest)} 
+                onEnroll={onEnroll} 
+                isAuthenticated={isAuthenticated} 
+              />
             </Box>
           ))}
         </Box>
@@ -957,358 +1050,284 @@ const CategorySection = ({ title, quests, onQuestClick }) => {
   );
 };
 
+// Filters section in the QuestsPage component
+const FilterSection = ({ 
+  filters, 
+  onFilterChange, 
+  onClearFilters,
+  availableDifficulties,
+  availableCategories,
+  availableTopics
+}) => {
+  return (
+    <Grid container spacing={2}>
+      {/* Difficulty filter */}
+      <Grid item xs={12} sm={4}>
+        <FormControl fullWidth variant="outlined" size="small">
+          <InputLabel>Difficulty</InputLabel>
+          <Select
+            value={filters.difficulty}
+            label="Difficulty"
+            onChange={(e) => onFilterChange('difficulty', e.target.value)}
+          >
+            <MenuItem value="all">All Difficulties</MenuItem>
+            {availableDifficulties.map(difficulty => (
+              <MenuItem key={difficulty} value={difficulty.toLowerCase()}>
+                {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      {/* Category filter */}
+      <Grid item xs={12} sm={4}>
+        <FormControl fullWidth variant="outlined" size="small">
+          <InputLabel>Category</InputLabel>
+          <Select
+            value={filters.category}
+            label="Category"
+            onChange={(e) => onFilterChange('category', e.target.value)}
+          >
+            <MenuItem value="all">All Categories</MenuItem>
+            {availableCategories.map(category => (
+              <MenuItem key={category} value={category}>
+                {category}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      {/* Topic/Type filter */}
+      <Grid item xs={12} sm={4}>
+        <FormControl fullWidth variant="outlined" size="small">
+          <InputLabel>Topic</InputLabel>
+          <Select
+            value={filters.topic}
+            label="Topic"
+            onChange={(e) => onFilterChange('topic', e.target.value)}
+          >
+            <MenuItem value="all">All Topics</MenuItem>
+            {availableTopics.map(topic => (
+              <MenuItem key={topic} value={topic}>
+                {topic}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      {/* Sort option */}
+      <Grid item xs={12} sm={4}>
+        <FormControl fullWidth variant="outlined" size="small">
+          <InputLabel>Sort By</InputLabel>
+          <Select
+            value={filters.sort}
+            label="Sort By"
+            onChange={(e) => onFilterChange('sort', e.target.value)}
+          >
+            <MenuItem value="newest">Newest</MenuItem>
+            <MenuItem value="points-high">Highest Points</MenuItem>
+            <MenuItem value="points-low">Lowest Points</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid>
+      
+      {/* Clear filters button */}
+      <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button 
+          variant="outlined" 
+          onClick={onClearFilters} 
+          startIcon={<FilterListIcon />}
+          size="small"
+        >
+          Clear Filters
+        </Button>
+      </Grid>
+    </Grid>
+  );
+};
+
 // Main Quests Page Component
 export default function QuestsPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const theme = useTheme();
-  
-  // State definitions
-  const [activeTab, setActiveTab] = useState(0);
+  const { isAuthenticated, token, user, updateUser } = useAuth();
+  const toast = useToast();
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  
-  // Search and filter states
+  const [enrolledQuests, setEnrolledQuests] = useState([]);
+  const [completedQuests, setCompletedQuests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [rewardAnimation, setRewardAnimation] = useState(false);
+  const [rewardNFT, setRewardNFT] = useState(false);
   const [filters, setFilters] = useState({
     difficulty: 'all',
     category: 'all',
+    topic: 'all',
     sort: 'newest'
   });
-  
-  // Pagination
   const [page, setPage] = useState(1);
-  const itemsPerPage = 8; // Items per page
-
-  // Load mock quest data
+  const questsPerPage = 12;
+  const [refreshTrigger, setRefreshTrigger] = useState(Date.now());
+  
+  // Get unique values for filters
+  const availableDifficulties = useMemo(() => {
+    return ['all', ...new Set(quests.map(quest => 
+      (quest.difficulty || quest.DifficultyLevel || '').toLowerCase()
+    ).filter(Boolean))];
+  }, [quests]);
+  
+  const availableCategories = useMemo(() => {
+    return ['all', ...new Set(quests.map(quest => 
+      quest.category || quest.Category || ''
+    ).filter(Boolean))];
+  }, [quests]);
+  
+  const availableTopics = useMemo(() => {
+    // Extract topics from quests based on condition types and descriptions
+    const topics = new Set(quests.map(quest => {
+      // Check conditions first
+      const conditions = quest.conditions || [];
+      if (conditions.some(c => (c.type || c.conditionType || '').includes('course')))
+        return 'Learning';
+      if (conditions.some(c => (c.type || c.conditionType || '').includes('quiz')))
+        return 'Quiz';
+        
+      // Then check description
+      const desc = quest.description || quest.Description || '';
+      if (/\bweb3\b|\bblockchain\b|\bcrypto\b/i.test(desc))
+        return 'Web3';
+      if (/\bcoding\b|\bprogramming\b/i.test(desc))
+        return 'Coding';
+      if (/\bdesign\b|\bui\b|\bux\b/i.test(desc))
+        return 'Design';
+        
+      return ''; // Default
+    }).filter(Boolean));
+    
+    return ['all', ...topics];
+  }, [quests]);
+  
   useEffect(() => {
-    const fetchQuests = async () => {
+    if (isAuthenticated) {
+      fetchQuests();
+    } else {
+      setQuests([]);
+      setLoading(false);
+    }
+  }, [isAuthenticated, refreshTrigger]);
+  
+  const fetchQuests = async () => {
+    if (!isAuthenticated) {
+      // If not authenticated, only fetch public quests
       setLoading(true);
       try {
-        // In a real application, fetch from API:
-        // const response = await fetch('/api/quests/');
-        // const data = await response.json();
-        
-        // Mock data
-        const mockQuests = [
-          {
-            id: 1,
-            title: "Blockchain Pioneer",
-            description: "Complete the Introduction to Blockchain course and pass all quizzes with at least 80% score.",
-            difficulty: "easy",
-            category: "Blockchain",
-            requiredPoints: 100,
-            rewardPoints: 500,
-            rewardNft: {
-              id: 1,
-              title: "Blockchain Pioneer Badge",
-              imageUri: "/placeholder-nft1.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 1, targetValue: 1, description: 'Complete the Introduction to Blockchain course' },
-              { type: 'quiz_score', targetId: 1, targetValue: 80, description: 'Pass all quizzes with 80% score' }
-            ],
-            progress: {
-              currentProgress: 1,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 50
-            }
-          },
-          {
-            id: 2,
-            title: "Smart Contract Expert",
-            description: "Finish the Smart Contract Development course and complete a smart contract project.",
-            difficulty: "intermediate",
-            category: "Development",
-            requiredPoints: 300,
-            rewardPoints: 800,
-            rewardNft: {
-              id: 2,
-              title: "Smart Contract Expert Badge",
-              imageUri: "/placeholder-nft2.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 2, targetValue: 1, description: 'Complete the Smart Contract Development course' },
-              { type: 'project_submission', targetId: 1, targetValue: 1, description: 'Submit a smart contract project' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 3,
-            title: "Web3 Developer",
-            description: "Complete the Web3 Frontend Development course and build a dApp that interacts with a smart contract.",
-            difficulty: "advanced",
-            category: "Development",
-            requiredPoints: 500,
-            rewardPoints: 1200,
-            rewardNft: {
-              id: 3,
-              title: "Web3 Developer Badge",
-              imageUri: "/placeholder-nft3.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 3, targetValue: 1, description: 'Complete the Web3 Frontend Development course' },
-              { type: 'project_submission', targetId: 2, targetValue: 1, description: 'Submit a dApp project' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 4,
-            title: "Early Adopter",
-            description: "Join the platform and complete your profile within the first month of launch.",
-            difficulty: "easy",
-            category: "Community",
-            requiredPoints: 0,
-            rewardPoints: 300,
-            rewardNft: {
-              id: 4,
-              title: "Early Adopter Badge",
-              imageUri: "/placeholder-nft4.jpg"
-            },
-            conditions: [
-              { type: 'profile_completion', targetId: null, targetValue: 1, description: 'Complete your profile' }
-            ],
-            progress: {
-              currentProgress: 1,
-              isCompleted: true,
-              rewardClaimed: true,
-              completionPercentage: 100
-            }
-          },
-          {
-            id: 5,
-            title: "Community Contributor",
-            description: "Create 5 valuable posts in the community forum and earn at least 20 likes.",
-            difficulty: "intermediate",
-            category: "Community",
-            requiredPoints: 200,
-            rewardPoints: 600,
-            rewardNft: {
-              id: 5,
-              title: "Community Contributor Badge",
-              imageUri: "/placeholder-nft5.jpg"
-            },
-            conditions: [
-              { type: 'community_posts', targetId: null, targetValue: 5, description: 'Create 5 posts in the community forum' },
-              { type: 'community_likes', targetId: null, targetValue: 20, description: 'Earn 20 likes on your posts' }
-            ],
-            progress: {
-              currentProgress: 1,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 50
-            }
-          },
-          {
-            id: 6,
-            title: "AI Enthusiast",
-            description: "Complete the AI Fundamentals course and train a simple machine learning model.",
-            difficulty: "intermediate",
-            category: "AI & ML",
-            requiredPoints: 250,
-            rewardPoints: 700,
-            rewardNft: {
-              id: 6,
-              title: "AI Enthusiast Badge",
-              imageUri: "/placeholder-nft6.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 4, targetValue: 1, description: 'Complete the AI Fundamentals course' },
-              { type: 'project_submission', targetId: 3, targetValue: 1, description: 'Train and submit a machine learning model' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 7,
-            title: "DeFi Explorer",
-            description: "Learn about decentralized finance by completing the DeFi Basics course and participating in a simulated trading exercise.",
-            difficulty: "intermediate",
-            category: "DeFi",
-            requiredPoints: 350,
-            rewardPoints: 900,
-            rewardNft: {
-              id: 7,
-              title: "DeFi Explorer Badge",
-              imageUri: "/placeholder-nft7.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 5, targetValue: 1, description: 'Complete the DeFi Basics course' },
-              { type: 'simulation_completion', targetId: 1, targetValue: 1, description: 'Complete the DeFi trading simulation' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 8,
-            title: "NFT Creator",
-            description: "Complete the NFT Creation course and mint your own digital collectible on the testnet.",
-            difficulty: "advanced",
-            category: "NFTs",
-            requiredPoints: 400,
-            rewardPoints: 1000,
-            rewardNft: {
-              id: 8,
-              title: "NFT Creator Badge",
-              imageUri: "/placeholder-nft8.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 6, targetValue: 1, description: 'Complete the NFT Creation course' },
-              { type: 'mint_completion', targetId: null, targetValue: 1, description: 'Mint an NFT on the testnet' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 9,
-            title: "Zero Knowledge Expert",
-            description: "Understand the fundamentals of Zero Knowledge Proofs and implement a simple ZKP protocol.",
-            difficulty: "advanced",
-            category: "Cryptography",
-            requiredPoints: 600,
-            rewardPoints: 1500,
-            rewardNft: {
-              id: 9,
-              title: "ZK Expert Badge",
-              imageUri: "/placeholder-nft9.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 7, targetValue: 1, description: 'Complete the ZK Proofs course' },
-              { type: 'project_submission', targetId: 4, targetValue: 1, description: 'Implement a simple ZKP protocol' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 10,
-            title: "Metaverse Pioneer",
-            description: "Explore and create content in the Metaverse using WebXR technologies.",
-            difficulty: "intermediate",
-            category: "Metaverse",
-            requiredPoints: 400,
-            rewardPoints: 800,
-            rewardNft: {
-              id: 10,
-              title: "Metaverse Pioneer Badge",
-              imageUri: "/placeholder-nft10.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 8, targetValue: 1, description: 'Complete the Intro to Metaverse course' },
-              { type: 'project_submission', targetId: 5, targetValue: 1, description: 'Create a simple WebXR experience' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 11,
-            title: "Data Science for Blockchain",
-            description: "Apply data science techniques to analyze blockchain data and create meaningful visualizations.",
-            difficulty: "intermediate",
-            category: "Data Science",
-            requiredPoints: 350,
-            rewardPoints: 700,
-            rewardNft: {
-              id: 11,
-              title: "Blockchain Data Scientist Badge",
-              imageUri: "/placeholder-nft11.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 9, targetValue: 1, description: 'Complete the Blockchain Data Analysis course' },
-              { type: 'project_submission', targetId: 6, targetValue: 1, description: 'Create a blockchain data visualization project' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          },
-          {
-            id: 12,
-            title: "Crypto Trading Basics",
-            description: "Learn the fundamentals of cryptocurrency trading and technical analysis.",
-            difficulty: "easy",
-            category: "Trading",
-            requiredPoints: 150,
-            rewardPoints: 400,
-            rewardNft: {
-              id: 12,
-              title: "Crypto Trader Badge",
-              imageUri: "/placeholder-nft12.jpg"
-            },
-            conditions: [
-              { type: 'course_completion', targetId: 10, targetValue: 1, description: 'Complete the Crypto Trading Basics course' },
-              { type: 'quiz_score', targetId: 3, targetValue: 80, description: 'Pass the technical analysis quiz with at least 80%' }
-            ],
-            progress: {
-              currentProgress: 0,
-              isCompleted: false,
-              rewardClaimed: false,
-              completionPercentage: 0
-            }
-          }
-        ];
-        
-        // Simulate API delay
-        setTimeout(() => {
-          setQuests(mockQuests);
-          setLoading(false);
-        }, 1000);
+        const response = await fetch('/api/quests/');
+        if (!response.ok) {
+          throw new Error('Failed to fetch quests');
+        }
+        const data = await response.json();
+        setQuests(data);
       } catch (error) {
-        console.error('Failed to load quests:', error);
+        console.error('Error fetching quests:', error);
         setError('Failed to load quests. Please try again later.');
+        setQuests([]);
+      } finally {
         setLoading(false);
       }
-    };
-    
-    fetchQuests();
-  }, []);
-  
-  // Tab change handler
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setPage(1); // Reset to first page when tab changes
+      return;
+    }
+
+    // If authenticated, fetch quests with user progress
+    setLoading(true);
+    try {
+      const response = await fetch('/api/quests/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch quests');
+      }
+      
+      const data = await response.json();
+      console.log('Quests data:', data);
+      setQuests(data);
+      
+      // Filter enrolled and completed quests
+      const enrolled = data.filter(quest => quest.userProgress && !quest.userProgress.isCompleted);
+      const completed = data.filter(quest => quest.userProgress && quest.userProgress.isCompleted);
+      
+      setEnrolledQuests(enrolled);
+      setCompletedQuests(completed);
+      
+    } catch (error) {
+      console.error('Error fetching quests:', error);
+      setError('Failed to load quests. Please try again later.');
+      setQuests([]);
+    } finally {
+      setLoading(false);
+    }
   };
   
   // Quest card click handler
   const handleQuestClick = (quest) => {
     setSelectedQuest(quest);
     setModalOpen(true);
+    
+    // Quest detaylarını API'den getir
+    if (quest?.QuestID || quest?.id || quest?.questId) {
+      const questId = quest.QuestID || quest.id || quest.questId;
+      
+      // Set loading state while fetching details
+      setLoading(true);
+      
+      fetch(`/api/quests/${questId}`)
+        .then(res => {
+          if (!res.ok) {
+            // Handle non-200 responses
+            if (res.status === 404) {
+              throw new Error('Quest not found');
+            } else if (res.status === 401) {
+              throw new Error('Authentication required');
+            }
+            throw new Error(`API error: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          // Only update if we have valid data
+          if (data) {
+            // Check for error property
+            if (data && typeof data === 'object' && 'error' in data) {
+              console.error('Error in quest detail response:', data.error);
+              toast.error('Failed to load quest details');
+              return;
+            }
+            
+            // Log the data to help with debugging
+            console.log('Quest details received:', data);
+            
+            // Update the selected quest with details from the API
+            setSelectedQuest(prevQuest => ({...prevQuest, ...data}));
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching quest details:', err);
+          toast.error('Failed to load quest details. Please try again.');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
   };
   
   // Close modal
@@ -1316,69 +1335,16 @@ export default function QuestsPage() {
     setModalOpen(false);
   };
   
-  // Enroll in quest handler
-  const handleEnrollQuest = (questId) => {
-    if (!isAuthenticated) {
-      // Redirect to login if not authenticated
-      router.push('/login');
-      return;
-    }
-    
-    // Navigate to quest detail page if authenticated
-    router.push(`/quests/${questId}`);
-    setModalOpen(false);
-  };
-  
-  // Claim reward handler
-  const handleClaimReward = async (questId) => {
-    if (!isAuthenticated) return;
-    
-    try {
-      // In a real application, API request:
-      // const response = await fetch(`/api/quests/${questId}/claim-reward`, {
-      //   method: 'POST',
-      // });
-      // if (!response.ok) throw new Error('Failed to claim reward');
-      
-      // Mock operation - assume success
-      // Update quest list
-      const updatedQuests = quests.map(quest => {
-        if (quest.id === questId && quest.progress) {
-          return {
-            ...quest,
-            progress: {
-              ...quest.progress,
-              rewardClaimed: true
-            }
-          };
-        }
-        return quest;
-      });
-      
-      setQuests(updatedQuests);
-      
-      // Update selected quest
-      if (selectedQuest && selectedQuest.id === questId) {
-        setSelectedQuest({
-          ...selectedQuest,
-          progress: {
-            ...selectedQuest.progress,
-            rewardClaimed: true
-          }
-        });
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Failed to claim reward:', error);
-      throw error;
-    }
+  // Tab change handler
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setPage(1); // Reset to first page when tab changes
   };
   
   // Search handler
   const handleSearch = (term) => {
     setSearchTerm(term);
-    setPage(1);
+    setPage(1); // Reset page when search changes
   };
   
   // Filter change handler
@@ -1387,78 +1353,439 @@ export default function QuestsPage() {
       ...prev,
       [type]: value
     }));
-    setPage(1);
+    setPage(1); // Reset page when filters change
   };
   
-  // Clear filters
+  // Clear filters handler
   const handleClearFilters = () => {
     setSearchTerm('');
     setFilters({
       difficulty: 'all',
       category: 'all',
+      topic: 'all',
       sort: 'newest'
     });
-    setPage(1);
+    setPage(1); // Reset page when filters are cleared
+  };
+  
+  // Function to check quest progress
+  const checkQuestProgress = async (questId) => {
+    if (!isAuthenticated) {
+      return;
+    }
+    
+    try {
+      // Get token for authorization
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      if (!token) {
+        return;
+      }
+
+      // Call the check-progress endpoint
+      const response = await fetch(`/api/quests/${questId}/check-progress`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Failed to check quest progress:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log('Quest progress checked:', data);
+
+      if (data.success) {
+        // Update the quest progress in state
+        setSelectedQuest(prev => {
+          if (prev && prev.QuestID === questId) {
+            return {
+              ...prev,
+              progress: {
+                currentProgress: data.currentProgress || 0,
+                isCompleted: data.isCompleted || false,
+                completionPercentage: data.progressPercentage || 0,
+                rewardClaimed: prev.progress?.rewardClaimed || false
+              },
+              conditions: Array.isArray(prev.conditions) ? prev.conditions.map((condition, index) => {
+                // If we have progress data for this condition, update it
+                if (data.conditions && data.conditions[index]) {
+                  return {
+                    ...condition,
+                    progress: data.conditions[index].progress
+                  };
+                }
+                return condition;
+              }) : []
+            };
+          }
+          return prev;
+        });
+
+        // Also update the quests list if this quest is in it
+        setQuests(prevQuests => {
+          return prevQuests.map(quest => {
+            if (quest.QuestID === questId) {
+              return {
+                ...quest,
+                userProgress: {
+                  currentProgress: data.currentProgress || 0,
+                  isCompleted: data.isCompleted || false,
+                  completionPercentage: data.progressPercentage || 0,
+                  rewardClaimed: quest.userProgress?.rewardClaimed || false
+                }
+              };
+            }
+            return quest;
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Error checking quest progress:', error);
+    }
+  };
+
+  const handleEnrollQuest = (questId) => {
+    if (!isAuthenticated) {
+      toast?.warn('Bu göreve katılmak için giriş yapmalısınız.');
+      router.push('/login?redirect=/quests');
+      return;
+    }
+    
+    // Set loading state
+    setLoading(true);
+
+    // Get token for authorization
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    if (!token) {
+      toast?.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+      router.push('/login?redirect=/quests');
+      setLoading(false);
+      return;
+    }
+
+    // API'ye ilerleme başlatma isteği gönder
+    fetch(`/api/quests/${questId}/progress`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        completedConditionIds: []
+      })
+    })
+      .then(res => {
+        // Log the raw response for debugging
+        console.log(`Progress API response status: ${res.status}`);
+        
+        // Handle HTTP errors first
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            toast?.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+            router.push('/login?redirect=/quests');
+            throw new Error('Authentication required');
+          } else if (res.status === 400) {
+            return res.json().then(errorData => {
+              // Check if this is the specific "Quest koşulları bulunamadı" error
+              // which we should now handle gracefully instead of showing an error
+              if (errorData?.error === "Quest koşulları bulunamadı") {
+                console.log("Quest has no conditions, but proceeding with enrollment");
+                return {
+                  success: true,
+                  message: "Successfully enrolled in quest with no conditions",
+                  progress: {
+                    currentProgress: 1,
+                    isCompleted: true,
+                    completionPercentage: 100 
+                  }
+                };
+              }
+              throw new Error(errorData?.error || 'Bad request: Invalid quest ID or parameters');
+            });
+          } else if (res.status === 404) {
+            throw new Error('Quest not found');
+          } else {
+            throw new Error(`Server error: ${res.status}`);
+          }
+        }
+        
+        // Try to parse JSON response
+        return res.json().catch(() => {
+          // If JSON parsing fails, return a default success object
+          console.warn('Could not parse JSON response, using default');
+          return { success: true, message: 'Successfully enrolled in quest' };
+        });
+      })
+      .then(data => {
+        console.log('Progress API response data:', data);
+        
+        // Always check if data exists before proceeding
+        if (!data) {
+          toast?.error('Invalid response from server');
+          return;
+        }
+        
+        // Safely check for success property
+        if (data.success) {
+          toast?.success('Göreve katılım başarılı!');
+          
+          // Seçili görevi güncelle
+          setSelectedQuest(prev => {
+            // Make a deep copy to ensure we don't have reference issues
+            const updatedQuest = {...prev};
+            
+            // Update progress information
+            updatedQuest.progress = data.progress || { 
+              currentProgress: 0,
+              isCompleted: false,
+              completionPercentage: 0
+            };
+            
+            // Ensure that conditions are properly handled
+            if (!Array.isArray(updatedQuest.conditions) || updatedQuest.conditions.length === 0) {
+              // For quests with no conditions, make sure we don't display errors
+              console.log("Setting empty conditions array for quest without conditions");
+              updatedQuest.conditions = [];
+            }
+            
+            return updatedQuest;
+          });
+          
+          // Check actual progress to properly update conditions and progress
+          setTimeout(() => {
+            checkQuestProgress(questId);
+          }, 500);
+          
+          // Refresh quests after successful enrollment
+          setTimeout(() => {
+            // Use directly from state updates since fetchQuests is not accessible here
+            // This will refresh the quests list by refetching from API
+            setQuests(prev => {
+              // Force refresh of quests list by updating state
+              // This will trigger the useEffect to refetch quests
+              setRefreshTrigger(Date.now());
+              return prev;
+            });
+          }, 1000);
+        } else {
+          // Handle API error responses
+          const errorMessage = data.error || 'Göreve katılım sırasında bir hata oluştu.';
+          toast?.error(errorMessage);
+        }
+      })
+      .catch(err => {
+        console.error('Göreve katılım sırasında hata:', err);
+        // Only show toast if it's not already handled and toast is defined
+        if (err && err.message !== 'Authentication required' && typeof toast !== 'undefined') {
+          toast?.error(err.message || 'Bir bağlantı hatası oluştu. Lütfen tekrar deneyin.');
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+  
+  // Claim reward handler
+  const handleClaimReward = async (questId) => {
+    if (!isAuthenticated) {
+      toast.warn('Ödül almak için giriş yapmalısınız.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`/api/quests/${questId}/claim-reward`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': typeof window !== 'undefined' ? `Bearer ${localStorage.getItem('access_token')}` : ''
+        }
+      });
+
+      // Handle failed responses
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+          router.push('/login?redirect=/quests');
+          return;
+        }
+        
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+        }
+        
+        throw new Error(errorData.error || `API error: ${response.status}`);
+      }
+
+      // Parse the successful response
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error('Error parsing success response:', e);
+        data = { success: true };
+      }
+
+      if (data && data.success) {
+        if (typeof toast !== 'undefined') {
+          toast.success('Ödülünüz başarıyla talep edildi!');
+        }
+        
+        // Animasyon efekti
+        setRewardAnimation(true);
+        
+        // Kazanılan puanları göster
+        if (data.rewards && data.rewards.points) {
+          toast.success(`${data.rewards.points} puan kazandınız!`);
+        }
+        
+        // NFT kazanıldıysa bildirim göster
+        if (data.rewards && data.rewards.nft) {
+          setRewardNFT(true);
+          toast.success('Bir NFT ödülü kazandınız!');
+        }
+        
+        // Seçili görevi güncelle
+        setSelectedQuest(prev => ({
+          ...prev,
+          progress: {
+            ...prev.progress,
+            rewardClaimed: true
+          }
+        }));
+        
+        // Kullanıcı bilgilerini güncelle (örn. toplam puanları)
+        if (updateUser) {
+          updateUser();
+        }
+        
+        // 3 saniye sonra animasyonu kapat
+        setTimeout(() => {
+          setRewardAnimation(false);
+          setRewardNFT(false);
+        }, 3000);
+      } else {
+        // Handle API response without success field
+        toast.error(data && data.error ? data.error : 'Ödül alınamadı. Lütfen daha sonra tekrar deneyin.');
+      }
+    } catch (error) {
+      console.error('Ödül talep edilirken hata oluştu:', error);
+      toast.error(error && error.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setLoading(false);
+    }
   };
   
   // Filter quests based on tab
   const getFilteredQuests = () => {
-    let filtered = [...quests];
+    if (!quests || !Array.isArray(quests)) return [];
     
-    // Tab filter
-    if (activeTab === 1) { // In Progress
-      filtered = filtered.filter(quest => 
-        quest.progress && 
-        quest.progress.currentProgress > 0 && 
-        !quest.progress.isCompleted
-      );
-    } else if (activeTab === 2) { // Completed
-      filtered = filtered.filter(quest => 
-        quest.progress && 
-        quest.progress.isCompleted
-      );
-    } else if (activeTab === 3) { // Available
-      filtered = filtered.filter(quest => 
-        !quest.progress || 
-        (quest.progress.currentProgress === 0 && !quest.progress.isCompleted)
-      );
-    }
-    
-    // Difficulty filter
+    return quests.filter(quest => {
+      // Filter by difficulty
     if (filters.difficulty !== 'all') {
-      filtered = filtered.filter(quest => quest.difficulty === filters.difficulty);
+        const questDifficulty = quest.difficulty || quest.DifficultyLevel || '';
+        if (questDifficulty.toLowerCase() !== filters.difficulty.toLowerCase()) {
+          return false;
+        }
     }
     
-    // Category filter
+      // Filter by category
     if (filters.category !== 'all') {
-      filtered = filtered.filter(quest => quest.category === filters.category);
-    }
-    
-    // Search filter
-    if (searchTerm.trim() !== '') {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(quest => 
-        quest.title.toLowerCase().includes(term) || 
-        quest.description.toLowerCase().includes(term) ||
-        (quest.category && quest.category.toLowerCase().includes(term))
-      );
-    }
-    
-    // Sorting
-    if (filters.sort === 'points-high') {
-      filtered.sort((a, b) => b.rewardPoints - a.rewardPoints);
-    } else if (filters.sort === 'points-low') {
-      filtered.sort((a, b) => a.rewardPoints - b.rewardPoints);
-    }
-    
-    return filtered;
+        const questCategory = quest.category || quest.Category || '';
+        if (questCategory !== filters.category) {
+          return false;
+        }
+      }
+      
+      // Filter by topic
+      if (filters.topic !== 'all') {
+        // Check quest conditions for topic match
+        const conditions = quest.conditions || [];
+        const conditionTypes = conditions.map(c => c.conditionType || c.type).filter(Boolean);
+        
+        // Check description for topic keywords
+        const description = quest.description || quest.Description || '';
+        
+        // Check for Web3 topic
+        if (filters.topic === 'Web3' && 
+            !(/\bweb3\b|\bblockchain\b|\bcrypto\b|\bnft\b/i.test(description)) &&
+            !conditionTypes.some(type => /blockchain|crypto|nft|token|web3/i.test(type))) {
+          return false;
+        }
+        
+        // Check for Coding topic
+        if (filters.topic === 'Coding' && 
+            !(/\bcoding\b|\bprogramming\b|\bdevelop(er|ment)?\b/i.test(description)) &&
+            !conditionTypes.some(type => /coding|programming|develop/i.test(type))) {
+          return false;
+        }
+        
+        // Check for Design topic
+        if (filters.topic === 'Design' && 
+            !(/\bdesign\b|\bui\b|\bux\b/i.test(description)) &&
+            !conditionTypes.some(type => /design|ui|ux/i.test(type))) {
+          return false;
+        }
+        
+        // Check for Learning topic
+        if (filters.topic === 'Learning' && 
+            !(/\blearn\b|\beducation\b|\bcourse\b|\bstudy\b/i.test(description)) &&
+            !conditionTypes.includes('course_completion')) {
+          return false;
+        }
+        
+        // Check for Quiz topic
+        if (filters.topic === 'Quiz' && 
+            !(/\bquiz\b|\btest\b|\bexam\b|\bchallenge\b/i.test(description)) &&
+            !conditionTypes.includes('quiz_score')) {
+          return false;
+        }
+      }
+      
+      // Search
+      if (searchTerm) {
+        const title = quest.title || quest.Title || '';
+        const description = quest.description || quest.Description || '';
+        const searchRegex = new RegExp(searchTerm, 'i');
+        if (!searchRegex.test(title) && !searchRegex.test(description)) {
+          return false;
+        }
+      }
+      
+      return true;
+    }).sort((a, b) => {
+      // Sort based on selected sort option
+      if (filters.sort === 'newest') {
+        // Assuming each quest has a creationDate property
+        const dateA = new Date(a.creationDate || a.CreationDate || 0);
+        const dateB = new Date(b.creationDate || b.CreationDate || 0);
+        return dateB - dateA;
+      } else if (filters.sort === 'points-high') {
+        const pointsA = a.rewardPoints || a.RewardPoints || 0;
+        const pointsB = b.rewardPoints || b.RewardPoints || 0;
+        return pointsB - pointsA;
+      } else if (filters.sort === 'points-low') {
+        const pointsA = a.rewardPoints || a.RewardPoints || 0;
+        const pointsB = b.rewardPoints || b.RewardPoints || 0;
+        return pointsA - pointsB;
+      }
+      return 0;
+    });
   };
   
   // Get paginated quests
   const getPaginatedQuests = () => {
     const filteredQuests = getFilteredQuests();
-    const startIndex = (page - 1) * itemsPerPage;
-    return filteredQuests.slice(startIndex, startIndex + itemsPerPage);
+    const startIndex = (page - 1) * questsPerPage;
+    return filteredQuests.slice(startIndex, startIndex + questsPerPage);
   };
   
   // Group quests by category
@@ -1482,20 +1809,14 @@ export default function QuestsPage() {
   const getDifficultyQuests = () => {
     const filteredQuests = getFilteredQuests();
     
-    // Group by difficulty
+    // Group by difficulty (case-insensitive matching)
     const difficulties = {
-      easy: filteredQuests.filter(q => q.difficulty === 'easy'),
-      intermediate: filteredQuests.filter(q => q.difficulty === 'intermediate'),
-      advanced: filteredQuests.filter(q => q.difficulty === 'advanced')
+      easy: filteredQuests.filter(q => (q.difficulty || '').toLowerCase() === 'easy'),
+      intermediate: filteredQuests.filter(q => (q.difficulty || '').toLowerCase() === 'intermediate'),
+      advanced: filteredQuests.filter(q => (q.difficulty || '').toLowerCase() === 'advanced')
     };
     
     return difficulties;
-  };
-  
-  // Get unique categories
-  const getUniqueCategories = () => {
-    const categories = ['all', ...new Set(quests.map(quest => quest.category).filter(Boolean))];
-    return categories;
   };
   
   // Page change handler
@@ -1619,7 +1940,7 @@ export default function QuestsPage() {
               { icon: <ExtensionIcon />, value: quests.length.toString(), label: "Total Quests" },
               { icon: <StarIcon />, value: "25K+", label: "Rewards Distributed" },
               { icon: <TokenIcon />, value: "10K+", label: "NFTs Earned" },
-              { icon: <DifficultyIcon />, value: "3", label: "Difficulty Levels" }
+              { icon: <SignalCellularAltIcon />, value: "3", label: "Difficulty Levels" }
             ].map((stat, index) => (
               <Grid item xs={6} sm={3} key={index}>
                 <Box sx={{ 
@@ -1774,57 +2095,14 @@ export default function QuestsPage() {
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
             }}
           >
-            <Grid container spacing={3}>
-              {/* Difficulty filter */}
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Difficulty</InputLabel>
-                  <Select
-                    value={filters.difficulty}
-                    label="Difficulty"
-                    onChange={(e) => handleFilterChange('difficulty', e.target.value)}
-                  >
-                    <MenuItem value="all">All Difficulties</MenuItem>
-                    <MenuItem value="easy">Easy</MenuItem>
-                    <MenuItem value="intermediate">Intermediate</MenuItem>
-                    <MenuItem value="advanced">Advanced</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              {/* Category filter */}
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={filters.category}
-                    label="Category"
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                  >
-                    <MenuItem value="all">All Categories</MenuItem>
-                    {getUniqueCategories().filter(cat => cat !== 'all').map(category => (
-                      <MenuItem key={category} value={category}>{category}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              {/* Sort option */}
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel>Sort By</InputLabel>
-                  <Select
-                    value={filters.sort}
-                    label="Sort By"
-                    onChange={(e) => handleFilterChange('sort', e.target.value)}
-                  >
-                    <MenuItem value="newest">Newest</MenuItem>
-                    <MenuItem value="points-high">Highest Points</MenuItem>
-                    <MenuItem value="points-low">Lowest Points</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
+            <FilterSection 
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+              availableDifficulties={availableDifficulties}
+              availableCategories={availableCategories}
+              availableTopics={availableTopics}
+            />
           </Paper>
         </Collapse>
         
@@ -1859,7 +2137,7 @@ export default function QuestsPage() {
         {loading ? (
           <Grid container spacing={3}>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
-              <Grid item xs={12} sm={6} md={3} key={item}>
+              <Grid xs={12} sm={6} md={3} key={item}>
                 <Paper sx={{ 
                   height: 280, 
                   borderRadius: 2,
@@ -1894,6 +2172,8 @@ export default function QuestsPage() {
                         title="Easy Quests"
                         quests={getDifficultyQuests().easy}
                         onQuestClick={handleQuestClick}
+                        onEnroll={handleEnrollQuest}
+                        isAuthenticated={isAuthenticated}
                       />
                     )}
                     
@@ -1902,6 +2182,8 @@ export default function QuestsPage() {
                         title="Intermediate Quests"
                         quests={getDifficultyQuests().intermediate}
                         onQuestClick={handleQuestClick}
+                        onEnroll={handleEnrollQuest}
+                        isAuthenticated={isAuthenticated}
                       />
                     )}
                     
@@ -1910,6 +2192,8 @@ export default function QuestsPage() {
                         title="Advanced Quests"
                         quests={getDifficultyQuests().advanced}
                         onQuestClick={handleQuestClick}
+                        onEnroll={handleEnrollQuest}
+                        isAuthenticated={isAuthenticated}
                       />
                     )}
                     
@@ -1922,6 +2206,8 @@ export default function QuestsPage() {
                           title={`${category} Quests`}
                           quests={categoryQuests}
                           onQuestClick={handleQuestClick}
+                          onEnroll={handleEnrollQuest}
+                          isAuthenticated={isAuthenticated}
                         />
                       ))
                     }
@@ -1931,7 +2217,7 @@ export default function QuestsPage() {
                     {/* Traditional Grid View for Filtered Results */}
                     <Grid container spacing={2}>
                       {getPaginatedQuests().map((quest) => (
-                        <Grid item xs={6} sm={4} md={3} key={quest.id}>
+                        <Grid xs={6} sm={4} md={3} key={quest.id}>
                           <Box sx={{ height: 280 }}>
                             <QuestCard 
                               quest={quest} 
@@ -1943,10 +2229,10 @@ export default function QuestsPage() {
                     </Grid>
                     
                     {/* Pagination */}
-                    {getFilteredQuests().length > itemsPerPage && (
+                    {getFilteredQuests().length > questsPerPage && (
                       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                         <Pagination 
-                          count={Math.ceil(getFilteredQuests().length / itemsPerPage)} 
+                          count={Math.ceil(getFilteredQuests().length / questsPerPage)} 
                           page={page}
                           onChange={handlePageChange}
                           color="primary"
@@ -2002,6 +2288,7 @@ export default function QuestsPage() {
         isAuthenticated={isAuthenticated}
         onEnroll={handleEnrollQuest}
         onClaimReward={handleClaimReward}
+        loading={loading}
       />
     </Box>
   );

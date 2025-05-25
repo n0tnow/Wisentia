@@ -4,7 +4,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 import hashlib
-from .auth import generate_token
+from .auth import (
+    generate_token, 
+    generate_email_verification_token,
+    store_email_verification_code,
+    store_password_reset_code, 
+    verify_email_code, 
+    verify_password_reset_code,
+    clear_password_reset_code
+)
 import jwt
 from django.conf import settings
 import logging
@@ -17,6 +25,10 @@ import time
 from django.http import JsonResponse
 import json
 from django.contrib.auth import logout
+from django.core.mail import send_mail
+
+
+
 
 logger = logging.getLogger('wisentia')
 
@@ -60,7 +72,7 @@ def login(request):
 
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT UserID, Username, Email, UserRole, IsActive
+            SELECT UserID, Username, Email, UserRole, IsActive, IsEmailVerified
             FROM Users
             WHERE Email = %s AND PasswordHash = %s
         """, [email, password_hash])
@@ -70,7 +82,7 @@ def login(request):
         if not user_data:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        user_id, username, email, user_role, is_active = user_data
+        user_id, username, email, user_role, is_active, is_email_verified = user_data
 
         if not is_active:
             return Response({'error': 'Account is inactive'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -86,6 +98,7 @@ def login(request):
                 'username': username,
                 'email': email,
                 'role': user_role,
+                'isEmailVerified': bool(is_email_verified)
             },
             'tokens': tokens
         })
@@ -96,7 +109,8 @@ def login(request):
             value=json.dumps({
                 'id': user_id,
                 'username': username,
-                'role': user_role
+                'role': user_role,
+                'isEmailVerified': bool(is_email_verified)
             }),
             httponly=False,
             secure=False,              # ✅ HTTPS olmadığı için False olmalı
@@ -109,8 +123,9 @@ def login(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@throttle_classes([AuthenticationThrottle])  # Throttling aktifleştirildi
+@throttle_classes([AuthenticationThrottle])
 def register(request):
+    """Kullanıcı kaydı yapar ve doğrulama kodu gönderir"""
     try:
         username = request.data.get('username')
         email = request.data.get('email')
@@ -147,12 +162,12 @@ def register(request):
                 print(f"Empty wallet address, using temporary value: {wallet_address}")
             
             try:
-                # Kullanıcı ekle
+                # Kullanıcı ekle - IsEmailVerified alanı eklendi ve varsayılan olarak 0 (false) değeri atandı
                 cursor.execute("""
                     INSERT INTO Users 
                     (Username, Email, PasswordHash, WalletAddress, JoinDate, UserRole, 
-                    ThemePreference, TotalPoints, IsActive)
-                    VALUES (%s, %s, %s, %s, GETDATE(), 'regular', 'light', 0, 1);
+                    ThemePreference, TotalPoints, IsActive, IsEmailVerified)
+                    VALUES (%s, %s, %s, %s, GETDATE(), 'regular', 'light', 0, 1, 0);
                 """, [username, email, password_hash, wallet_address])
                 
                 # ID'yi al
@@ -182,6 +197,43 @@ def register(request):
                     'detail': str(e)
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
+            # E-posta doğrulama kodu oluştur ve cache'de sakla
+            verification_code = store_email_verification_code(
+                email, 
+                user_id, 
+                expiry_seconds=getattr(settings, 'VERIFICATION_CODE_EXPIRY', 86400)
+            )
+            
+            # E-posta gönder
+            email_sent = send_verification_code_email(email, verification_code, username)
+            
+            if email_sent:
+                logger.info(f"Verification code sent to {email}")
+                
+                # Aktivite log kaydı ekle
+                cursor.execute("""
+                    INSERT INTO ActivityLogs
+                    (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                    VALUES (%s, 'register', 'User registered and verification code sent', GETDATE(), %s, %s)
+                """, [
+                    user_id, 
+                    request.META.get('REMOTE_ADDR', ''),
+                    request.META.get('HTTP_USER_AGENT', '')
+                ])
+            else:
+                logger.warning(f"Failed to send verification code to {email}")
+                
+                # E-posta gönderilemese bile kullanıcı kaydını tamamla
+                cursor.execute("""
+                    INSERT INTO ActivityLogs
+                    (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                    VALUES (%s, 'register', 'User registered but verification code email failed', GETDATE(), %s, %s)
+                """, [
+                    user_id, 
+                    request.META.get('REMOTE_ADDR', ''),
+                    request.META.get('HTTP_USER_AGENT', '')
+                ])
+            
             # JWT token oluştur
             tokens = generate_token(user_id)
             
@@ -191,13 +243,15 @@ def register(request):
             # Response verisini hazırla
             response_data = {
                 'user': {
-                    'id': user_id,  # int'e dönüştürülmüş kullanıcı ID'si
+                    'id': user_id,
                     'username': username,
                     'email': email,
                     'walletAddress': wallet_to_return,
                     'role': 'regular',
+                    'isEmailVerified': False
                 },
-                'tokens': tokens
+                'tokens': tokens,
+                'verificationEmailSent': email_sent
             }
             
             return Response(response_data, status=status.HTTP_201_CREATED)
@@ -298,7 +352,7 @@ def get_user_profile(request):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT UserID, Username, Email, WalletAddress, JoinDate, LastLogin, 
-            UserRole, ProfileImage, ThemePreference, TotalPoints
+            UserRole, ProfileImage, ThemePreference, TotalPoints, IsEmailVerified
             FROM Users
             WHERE UserID = %s
         """, [user_id])
@@ -319,6 +373,7 @@ def get_user_profile(request):
             'profileImage': user_data[7],
             'themePreference': user_data[8],
             'totalPoints': user_data[9],
+            'isEmailVerified': bool(user_data[10]),
         }
         
         return Response(user)
@@ -368,6 +423,9 @@ def update_profile(request):
         
         sql_parts.append("Email = %s")
         params.append(update_data['email'])
+        
+        # E-posta değiştiğinde IsEmailVerified'ı false yap
+        sql_parts.append("IsEmailVerified = 0")
     
     if 'walletAddress' in update_data:
         sql_parts.append("WalletAddress = %s")
@@ -435,7 +493,7 @@ def change_password(request):
 @permission_classes([AllowAny])
 @throttle_classes([AuthenticationThrottle])
 def request_password_reset(request):
-    """Şifre sıfırlama isteği oluşturur"""
+    """Şifre sıfırlama isteği oluşturur ve doğrulama kodu gönderir"""
     email = request.data.get('email')
     
     if not email:
@@ -452,27 +510,21 @@ def request_password_reset(request):
         user_data = cursor.fetchone()
         if not user_data:
             # Güvenlik için kullanıcı olmasa bile başarılı yanıt dön
-            return Response({'message': 'If your account exists, you will receive a password reset email'})
+            return Response({'message': 'If your account exists, you will receive a password reset code'})
         
         user_id, username = user_data
         
-        # JWT token oluştur (24 saat geçerli)
-        expiry = datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        # Şifre sıfırlama kodu oluştur ve cache'de sakla
+        reset_code = store_password_reset_code(email, user_id, 
+                             expiry_seconds=getattr(settings, 'PASSWORD_RESET_CODE_EXPIRY', 86400))
         
-        reset_payload = {
-            'user_id': user_id,
-            'email': email,
-            'exp': int(expiry.timestamp()),
-            'iat': int(datetime.datetime.utcnow().timestamp()),
-            'type': 'password_reset'
-        }
+        # E-posta gönderme işlemi
+        email_sent = send_password_reset_code_email(email, reset_code, username)
         
-        reset_token = jwt.encode(reset_payload, settings.SECRET_KEY, algorithm='HS256')
-        
-        # Email gönderme işlemi yapılmalı (burada sadece simülasyon)
-        # Gerçek bir email gönderme servisi entegre edilmelidir
-        
-        logger.info(f"Password reset requested for UserID: {user_id}, Token: {reset_token}")
+        if email_sent:
+            logger.info(f"Password reset code sent to email: {email}")
+        else:
+            logger.error(f"Failed to send password reset code to email: {email}")
         
         # Etkinlik logu ekle
         cursor.execute("""
@@ -485,7 +537,7 @@ def request_password_reset(request):
             request.META.get('HTTP_USER_AGENT', '')
         ])
     
-    return Response({'message': 'If your account exists, you will receive a password reset email'})
+    return Response({'message': 'If your account exists, you will receive a password reset code'})
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -552,10 +604,380 @@ def reset_password(request):
     except Exception as e:
         logger.error(f"Password reset error: {str(e)}", exc_info=True)
         return Response({'error': 'Failed to reset password'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['token'],
+        properties={
+            'token': openapi.Schema(type=openapi.TYPE_STRING, description='E-posta doğrulama token\'ı'),
+        }
+    ),
+    responses={
+        200: 'E-posta doğrulama başarılı',
+        400: 'Geçersiz token',
+        404: 'Kullanıcı bulunamadı'
+    },
+    operation_description="E-posta doğrulama işlemini gerçekleştirir"
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([AuthenticationThrottle])
+def verify_email(request):
+    """E-posta doğrulama işlemini gerçekleştirir"""
+    token = request.data.get('token')
     
+    if not token:
+        return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Token'ı doğrula
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        
+        # Token tipini kontrol et
+        if payload.get('token_type') != 'email_verification':
+            return Response({'error': 'Invalid token type'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user_id = payload.get('user_id')
+        email = payload.get('email')
+        
+        with connection.cursor() as cursor:
+            # Kullanıcıyı kontrol et
+            cursor.execute("""
+                SELECT UserID, Email, IsEmailVerified
+                FROM Users
+                WHERE UserID = %s AND Email = %s
+            """, [user_id, email])
+            
+            user_data = cursor.fetchone()
+            if not user_data:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Kullanıcı zaten doğrulanmışsa bilgi ver
+            if user_data[2]:  # IsEmailVerified
+                return Response({'message': 'Email already verified'})
+            
+            # E-posta doğrulama durumunu güncelle
+            cursor.execute("""
+                UPDATE Users
+                SET IsEmailVerified = 1
+                WHERE UserID = %s
+            """, [user_id])
+            
+            # Etkinlik logu ekle
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                VALUES (%s, 'email_verification', 'Email verification completed', GETDATE(), %s, %s)
+            """, [
+                user_id, 
+                request.META.get('REMOTE_ADDR', ''),
+                request.META.get('HTTP_USER_AGENT', '')
+            ])
+        
+        return Response({'message': 'Email verified successfully'})
+    
+    except jwt.ExpiredSignatureError:
+        return Response({'error': 'Verification token has expired'}, status=status.HTTP_400_BAD_REQUEST)
+    except jwt.InvalidTokenError:
+        return Response({'error': 'Invalid verification token'}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Email verification error: {str(e)}", exc_info=True)
+        return Response({'error': 'Failed to verify email'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout_view(request):
     logout(request)
     return Response({'detail': 'Successfully logged out'})
+
+
+def send_verification_code_email(email, code, username):
+    """E-posta doğrulama kodu içeren e-posta gönderir"""
+    subject = "Your Email Verification Code - Wisentia Learning Platform"
+    
+    message = f"""
+Hello {username},
+
+Thank you for registering with Wisentia Learning Platform.
+
+Your email verification code is:
+
+{code}
+
+Please enter this code on our website to verify your email address. This code will expire in 24 hours.
+
+If you did not register on our platform, please ignore this email.
+
+Best regards,
+The Wisentia Team
+    """
+    
+    from_email = settings.EMAIL_HOST_USER
+    recipient_list = [email]
+    
+    try:
+        send_mail(subject, message, from_email, recipient_list)
+        logger.info(f"Verification code email sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send verification email to {email}: {str(e)}")
+        return False
+
+def send_password_reset_code_email(email, code, username):
+    """Şifre sıfırlama kodu içeren e-posta gönderir"""
+    subject = "Your Password Reset Code - Wisentia Learning Platform"
+    
+    message = f"""
+Hello {username},
+
+You have requested to reset your password.
+
+Your password reset code is:
+
+{code}
+
+Please enter this code on our website to reset your password. This code will expire in 24 hours.
+
+If you did not request a password reset, please ignore this email.
+
+Best regards,
+The Wisentia Team
+    """
+    
+    from_email = settings.EMAIL_HOST_USER
+    recipient_list = [email]
+    
+    try:
+        send_mail(subject, message, from_email, recipient_list)
+        logger.info(f"Password reset code email sent to {email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {email}: {str(e)}")
+        return False
+    
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([SensitiveOperationsThrottle])
+def reset_password_with_code(request):
+    """Doğrulama kodu ile şifre sıfırlama işlemini gerçekleştirir"""
+    email = request.data.get('email')
+    code = request.data.get('code')
+    new_password = request.data.get('new_password')
+    
+    if not email or not code or not new_password:
+        return Response({
+            'error': 'Email, verification code and new password are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Doğrulama kodunu kontrol et
+    user_id = verify_password_reset_code(email, code)
+    
+    if not user_id:
+        return Response({'error': 'Invalid or expired verification code'}, 
+                        status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Şifreyi hashle
+        password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+        
+        with connection.cursor() as cursor:
+            # Kullanıcıyı kontrol et
+            cursor.execute("""
+                SELECT UserID, Email 
+                FROM Users
+                WHERE UserID = %s AND Email = %s AND IsActive = 1
+            """, [user_id, email])
+            
+            user_data = cursor.fetchone()
+            if not user_data:
+                return Response({'error': 'User not found or inactive'}, 
+                               status=status.HTTP_404_NOT_FOUND)
+            
+            # Şifreyi güncelle
+            cursor.execute("""
+                UPDATE Users
+                SET PasswordHash = %s
+                WHERE UserID = %s
+            """, [password_hash, user_id])
+            
+            # Doğrulama kodunu temizle
+            clear_password_reset_code(email)
+            
+            # Etkinlik logu ekle
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                VALUES (%s, 'password_reset', 'Password reset completed', GETDATE(), %s, %s)
+            """, [
+                user_id, 
+                request.META.get('REMOTE_ADDR', ''),
+                request.META.get('HTTP_USER_AGENT', '')
+            ])
+        
+        return Response({'message': 'Password has been reset successfully'})
+    
+    except Exception as e:
+        logger.error(f"Password reset error: {str(e)}", exc_info=True)
+        return Response({'error': 'Failed to reset password'}, 
+                       status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([AuthenticationThrottle])
+def verify_email_with_code(request):
+    """E-posta doğrulama kodunu kontrol eder ve kullanıcı e-postasını doğrular"""
+    email = request.data.get('email')
+    code = request.data.get('code')
+    
+    if not email or not code:
+        return Response({'error': 'Email and verification code are required'}, 
+                       status=status.HTTP_400_BAD_REQUEST)
+    
+    # Doğrulama kodunu kontrol et
+    user_id = verify_email_code(email, code)
+    
+    if not user_id:
+        return Response({'error': 'Invalid or expired verification code'}, 
+                       status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        with connection.cursor() as cursor:
+            # Kullanıcıyı kontrol et
+            cursor.execute("""
+                SELECT UserID, Email, IsEmailVerified
+                FROM Users
+                WHERE UserID = %s AND Email = %s
+            """, [user_id, email])
+            
+            user_data = cursor.fetchone()
+            if not user_data:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Kullanıcı zaten doğrulanmışsa bilgi ver
+            if user_data[2]:  # IsEmailVerified
+                return Response({'message': 'Email already verified'})
+            
+            # E-posta doğrulama durumunu güncelle
+            cursor.execute("""
+                UPDATE Users
+                SET IsEmailVerified = 1
+                WHERE UserID = %s
+            """, [user_id])
+            
+            # Etkinlik logu ekle
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                VALUES (%s, 'email_verification', 'Email verification completed', GETDATE(), %s, %s)
+            """, [
+                user_id, 
+                request.META.get('REMOTE_ADDR', ''),
+                request.META.get('HTTP_USER_AGENT', '')
+            ])
+        
+        return Response({'message': 'Email verified successfully'})
+    
+    except Exception as e:
+        logger.error(f"Email verification error: {str(e)}", exc_info=True)
+        return Response({'error': 'Failed to verify email'}, 
+                       status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([AuthenticationThrottle])
+def resend_verification_code(request):
+    """Yeni bir e-posta doğrulama kodu gönderir"""
+    email = request.data.get('email')
+    
+    if not email:
+        return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    with connection.cursor() as cursor:
+        # Kullanıcıyı kontrol et
+        cursor.execute("""
+            SELECT UserID, Username, IsEmailVerified 
+            FROM Users
+            WHERE Email = %s AND IsActive = 1
+        """, [email])
+        
+        user_data = cursor.fetchone()
+        if not user_data:
+            # Güvenlik için kullanıcı olmasa bile başarılı yanıt dön
+            return Response({'message': 'If your account exists, you will receive a verification code'})
+        
+        user_id, username, is_email_verified = user_data
+        
+        # Zaten doğrulanmışsa bilgi ver
+        if is_email_verified:
+            return Response({'message': 'Your email is already verified'})
+        
+        # Yeni doğrulama kodu oluştur ve gönder
+        verification_code = store_email_verification_code(
+            email, 
+            user_id, 
+            expiry_seconds=getattr(settings, 'VERIFICATION_CODE_EXPIRY', 86400)
+        )
+        
+        # E-posta gönder
+        email_sent = send_verification_code_email(email, verification_code, username)
+        
+        if email_sent:
+            logger.info(f"New verification code sent to {email}")
+            
+            # Aktivite log kaydı ekle
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                VALUES (%s, 'resend_verification', 'New verification code sent', GETDATE(), %s, %s)
+            """, [
+                user_id, 
+                request.META.get('REMOTE_ADDR', ''),
+                request.META.get('HTTP_USER_AGENT', '')
+            ])
+        else:
+            logger.warning(f"Failed to send new verification code to {email}")
+    
+    return Response({'message': 'If your account exists, a new verification code has been sent'})
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_token(request):
+    """Verify a token and check if user is admin"""
+    try:
+        token = request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify the token
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+        user_id = payload['user_id']
+        
+        # Get user info
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT UserID, UserRole FROM Users WHERE UserID = %s
+            """, [user_id])
+            
+            user = cursor.fetchone()
+            
+            if not user:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            is_admin = user[1] == 'admin'
+            
+            return Response({
+                'valid': True,
+                'user_id': user[0],
+                'is_admin': is_admin
+            })
+    except jwt.ExpiredSignatureError:
+        return Response({'error': 'Token has expired'}, status=status.HTTP_401_UNAUTHORIZED)
+    except jwt.InvalidTokenError:
+        return Response({'error': 'Invalid token'}, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

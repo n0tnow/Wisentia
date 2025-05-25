@@ -46,70 +46,62 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
 import LockIcon from '@mui/icons-material/Lock';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import InfoIcon from '@mui/icons-material/Info';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import QuizIcon from '@mui/icons-material/Quiz';
+import PeopleIcon from '@mui/icons-material/People';
 import { useAuth } from '@/contexts/AuthContext';
+import GlowingStarsBackground from '@/components/GlowingStarsBackground';
+import React from 'react';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import WarningIcon from '@mui/icons-material/Warning';
+import Link from 'next/link';
 
-// Animated background with glowing stars effect
-const GlowingStarsBackground = () => {
-  const theme = useTheme();
+// Define animations
+const animations = `
+  @keyframes twinkle-0 {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
   
-  return (
-    <Box
-      className="stars-container"
-      sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        overflow: 'hidden',
-        zIndex: -1,
-      }}
-    >
-      {/* Small star particles */}
-      {[...Array(70)].map((_, i) => (
-        <Box
-          key={`star-${i}`}
-          className="star"
-          sx={{
-            position: 'absolute',
-            width: Math.random() < 0.7 ? '1px' : '2px',
-            height: Math.random() < 0.7 ? '1px' : '2px',
-            backgroundColor: i % 5 === 0 ? theme.palette.secondary.main : theme.palette.primary.main,
-            borderRadius: '50%',
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animation: `twinkle-${i % 3} ${2 + Math.random() * 4}s infinite ease-in-out`,
-            opacity: 0.6 + Math.random() * 0.4,
-          }}
-        />
-      ))}
-      
-      {/* Larger glow stars */}
-      {[...Array(20)].map((_, i) => {
-        const size = 1 + Math.random() * 2;
-        return (
-          <Box
-            key={`glow-star-${i}`}
-            className="glow-star"
-            sx={{
-              position: 'absolute',
-              width: size,
-              height: size,
-              backgroundColor: i % 2 === 0 ? theme.palette.primary.main : theme.palette.secondary.main,
-              borderRadius: '50%',
-              boxShadow: i % 2 === 0 
-                ? `0 0 ${5 + Math.random() * 10}px ${theme.palette.primary.main}`
-                : `0 0 ${5 + Math.random() * 10}px ${theme.palette.secondary.main}`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `pulse-${i % 5} ${4 + Math.random() * 6}s infinite alternate`,
-            }}
-          />
-        );
-      })}
-    </Box>
-  );
-};
+  @keyframes twinkle-1 {
+    0%, 100% { opacity: 0.6; }
+    30% { opacity: 0.2; }
+    60% { opacity: 1; }
+  }
+  
+  @keyframes twinkle-2 {
+    0%, 100% { opacity: 0.3; }
+    40% { opacity: 0.8; }
+    80% { opacity: 0.1; }
+  }
+  
+  @keyframes pulse-0 {
+    0% { transform: scale(1); opacity: 0.7; }
+    100% { transform: scale(1.2); opacity: 1; }
+  }
+  
+  @keyframes pulse-1 {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    100% { transform: scale(1.1); opacity: 0.9; }
+  }
+  
+  @keyframes pulse-2 {
+    0% { transform: scale(1.1); opacity: 0.4; }
+    100% { transform: scale(0.9); opacity: 0.8; }
+  }
+  
+  @keyframes pulse-3 {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(1.2); opacity: 1; }
+  }
+  
+  @keyframes pulse-4 {
+    0% { transform: scale(1.2); opacity: 0.3; }
+    100% { transform: scale(0.8); opacity: 0.7; }
+  }
+`;
 
 // Video list item component
 const VideoListItem = ({ video, index, isCompleted, isLocked, onVideoClick, isActive }) => {
@@ -235,6 +227,27 @@ const VideoListItem = ({ video, index, isCompleted, isLocked, onVideoClick, isAc
   );
 };
 
+// TabPanel component
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`course-tabpanel-${index}`}
+      aria-labelledby={`course-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
 // Main CourseDetail component
 export default function CourseDetailPage() {
   const params = useParams();
@@ -242,107 +255,262 @@ export default function CourseDetailPage() {
   const router = useRouter();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
-  // State
+  // State variables
   const [course, setCourse] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userProgress, setUserProgress] = useState(null);
   const [currentVideo, setCurrentVideo] = useState(null);
+  const [enrollmentStatus, setEnrollmentStatus] = useState({
+    isEnrolled: false,
+    isLoading: true
+  });
+  const [courseQuizzes, setCourseQuizzes] = useState([]);
+  const [videoProgress, setVideoProgress] = useState({});
+  const [noQuizzesMessage, setNoQuizzesMessage] = useState(null);
+  const [orderedContent, setOrderedContent] = useState([]); // Add state for ordered content
   
   // Fetch course data
   useEffect(() => {
     const fetchCourseDetails = async () => {
       setLoading(true);
+      setError(null);
+
       try {
-        // In a real application, fetch from API:
-        // const response = await fetch(`/api/courses/${courseId}`);
-        // const data = await response.json();
+        // Get auth token
+        const token = getToken();
+        if (!token) {
+          console.warn('No authentication token available');
+          setError('Authentication required. Please log in.');
+          setLoading(false);
+          return;
+        }
+
+        // Add cache busting timestamp
+        const timestamp = new Date().getTime();
+        console.log(`Fetching course details for courseId: ${courseId}, cache buster: ${timestamp}`);
         
-        // Mock data for now
-        const mockCourse = {
-          id: courseId,
-          title: 'Introduction to Blockchain',
-          description: 'Learn the fundamentals of blockchain technology, including its history, how it works, and its real-world applications. This course is designed for beginners and requires no prior knowledge of blockchain or cryptocurrency.',
-          longDescription: `
-          <p>Blockchain technology is revolutionizing industries across the globe, from finance and supply chain to healthcare and beyond. This comprehensive course will take you from a complete beginner to having a solid understanding of blockchain fundamentals.</p>
+        // Make API request with proper authorization header
+        const apiUrl = `/api/courses/${courseId}/?t=${timestamp}`;
+        console.log(`Making request to: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch course details');
+        }
+        
+        const data = await response.json();
+        console.log('Course API response:', data); // Debug log
+        
+        // Normalize data structure to handle different API response formats
+        const normalizedData = {
+          ...data,
+          id: data.id || data.CourseID,
+          title: data.title || data.Title,
+          description: data.description || data.Description,
+          longDescription: data.longDescription || data.LongDescription,
+          category: data.category || data.Category,
+          difficulty: data.difficulty || data.Difficulty,
+          instructorName: data.instructorName || data.InstructorName,
+          instructorBio: data.instructorBio || data.InstructorBio,
+          instructorAvatar: data.instructorAvatar || data.InstructorAvatar,
+          rating: data.rating || data.Rating || 0,
+          totalVideos: data.TotalVideos || data.totalVideos || (data.videos ? data.videos.length : 0),
           
-          <p>Through a series of engaging video lectures, practical examples, and interactive quizzes, you'll learn:</p>
+          // Ensure enrollment count is processed from all possible property names
+          studentsCount: processEnrollmentCount(data),
           
-          <ul>
-            <li>The history and evolution of blockchain technology</li>
-            <li>How blockchain works at a technical level</li>
-            <li>Different types of consensus mechanisms</li>
-            <li>Cryptocurrencies and tokens</li>
-            <li>Smart contracts and decentralized applications</li>
-            <li>Real-world blockchain use cases</li>
-            <li>The future of blockchain and its potential impact</li>
-          </ul>
+          creationDate: data.creationDate || data.CreationDate || new Date().toISOString(),
+          lastUpdated: data.lastUpdated || data.LastUpdated || new Date().toISOString(),
+          formattedDuration: data.formattedDuration || 'N/A',
+          thumbnailURL: data.thumbnailURL || data.ThumbnailURL || '/images/course-default.jpg', // Add default image
           
-          <p>By the end of this course, you'll have the knowledge and confidence to understand blockchain applications, participate in blockchain discussions, and even start building your own blockchain projects.</p>
+          // Ensure videos array is properly defined with consistent properties
+          videos: Array.isArray(data.videos) ? data.videos.map(video => ({
+            ...video,
+            id: video.id || video.VideoID, // Ensure id is always available
+            VideoID: video.VideoID || video.id, // Ensure VideoID is always available
+            title: video.title || video.Title || 'Untitled Video',
+            duration: video.duration || video.Duration || '0:00',
+            completed: video.completed || false,
+            is_free: video.is_free || false
+          })) : [],
           
-          <p>Whether you're a student, professional, entrepreneur, or simply curious about this groundbreaking technology, this course will provide you with the foundation you need to navigate the exciting world of blockchain.</p>
-          `,
-          category: 'Blockchain',
-          difficulty: 'Beginner',
-          thumbnailURL: '/placeholder-course1.jpg',
-          instructorName: 'John Doe',
-          instructorBio: 'Blockchain developer with 8+ years of experience',
-          instructorAvatar: '/avatar-placeholder.jpg',
-          totalVideos: 12,
-          totalDuration: '4 hours 30 minutes',
-          rating: 4.8,
-          studentsCount: 2854,
-          creationDate: '2023-05-15',
-          lastUpdated: '2024-02-20',
-          videos: [
-            { id: 1, title: 'Introduction to Blockchain Technology', duration: '12:30', completed: true },
-            { id: 2, title: 'The History of Bitcoin', duration: '15:45', completed: true },
-            { id: 3, title: 'How Blockchain Works', duration: '18:20', completed: false },
-            { id: 4, title: 'Consensus Mechanisms', duration: '22:15', completed: false },
-            { id: 5, title: 'Types of Blockchains', duration: '17:30', completed: false },
-            { id: 6, title: 'Blockchain Use Cases', duration: '20:10', completed: false },
-            { id: 7, title: 'Introduction to Cryptocurrencies', duration: '14:45', completed: false },
-            { id: 8, title: 'Smart Contracts Explained', duration: '24:00', completed: false },
-            { id: 9, title: 'Decentralized Applications', duration: '19:15', completed: false },
-            { id: 10, title: 'Blockchain Security', duration: '26:40', completed: false },
-            { id: 11, title: 'The Future of Blockchain', duration: '16:20', completed: false },
-            { id: 12, title: 'Final Project & Review', duration: '22:30', completed: false },
-          ],
-          quizzes: [
-            { id: 101, title: 'Blockchain Basics Quiz', description: 'Test your understanding of blockchain fundamentals' },
-            { id: 102, title: 'Cryptocurrency Quiz', description: 'Assess your knowledge of different cryptocurrencies' },
-            { id: 103, title: 'Smart Contracts & Applications', description: 'Check your understanding of smart contract use cases' }
-          ],
-          resources: [
-            { id: 201, title: 'Blockchain Glossary', type: 'PDF', size: '1.2 MB' },
-            { id: 202, title: 'Cryptocurrency Comparison Chart', type: 'PDF', size: '0.8 MB' },
-            { id: 203, title: 'Smart Contract Examples', type: 'ZIP', size: '3.5 MB' }
-          ]
+          // Ensure quizzes array is properly defined
+          quizzes: Array.isArray(data.quizzes) ? data.quizzes : [],
+          
+          // Ensure resources array is properly defined
+          resources: Array.isArray(data.resources) ? data.resources : []
         };
         
-        setTimeout(() => {
-          setCourse(mockCourse);
-          setCurrentVideo(mockCourse.videos[0]);
-          
-          // Set user progress if authenticated
-          if (isAuthenticated) {
-            setUserProgress({
-              completionPercentage: 16.7, // 2 out of 12 videos completed
-              lastWatchedVideo: mockCourse.videos[2],
-              isCompleted: false,
-              enrolledAt: '2023-08-20'
-            });
-          }
-          
-          setLoading(false);
-        }, 1000); // Simulate loading
+        // Debug the enrollment count
+        console.log("Student count being set to:", normalizedData.studentsCount);
+        
+        // Format duration if available but not already formatted
+        if (!normalizedData.formattedDuration && data.totalDuration) {
+          const hours = Math.floor(data.totalDuration / 3600);
+          const minutes = Math.floor((data.totalDuration % 3600) / 60);
+          normalizedData.formattedDuration = hours > 0 
+            ? `${hours}h ${minutes}m`
+            : `${minutes}m`;
+        }
+        
+        setCourse(normalizedData);
+        
+        // If there are videos, set the first video as current
+        if (normalizedData.videos && normalizedData.videos.length > 0) {
+          setCurrentVideo(normalizedData.videos[0]);
+        }
+        
+        // If user is authenticated, fetch enrollment status
+        if (isAuthenticated) {
+          fetchEnrollmentStatus();
+        }
+        
+        setLoading(false);
       } catch (error) {
         console.error('Failed to fetch course details:', error);
         setError('Failed to load course details. Please try again later.');
         setLoading(false);
+      }
+    };
+    
+    // Helper function to process enrollment count from different property names
+    const processEnrollmentCount = (data) => {
+      const possibleProperties = ['studentsCount', 'StudentCount', 'EnrolledUsers', 'enrolledUsers', 'enrolled_users'];
+      
+      // Check all possible property names
+      for (const prop of possibleProperties) {
+        if (data[prop] !== undefined && data[prop] !== null) {
+          const count = parseInt(data[prop], 10);
+          if (!isNaN(count)) {
+            console.log(`Found enrollment count in property '${prop}': ${count}`);
+            return count;
+          }
+        }
+      }
+      
+      // Default to 0 if not found
+      console.log("No valid enrollment count found in data, defaulting to 0");
+      return 0;
+    };
+    
+    const fetchEnrollmentStatus = async () => {
+      try {
+        console.log(`Fetching enrollment status for course ID: ${courseId}`);
+        
+        // Get fresh token
+        let token = localStorage.getItem('access_token');
+        if (!token) {
+          console.log('No access token found, skipping enrollment check');
+          return;
+        }
+        
+        // Check if the token might be expired
+        try {
+          // Simple token expiration check - parse JWT payload
+          const tokenParts = token.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            const expiryTime = payload.exp * 1000; // Convert to milliseconds
+            
+            // If token is expired or about to expire in the next minute, try to refresh
+            if (Date.now() > expiryTime - 60000) {
+              console.log('Token appears to be expired or about to expire, attempting refresh before enrollment');
+              
+              // Try to refresh the token
+              const refreshResponse = await fetch('/api/auth/refresh-token', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  refresh_token: localStorage.getItem('refresh_token')
+                })
+              });
+              
+              if (refreshResponse.ok) {
+                const refreshData = await refreshResponse.json();
+                if (refreshData.access) {
+                  console.log('Token successfully refreshed for enrollment');
+                  localStorage.setItem('access_token', refreshData.access);
+                  // Update token variable with new token
+                  token = refreshData.access;
+                }
+              } else {
+                console.warn('Failed to refresh token for enrollment, will attempt with existing token');
+              }
+            }
+          }
+        } catch (tokenError) {
+          console.warn('Error checking token expiration during enrollment:', tokenError);
+          // Continue with existing token
+        }
+        
+        // Make the API call with proper headers
+        const response = await fetch(`/api/courses/enrollment/status/${courseId}/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        
+        console.log(`Enrollment status response: ${response.status}`);
+        
+        // Handle specific error cases
+        if (response.status === 401 || response.status === 403) {
+          console.warn(`User not authenticated for enrollment check: ${response.status}`);
+          
+          // If we get an auth error, try redirecting to login
+          if (!isAuthenticated) {
+            console.log('User not authenticated, redirecting to login page');
+            setEnrollmentStatus({ isEnrolled: false, isLoading: false });
+            return;
+          }
+          
+          return;
+        }
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Failed to fetch enrollment status: ${response.status}, Error: ${errorText}`);
+          return;
+        }
+        
+        const data = await response.json();
+        console.log('Enrollment status data:', data);
+        
+        setEnrollmentStatus({
+          isEnrolled: data.is_enrolled,
+          isLoading: false
+        });
+        
+        if (data.is_enrolled && data.progress) {
+          // Set user progress if enrolled
+          setUserProgress({
+            completionPercentage: data.progress.completion_percentage || 0,
+            lastWatchedVideo: data.progress.last_video,
+            isCompleted: data.progress.is_completed || false,
+            lastAccessed: data.progress.last_accessed || new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch enrollment status:', error);
+        // Don't update state on error, keep default values
       }
     };
     
@@ -356,97 +524,484 @@ export default function CourseDetailPage() {
   
   // Handle video click
   const handleVideoClick = (videoId) => {
-    if (course) {
-      const video = course.videos.find(v => v.id === videoId);
-      if (video) {
-        setCurrentVideo(video);
-        // In a real app, we would navigate to the video page
-        router.push(`/courses/${courseId}/videos/${videoId}`);
-      }
+    // Safely find the video
+    if (!course?.videos || !Array.isArray(course.videos)) {
+      console.error('No videos available');
+      return;
     }
+    
+    const video = course.videos.find(v => (v.VideoID === videoId || v.id === videoId));
+    
+    if (!video) {
+      console.error(`Video with ID ${videoId} not found`);
+      return;
+    }
+    
+    // If user is not enrolled and the video is not free, prompt to enroll
+    if (!enrollmentStatus.isEnrolled && !(video.is_free || video.IsFree)) {
+      alert('You need to enroll in this course to watch this video');
+      return;
+    }
+    
+    // Set current video and navigate to video page
+    setCurrentVideo(video);
+    // Ensure we use the correct ID - prefer VideoID if available
+    const navigateId = video.VideoID || video.id;
+    router.push(`/courses/${courseId}/videos/${navigateId}`);
   };
   
   // Handle quiz click
   const handleQuizClick = (quizId) => {
+    // Check if user is enrolled
+    if (!enrollmentStatus.isEnrolled) {
+      alert('You need to enroll in this course to take the quiz');
+      return;
+    }
+    
     // Navigate to quiz page
     router.push(`/quizzes/${quizId}`);
   };
   
   // Handle enroll
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     if (!isAuthenticated) {
       router.push('/login');
       return;
     }
     
-    // In a real app, would call API to enroll
-    // For now, just simulate enrollment
-    setUserProgress({
-      completionPercentage: 0,
-      lastWatchedVideo: course.videos[0],
-      isCompleted: false,
-      enrolledAt: new Date().toISOString().split('T')[0]
-    });
+    setEnrollmentStatus(prev => ({ ...prev, isLoading: true }));
+    
+    try {
+      // Get token and check if it's expired
+      let token = localStorage.getItem('access_token');
+      
+      // Simple token expiration check - parse JWT payload
+      try {
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          const expiryTime = payload.exp * 1000; // Convert to milliseconds
+          
+          // If token is expired or about to expire in the next minute, try to refresh
+          if (Date.now() > expiryTime - 60000) {
+            console.log('Token appears to be expired or about to expire, attempting refresh before enrollment');
+            
+            // Try to refresh the token
+            const refreshResponse = await fetch('/api/auth/refresh-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                refresh_token: localStorage.getItem('refresh_token')
+              })
+            });
+            
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              if (refreshData.access) {
+                console.log('Token successfully refreshed for enrollment');
+                localStorage.setItem('access_token', refreshData.access);
+                // Update token variable with new token
+                token = refreshData.access;
+              }
+            } else {
+              console.warn('Failed to refresh token for enrollment, will attempt with existing token');
+            }
+          }
+        }
+      } catch (tokenError) {
+        console.warn('Error checking token expiration during enrollment:', tokenError);
+        // Continue with existing token
+      }
+      
+      const response = await fetch(`/${courseId}/enroll/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
+      });
+      
+      if (!response.ok) {
+        // Handle auth errors
+        if (response.status === 401 || response.status === 403) {
+          console.error('Authentication error during enrollment, redirecting to login');
+          router.push('/login');
+          return;
+        }
+        
+        throw new Error('Failed to enroll in course');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update enrollment status
+        setEnrollmentStatus({
+          isEnrolled: true,
+          isLoading: false
+        });
+        
+        // Set initial progress
+        setUserProgress({
+          completionPercentage: 0,
+          lastWatchedVideo: course.videos && course.videos.length > 0 ? course.videos[0] : null,
+          isCompleted: false,
+          lastAccessed: new Date().toISOString()
+        });
+        
+        // Show success message
+        alert('Successfully enrolled in course!');
+      } else {
+        throw new Error(data.error || 'Failed to enroll in course');
+      }
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      alert('Failed to enroll in course. Please try again later.');
+      setEnrollmentStatus(prev => ({ ...prev, isLoading: false }));
+    }
   };
   
   // Handle continue learning
   const handleContinueLearning = () => {
     if (userProgress && userProgress.lastWatchedVideo) {
-      // Set current video to last watched
+      // Set current video to last watched and navigate to video page
       setCurrentVideo(userProgress.lastWatchedVideo);
-      // Navigate to video page
-      router.push(`/courses/${courseId}/videos/${userProgress.lastWatchedVideo.id}`);
-    } else {
+      const videoId = userProgress.lastWatchedVideo.VideoID || userProgress.lastWatchedVideo.id;
+      if (videoId) {
+        router.push(`/courses/${courseId}/videos/${videoId}`);
+      } else {
+        console.error('Invalid video ID for last watched video');
+      }
+    } else if (course && course.videos && course.videos.length > 0) {
       // Start from the beginning
-      router.push(`/courses/${courseId}/videos/${course.videos[0].id}`);
+      const firstVideo = course.videos[0];
+      const videoId = firstVideo.VideoID || firstVideo.id;
+      if (videoId) {
+        router.push(`/courses/${courseId}/videos/${videoId}`);
+      } else {
+        console.error('Invalid video ID for first video');
+      }
+    } else {
+      console.error('No videos available to continue learning');
     }
   };
   
-  // Define animations
-  const animations = `
-    @keyframes twinkle-0 {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
+  // Add a refresh function to manually reload course data
+  const refreshCourseData = async () => {
+    console.log("Manually refreshing course data");
+    await fetchCourseDetails();
+    if (isAuthenticated) {
+      await fetchEnrollmentStatus();
     }
-    
-    @keyframes twinkle-1 {
-      0%, 100% { opacity: 0.6; }
-      30% { opacity: 0.2; }
-      60% { opacity: 1; }
-    }
-    
-    @keyframes twinkle-2 {
-      0%, 100% { opacity: 0.3; }
-      40% { opacity: 0.8; }
-      80% { opacity: 0.1; }
-    }
-    
-    @keyframes pulse-0 {
-      0% { transform: scale(1); opacity: 0.7; }
-      100% { transform: scale(1.2); opacity: 1; }
-    }
-    
-    @keyframes pulse-1 {
-      0% { transform: scale(0.9); opacity: 0.5; }
-      100% { transform: scale(1.1); opacity: 0.9; }
-    }
-    
-    @keyframes pulse-2 {
-      0% { transform: scale(1.1); opacity: 0.4; }
-      100% { transform: scale(0.9); opacity: 0.8; }
-    }
-    
-    @keyframes pulse-3 {
-      0% { transform: scale(0.8); opacity: 0.6; }
-      100% { transform: scale(1.2); opacity: 1; }
-    }
-    
-    @keyframes pulse-4 {
-      0% { transform: scale(1.2); opacity: 0.3; }
-      100% { transform: scale(0.8); opacity: 0.7; }
-    }
-  `;
+  };
   
+  // Get authentication token
+  const getToken = () => {
+    try {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          console.warn('No access token found in localStorage');
+          return null;
+        }
+        return token; // Return just the token, not with 'Bearer '
+      }
+      return null;
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
+      return null;
+    }
+  };
+  
+  // Add a function to fetch quizzes for the course
+  const fetchCourseQuizzes = async () => {
+    if (!course?.CourseID || !isAuthenticated) return;
+    
+    setLoading(true); // Set loading state when fetching begins
+    setError(null); // Clear any previous errors
+    
+    try {
+      // Get the auth token
+      const token = getToken();
+      if (!token) {
+        console.warn("Authentication token not available");
+        setLoading(false);
+        setError("Authentication error. Please log in again.");
+        return;
+      }
+      
+      // Add cache busting parameter
+      const timestamp = new Date().getTime();
+      const apiUrl = `/api/courses/${course.CourseID}/quizzes?_=${timestamp}`;
+      console.log(`Fetching quizzes from: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
+      });
+      
+      console.log(`Quiz API response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = 'Error fetching course quizzes';
+        
+        try {
+          // Try to parse as JSON if possible
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorData.detail || errorMessage;
+          console.error('Error fetching course quizzes from backend:', errorMessage);
+        } catch {
+          // If not JSON, use text
+          console.error('Error fetching course quizzes from backend:', errorText);
+        }
+        
+        setError(errorMessage);
+        setLoading(false);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log(`Successfully fetched ${data.quizzes?.length || 0} quizzes for course ${course.CourseID}`);
+      
+      // Set course quizzes
+      if (data.quizzes && Array.isArray(data.quizzes)) {
+        // Separate video-specific and course-level quizzes
+        const videoQuizzes = data.quizzes.filter(quiz => quiz.VideoID);
+        const courseLevelQuizzes = data.quizzes.filter(quiz => !quiz.VideoID);
+        
+        setCourseQuizzes({
+          videoQuizzes,
+          courseLevelQuizzes
+        });
+        
+        console.log(`Found ${videoQuizzes.length} video-specific quizzes and ${courseLevelQuizzes.length} course-level quizzes`);
+      }
+      
+      // Set ordered content if available
+      if (data.orderedContent && Array.isArray(data.orderedContent)) {
+        console.log(`Retrieved ordered content with ${data.orderedContent.length} items`);
+        setOrderedContent(data.orderedContent);
+      } else {
+        // If not available, create a simple ordered list of just videos
+        if (course?.videos && Array.isArray(course.videos)) {
+          const simpleOrdered = course.videos.map(video => ({
+            ...video,
+            type: 'video'
+          }));
+          setOrderedContent(simpleOrdered);
+        } else {
+          setOrderedContent([]);
+        }
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching quizzes:', error);
+      setError('Failed to load course quizzes. Please try again later.');
+      setLoading(false);
+    }
+  };
+
+  // Add to useEffect when course details are loaded
+  useEffect(() => {
+    if (course?.CourseID) {
+      fetchCourseQuizzes();
+      fetchVideoProgress();
+    }
+  }, [course]);
+
+  // Add a function to fetch user's video progress
+  const fetchVideoProgress = async () => {
+    if (!course?.CourseID || !isAuthenticated) return;
+    
+    try {
+      const token = getToken();
+      if (!token) return;
+      
+      const response = await fetch(`/api/courses/${course.CourseID}/progress`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        },
+        cache: 'no-store'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Video progress data:', data);
+        
+        if (data.videoProgress) {
+          // Convert to a more usable format: { videoId: { watchedPercentage, isCompleted } }
+          const progressMap = {};
+          data.videoProgress.forEach(item => {
+            progressMap[item.VideoID] = {
+              watchedPercentage: item.WatchedPercentage || 0,
+              isCompleted: item.IsCompleted || false,
+              lastPosition: item.LastPosition || 0
+            };
+          });
+          
+          setVideoProgress(progressMap);
+        }
+      } else {
+        console.warn('Failed to fetch video progress:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching video progress:', error);
+    }
+  };
+
+  // Add a CourseQuiz component to display quizzes
+  const CourseQuiz = ({ quiz, videoProgress }) => {
+    const theme = useTheme();
+    const router = useRouter();
+    
+    // Improved access logic with better null and undefined checks
+    const canAccess = React.useMemo(() => {
+      // Course level quiz is always accessible
+      if (!quiz.VideoID) return true;
+      
+      // If videoProgress is null (temporary database issue) allow quiz access
+      if (!videoProgress) return true;
+      
+      // If videoProgress object is empty, allow quiz access
+      if (typeof videoProgress !== 'object' || Object.keys(videoProgress).length === 0) return true;
+      
+      // Check if video progress exists
+      const videoData = videoProgress[quiz.VideoID];
+      if (!videoData) return true; // If no data for this video, allow access
+      
+      // Check if video is completed or watched more than 90%
+      return videoData.isCompleted || videoData.watchedPercentage >= 90;
+    }, [quiz.VideoID, videoProgress]);
+    
+    const handleTakeQuiz = () => {
+      if (!canAccess) return;
+      router.push(`/quizzes/${quiz.QuizID}`);
+    };
+    
+    // Get video title if associated with a video
+    const videoTitle = quiz.VideoID && course?.videos?.length > 0
+      ? course.videos.find(v => v.VideoID === quiz.VideoID)?.Title || 'Related Video'
+      : null;
+    
+    return (
+      <Paper
+        elevation={2}
+        sx={{
+          p: 2,
+          mb: 2,
+          border: '1px solid',
+          borderColor: canAccess ? 'primary.main' : 'divider',
+          borderRadius: 2,
+          opacity: canAccess ? 1 : 0.7,
+          transition: 'all 0.2s ease',
+          position: 'relative',
+          overflow: 'hidden',
+          '&:hover': {
+            transform: canAccess ? theme.shadows[4] : theme.shadows[2],
+          }
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              {quiz.Title}
+              </Typography>
+            
+            {videoTitle && (
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Related to: {videoTitle}
+            </Typography>
+            )}
+            
+            <Typography variant="body2" color="text.secondary">
+              {quiz.Description || 'Test your knowledge with this quiz.'}
+            </Typography>
+            
+            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Chip
+                icon={<AssignmentIcon />}
+                label={`${quiz.QuestionCount || 0} Questions`}
+                size="small"
+                color="primary"
+                variant="outlined"
+              />
+            
+              {quiz.PassingScore && (
+              <Chip
+                  icon={<SchoolIcon />}
+                  label={`Passing Score: ${quiz.PassingScore}%`}
+                size="small"
+                  color="secondary"
+                  variant="outlined"
+              />
+              )}
+              
+              {quiz.Score && (
+              <Chip
+                  icon={<EmojiEventsIcon />}
+                  label={`Your Score: ${quiz.Score}%`}
+                size="small"
+                  color={quiz.Score >= quiz.PassingScore ? 'success' : 'error'}
+                  variant="outlined"
+                />
+              )}
+            </Box>
+          </Box>
+          
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleTakeQuiz}
+            disabled={!canAccess}
+            startIcon={<QuizIcon />}
+            sx={{
+              minWidth: 120,
+              opacity: canAccess ? 1 : 0.7,
+            }}
+          >
+            {quiz.Score ? 'Retake Quiz' : 'Take Quiz'}
+          </Button>
+        </Box>
+        
+        {!canAccess && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: alpha(theme.palette.background.paper, 0.8),
+              backdropFilter: 'blur(2px)',
+            }}
+          >
+            <Box sx={{ textAlign: 'center', p: 2 }}>
+              <LockIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+              <Typography variant="body1" color="text.secondary">
+                Complete the video first to unlock this quiz
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      </Paper>
+    );
+  };
+
   if (loading) {
     return (
       <Box sx={{ py: 6, position: 'relative', minHeight: '100vh' }}>
@@ -538,54 +1093,83 @@ export default function CourseDetailPage() {
           <Grid container spacing={4}>
             {/* Left Column - Course details */}
             <Grid item xs={12} md={8}>
-              {/* Course header */}
+              {/* Course header - Updated to use course banner/thumbnail */}
               <Paper 
                 elevation={4} 
                 sx={{ 
-                  height: 300, 
+                  height: 350, // Increased height for better visual impact
                   borderRadius: 3, 
                   mb: 3, 
                   position: 'relative',
                   overflow: 'hidden',
-                  backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.8)}, ${alpha(theme.palette.secondary.dark, 0.9)})`,
+                  backgroundImage: course.thumbnailURL 
+                    ? `url(${course.thumbnailURL})` 
+                    : `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.8)}, ${alpha(theme.palette.secondary.dark, 0.9)})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'flex-end',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8))',
+                    zIndex: 1
+                  }
                 }}
               >
-                {/* Course title overlay */}
+                {/* Course title overlay - improved contrast and readability */}
                 <Box
                   sx={{
-                    p: 3,
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.4) 50%, rgba(0,0,0,0))',
+                    p: 4, // Increased padding
+                    position: 'relative',
+                    zIndex: 2, // Ensure content is above the gradient overlay
                   }}
                 >
-                  <Box sx={{ display: 'flex', mb: 1 }}>
+                  <Box sx={{ display: 'flex', mb: 1.5 }}>
                     <Chip 
                       label={course.difficulty} 
                       size="small" 
                       sx={{ 
-                        mr: 1,
+                        mr: 1, 
                         bgcolor: 
                           course.difficulty === 'Beginner' ? theme.palette.success.main :
                           course.difficulty === 'Intermediate' ? theme.palette.primary.main :
                           theme.palette.secondary.main,
-                        color: '#fff'
+                        color: 'white',
+                        fontWeight: 'bold'
                       }}
                     />
                     <Chip 
                       label={course.category} 
                       size="small" 
-                      sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: '#fff' }}
+                      sx={{ 
+                        bgcolor: 'rgba(255, 255, 255, 0.2)', 
+                        color: '#fff' 
+                      }}
                     />
                     
-                    <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
-                      <Rating value={course.rating} precision={0.1} size="small" readOnly />
-                      <Typography variant="body2" sx={{ ml: 1, color: '#fff' }}>
-                        ({course.rating})
-                      </Typography>
+                    {/* Add refresh button */}
+                    <Box sx={{ ml: 'auto' }}>
+                      <Tooltip title="Refresh course data">
+                        <IconButton 
+                          onClick={refreshCourseData} 
+                          disabled={loading}
+                          sx={{ 
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                            }
+                          }}
+                        >
+                          <RefreshIcon />
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </Box>
                   
@@ -595,18 +1179,45 @@ export default function CourseDetailPage() {
                     sx={{ 
                       color: '#fff', 
                       fontWeight: 'bold',
-                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                      textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                      mb: 1,
+                      fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' } // Responsive font size
                     }}
                   >
                     {course.title}
                   </Typography>
                   
-                  <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                  <Typography 
+                    variant="subtitle1" 
+                    sx={{ 
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                      maxWidth: '80%',
+                      mb: 1.5
+                    }}
+                  >
                     {course.description}
                   </Typography>
+                  
+                  {/* Added instructor info in banner */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+                    <Avatar 
+                      src={course.instructorAvatar} 
+                      alt={course.instructorName}
+                      sx={{ 
+                        width: 36, 
+                        height: 36, 
+                        mr: 1,
+                        border: '2px solid white'
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                      Instructor: <Box component="span" sx={{ fontWeight: 'bold' }}>{course.instructorName}</Box>
+                    </Typography>
+                  </Box>
                 </Box>
                 
-                {/* Play button overlay */}
+                {/* Play button overlay - Improved design */}
                 <Box sx={{ 
                   position: 'absolute', 
                   top: 0, 
@@ -615,44 +1226,58 @@ export default function CourseDetailPage() {
                   bottom: 0, 
                   display: 'flex', 
                   alignItems: 'center', 
-                  justifyContent: 'center' 
+                  justifyContent: 'center',
+                  zIndex: 2
                 }}>
                   <IconButton
-                    onClick={() => handleVideoClick(course.videos[0].id)}
+                    onClick={() => course?.videos && course.videos.length > 0 && handleVideoClick(course.videos[0].VideoID)}
                     sx={{
-                      bgcolor: 'rgba(255, 255, 255, 0.15)',
-                      backdropFilter: 'blur(5px)',
-                      p: 3,
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)',
+                      p: 2.5,
                       '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.25)',
-                        transform: 'scale(1.1)'
+                        bgcolor: 'rgba(255, 255, 255, 0.3)',
+                        transform: 'scale(1.1)',
+                        boxShadow: '0 0 20px rgba(255,255,255,0.5)'
                       },
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 0 15px rgba(0,0,0,0.3)'
                     }}
                   >
-                    <PlayArrowIcon sx={{ fontSize: 50, color: '#fff' }} />
+                    <PlayArrowIcon sx={{ fontSize: 54, color: '#fff' }} />
                   </IconButton>
                 </Box>
               </Paper>
               
-              {/* Course stats */}
-              <Box sx={{ mb: 4 }}>
-                <Grid container spacing={3}>
-                  <Grid item xs={6} sm={3}>
+              {/* Course stats - Updated design with equal dimensions */}
+              <Box sx={{ 
+                mb: 4,
+                display: 'flex',
+                width: '100%'
+              }}>
+                <Grid container spacing={2} sx={{ width: '100%' }}>
+                  <Grid item xs={3}>
                     <Paper 
-                      elevation={2} 
+                      elevation={1} 
                       sx={{ 
                         p: 2, 
                         textAlign: 'center', 
-                        borderRadius: 2,
+                        borderRadius: 3,
                         height: '100%',
+                        minHeight: 140,
+                        width: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        bgcolor: theme.palette.background.paper,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                        minHeight: 120
+                        bgcolor: alpha(theme.palette.background.paper, 0.7),
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.07)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          boxShadow: '0 8px 20px rgba(0,0,0,0.09)'
+                        }
                       }}
                     >
                       <Box 
@@ -661,34 +1286,41 @@ export default function CourseDetailPage() {
                           justifyContent: 'center',
                           alignItems: 'center',
                           mb: 1,
-                          width: 207,
-                          height: 40,
-                          borderRadius: '12px',
+                          width: 54,
+                          height: 54,
+                          borderRadius: '50%',
                           bgcolor: alpha(theme.palette.primary.main, 0.1)
                         }}
                       >
-                        <VideoLibraryIcon color="primary" sx={{ fontSize: 24 }} />
+                        <VideoLibraryIcon color="primary" sx={{ fontSize: 26 }} />
                       </Box>
                       <Typography variant="body2" color="text.secondary" gutterBottom>Videos</Typography>
                       <Typography variant="h6" fontWeight="bold">{course.totalVideos}</Typography>
                     </Paper>
                   </Grid>
                   
-                  <Grid item xs={6} sm={3}>
+                  <Grid item xs={3}>
                     <Paper 
-                      elevation={2} 
+                      elevation={1} 
                       sx={{ 
                         p: 2, 
                         textAlign: 'center', 
-                        borderRadius: 2,
+                        borderRadius: 3,
                         height: '100%',
+                        minHeight: 140,
+                        width: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        bgcolor: theme.palette.background.paper,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                        minHeight: 120
+                        bgcolor: alpha(theme.palette.background.paper, 0.7),
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.07)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          boxShadow: '0 8px 20px rgba(0,0,0,0.09)'
+                        }
                       }}
                     >
                       <Box 
@@ -697,34 +1329,41 @@ export default function CourseDetailPage() {
                           justifyContent: 'center',
                           alignItems: 'center',
                           mb: 1,
-                          width: 207,
-                          height: 40,
-                          borderRadius: '12px',
+                          width: 54,
+                          height: 54,
+                          borderRadius: '50%',
                           bgcolor: alpha(theme.palette.primary.main, 0.1)
                         }}
                       >
-                        <AccessTimeIcon color="primary" sx={{ fontSize: 24 }} />
+                        <AccessTimeIcon color="primary" sx={{ fontSize: 26 }} />
                       </Box>
                       <Typography variant="body2" color="text.secondary" gutterBottom>Duration</Typography>
-                      <Typography variant="h6" fontWeight="bold">{course.totalDuration}</Typography>
+                      <Typography variant="h6" fontWeight="bold">{course.formattedDuration}</Typography>
                     </Paper>
                   </Grid>
                   
-                  <Grid item xs={6} sm={3}>
+                  <Grid item xs={3}>
                     <Paper 
-                      elevation={2} 
+                      elevation={1} 
                       sx={{ 
                         p: 2, 
                         textAlign: 'center', 
-                        borderRadius: 2,
+                        borderRadius: 3,
                         height: '100%',
+                        minHeight: 140,
+                        width: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        bgcolor: theme.palette.background.paper,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                        minHeight: 120
+                        bgcolor: alpha(theme.palette.background.paper, 0.7),
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.07)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          boxShadow: '0 8px 20px rgba(0,0,0,0.09)'
+                        }
                       }}
                     >
                       <Box 
@@ -733,34 +1372,50 @@ export default function CourseDetailPage() {
                           justifyContent: 'center',
                           alignItems: 'center',
                           mb: 1,
-                          width: 207,
-                          height: 40,
-                          borderRadius: '12px',
+                          width: 54,
+                          height: 54,
+                          borderRadius: '50%',
                           bgcolor: alpha(theme.palette.primary.main, 0.1)
                         }}
                       >
-                        <SchoolIcon color="primary" sx={{ fontSize: 24 }} />
+                        <SchoolIcon color="primary" sx={{ fontSize: 26 }} />
                       </Box>
                       <Typography variant="body2" color="text.secondary" gutterBottom>Students</Typography>
-                      <Typography variant="h6" fontWeight="bold">{course.studentsCount.toLocaleString()}</Typography>
+                      <Typography variant="h6" fontWeight="bold">
+                        {loading ? (
+                          <Skeleton width={40} />
+                        ) : (
+                          /* Display enrollment count with better parsing */
+                          typeof course?.studentsCount === 'number' 
+                            ? course.studentsCount.toLocaleString() 
+                            : parseInt(course?.studentsCount || '0', 10).toLocaleString()
+                        )}
+                      </Typography>
                     </Paper>
                   </Grid>
                   
-                  <Grid item xs={6} sm={3}>
+                  <Grid item xs={3}>
                     <Paper 
-                      elevation={2} 
+                      elevation={1} 
                       sx={{ 
                         p: 2, 
                         textAlign: 'center', 
-                        borderRadius: 2,
+                        borderRadius: 3,
                         height: '100%',
+                        minHeight: 140,
+                        width: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        bgcolor: theme.palette.background.paper,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                        minHeight: 120
+                        bgcolor: alpha(theme.palette.background.paper, 0.7),
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.07)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          boxShadow: '0 8px 20px rgba(0,0,0,0.09)'
+                        }
                       }}
                     >
                       <Box 
@@ -769,13 +1424,13 @@ export default function CourseDetailPage() {
                           justifyContent: 'center',
                           alignItems: 'center',
                           mb: 1,
-                          width: 207,
-                          height: 40,
-                          borderRadius: '12px',
+                          width: 54,
+                          height: 54,
+                          borderRadius: '50%',
                           bgcolor: alpha(theme.palette.primary.main, 0.1)
                         }}
                       >
-                        <PersonIcon color="primary" sx={{ fontSize: 24 }} />
+                        <PersonIcon color="primary" sx={{ fontSize: 26 }} />
                       </Box>
                       <Typography variant="body2" color="text.secondary" gutterBottom>Instructor</Typography>
                       <Typography variant="h6" fontWeight="bold" sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
@@ -786,7 +1441,7 @@ export default function CourseDetailPage() {
                 </Grid>
               </Box>
               
-              {/* Tabs for course content, quizzes, resources */}
+              {/* Tabs for course content - improved styling */}
               <Box sx={{ mb: 3 }}>
                 <Tabs 
                   value={activeTab} 
@@ -796,65 +1451,79 @@ export default function CourseDetailPage() {
                   sx={{ 
                     mb: 3,
                     '& .MuiTab-root': {
-                      minWidth: 255,
+                      minWidth: { xs: 'auto', sm: 150 },
                       fontWeight: 600,
+                      fontSize: '0.95rem',
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: '50px',
+                      mx: 0.5,
+                      transition: 'all 0.2s'
                     },
                     '& .Mui-selected': {
                       color: theme.palette.secondary.main,
+                      bgcolor: alpha(theme.palette.secondary.main, 0.1)
                     },
                     '& .MuiTabs-indicator': {
-                      backgroundColor: theme.palette.secondary.main,
-                      height: 3,
-                      borderRadius: 1.5
+                      display: 'none' // Hide the default indicator
                     }
                   }}
                 >
-                  <Tab icon={<DescriptionIcon />} label="About" iconPosition="start" />
-                  <Tab icon={<OndemandVideoIcon />} label="Videos" iconPosition="start" />
-                  <Tab icon={<AssignmentIcon />} label="Quizzes" iconPosition="start" />
-                  <Tab icon={<ArticleIcon />} label="Resources" iconPosition="start" />
+                  <Tab icon={<DescriptionIcon sx={{ fontSize: 20 }} />} label="About" iconPosition="start" />
+                  <Tab icon={<OndemandVideoIcon sx={{ fontSize: 20 }} />} label="Videos" iconPosition="start" />
+                  <Tab icon={<AssignmentIcon sx={{ fontSize: 20 }} />} label="Quizzes" iconPosition="start" />
+                  <Tab icon={<ArticleIcon sx={{ fontSize: 20 }} />} label="Resources" iconPosition="start" />
                 </Tabs>
                 
-                {/* About Tab */}
+                {/* Updated Paper style for all tabs */}
                 {activeTab === 0 && (
                   <Paper 
-                    elevation={2} 
+                    elevation={1} 
                     sx={{ 
-                      p: 3, 
-                      borderRadius: 2,
+                      p: { xs: 2, sm: 3, md: 4 },
+                      borderRadius: 3,
                       animation: 'fadeIn 0.5s ease-in-out',
                       '@keyframes fadeIn': {
                         '0%': { opacity: 0, transform: 'translateY(10px)' },
                         '100%': { opacity: 1, transform: 'translateY(0)' }
-                      }
+                      },
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
+                      background: alpha(theme.palette.background.paper, 0.7),
+                      backdropFilter: 'blur(10px)',
+                      minHeight: 400, // Fixed min height
                     }}
                   >
-                    <Typography variant="h5" gutterBottom fontWeight="medium">About this course</Typography>
+                    <Typography variant="h5" gutterBottom fontWeight="medium" color={theme.palette.primary.main}>About this course</Typography>
                     
                     {/* Convert HTML string to React elements */}
-                    <Box dangerouslySetInnerHTML={{ __html: course.longDescription }} />
+                    <Box dangerouslySetInnerHTML={{ __html: course.longDescription || '<p>No description available for this course yet.</p>' }} sx={{ 
+                      lineHeight: 1.7,
+                      '& p': { mb: 2 },
+                      '& ul, & ol': { pl: 3, mb: 2 },
+                      '& li': { mb: 1 },
+                    }} />
                     
                     <Divider sx={{ my: 3 }} />
                     
-                    <Typography variant="h6" gutterBottom>Course Information</Typography>
+                    <Typography variant="h6" gutterBottom color={theme.palette.primary.main}>Course Information</Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', mb: 1 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>Created on</Typography>
+                        <Box sx={{ display: 'flex', mb: 1.5 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120, fontWeight: 500 }}>Created on</Typography>
                           <Typography variant="body2">{new Date(course.creationDate).toLocaleDateString()}</Typography>
                         </Box>
-                        <Box sx={{ display: 'flex', mb: 1 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>Last updated</Typography>
+                        <Box sx={{ display: 'flex', mb: 1.5 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120, fontWeight: 500 }}>Last updated</Typography>
                           <Typography variant="body2">{new Date(course.lastUpdated).toLocaleDateString()}</Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={12} sm={6}>
-                        <Box sx={{ display: 'flex', mb: 1 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>Category</Typography>
+                        <Box sx={{ display: 'flex', mb: 1.5 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120, fontWeight: 500 }}>Category</Typography>
                           <Typography variant="body2">{course.category}</Typography>
                         </Box>
-                        <Box sx={{ display: 'flex', mb: 1 }}>
-                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>Difficulty</Typography>
+                        <Box sx={{ display: 'flex', mb: 1.5 }}>
+                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120, fontWeight: 500 }}>Difficulty</Typography>
                           <Typography variant="body2">{course.difficulty}</Typography>
                         </Box>
                       </Grid>
@@ -862,521 +1531,577 @@ export default function CourseDetailPage() {
                     
                     <Divider sx={{ my: 3 }} />
                     
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: alpha(theme.palette.background.paper, 0.4),
+                    }}>
                       <Avatar 
                         src={course.instructorAvatar} 
                         alt={course.instructorName}
-                        sx={{ width: 64, height: 64, mr: 2 }}
+                        sx={{ width: 70, height: 70, mr: 2 }}
                       />
                       <Box>
-                        <Typography variant="h6">{course.instructorName}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {course.instructorBio}
+                        <Typography variant="h6" color={theme.palette.primary.main}>{course.instructorName}</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, mt: 0.5 }}>
+                          {course.instructorBio || 'Expert instructor with experience in this subject.'}
                         </Typography>
                       </Box>
                     </Box>
                   </Paper>
                 )}
-                
-                {/* Videos Tab */}
+
+                {/* Course Content Tab */}
                 {activeTab === 1 && (
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 3, 
-                      borderRadius: 2,
-                      animation: 'fadeIn 0.5s ease-in-out',
-                      '@keyframes fadeIn': {
-                        '0%': { opacity: 0, transform: 'translateY(10px)' },
-                        '100%': { opacity: 1, transform: 'translateY(0)' }
-                      }
-                    }}
-                  >
-                    <Typography variant="h5" gutterBottom fontWeight="medium">Course Content</Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {course.totalVideos} videos • Total {course.totalDuration}
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                      Course Content 
+                      {course.videos && (
+                        <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                          ({course.videos.length} videos)
+                        </Typography>
+                      )}
                     </Typography>
-                    
-                    <Box sx={{ mt: 3 }}>
-                      {course.videos.map((video, index) => (
-                        <VideoListItem 
-                          key={video.id}
-                          video={video}
-                          index={index}
-                          isCompleted={video.completed}
-                          isLocked={!userProgress && index > 1} // Lock videos if not enrolled (except first 2)
-                          isActive={currentVideo && currentVideo.id === video.id}
-                          onVideoClick={handleVideoClick}
-                        />
-                      ))}
-                    </Box>
-                  </Paper>
-                )}
-                
-                {/* Quizzes Tab */}
-                {activeTab === 2 && (
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 3, 
-                      borderRadius: 2,
-                      animation: 'fadeIn 0.5s ease-in-out',
-                      '@keyframes fadeIn': {
-                        '0%': { opacity: 0, transform: 'translateY(10px)' },
-                        '100%': { opacity: 1, transform: 'translateY(0)' }
-                      }
-                    }}
-                  >
-                    <Typography variant="h5" gutterBottom fontWeight="medium">Course Quizzes</Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Test your knowledge and earn certificates
-                    </Typography>
-                    
-                    <Box sx={{ mt: 3 }}>
-                      {course.quizzes.map((quiz, index) => (
-                        <Paper
-                          key={quiz.id}
-                          elevation={1}
-                          sx={{ 
-                            p: 2, 
-                            mb: 2, 
-                            borderRadius: 2,
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              boxShadow: 3,
-                              transform: userProgress ? 'translateY(-2px)' : 'none',
-                            }
-                          }}
-                        >
-                          <Box sx={{ display: 'flex' }}>
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Typography variant="subtitle1" fontWeight="medium">{quiz.title}</Typography>
-                              <Typography variant="body2" color="text.secondary">{quiz.description}</Typography>
-                            </Box>
-                            
-                            <Button
-                              variant="outlined"
-                              color="primary"
-                              size="small"
-                              disabled={!userProgress}
-                              onClick={() => handleQuizClick(quiz.id)}
-                              sx={{ alignSelf: 'center' }}
-                            >
-                              Take Quiz
-                            </Button>
-                          </Box>
-                        </Paper>
-                      ))}
-                    </Box>
-                    
-                    {!userProgress && (
-                      <Alert severity="info" sx={{ mt: 2 }}>
-                        Enroll in the course to access quizzes and earn certificates.
-                      </Alert>
-                    )}
-                  </Paper>
-                )}
-                
-                {/* Resources Tab */}
-                {activeTab === 3 && (
-                  <Paper 
-                    elevation={2} 
-                    sx={{ 
-                      p: 3, 
-                      borderRadius: 2,
-                      animation: 'fadeIn 0.5s ease-in-out',
-                      '@keyframes fadeIn': {
-                        '0%': { opacity: 0, transform: 'translateY(10px)' },
-                        '100%': { opacity: 1, transform: 'translateY(0)' }
-                      }
-                    }}
-                  >
-                    <Typography variant="h5" gutterBottom fontWeight="medium">Course Resources</Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Downloadable materials and additional content
-                    </Typography>
-                    
-                    <Box sx={{ mt: 3 }}>
-                      {course.resources.map((resource) => (
-                        <Paper
-                          key={resource.id}
-                          elevation={1}
-                          sx={{ 
-                            p: 2, 
-                            mb: 2, 
-                            borderRadius: 2,
-                            transition: 'all 0.2s ease',
-                            '&:hover': {
-                              boxShadow: 3,
-                              transform: userProgress ? 'translateY(-2px)' : 'none',
-                            }
-                          }}
-                        >
-                          <Box sx={{ display: 'flex' }}>
-                            <Box sx={{ flexGrow: 1 }}>
-                              <Typography variant="subtitle1" fontWeight="medium">{resource.title}</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {resource.type} • {resource.size}
-                              </Typography>
-                            </Box>
-                            
-                            <Button
-                              variant="outlined"
-                              color="primary"
-                              size="small"
-                              disabled={!userProgress}
-                              sx={{ alignSelf: 'center' }}
-                            >
-                              Download
-                            </Button>
-                          </Box>
-                        </Paper>
-                      ))}
-                    </Box>
-                    
-                    {!userProgress && (
-                      <Alert severity="info" sx={{ mt: 2 }}>
-                        Enroll in the course to access downloadable resources.
-                      </Alert>
-                    )}
-                  </Paper>
-                )}
-              </Box>
-            </Grid>
-            
-            {/* Right Column - Enrollment/Progress */}
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <Grid container spacing={3}>
-                  {/* Enrollment Card */}
-                  <Grid item xs={12} sm={6} md={12}>
-                    <Paper 
-                      elevation={4} 
-                      sx={{ 
-                        p: 3, 
-                        borderRadius: 3,
-                        overflow: 'hidden',
-                        position: 'relative',
-                        height: {xs: 'auto', md: '350px'},
-                        display: 'flex',
-                        flexDirection: 'column',
-                        background: theme.palette.mode === 'dark'
-                          ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.2)}, ${alpha(theme.palette.secondary.dark, 0.2)})`
-                          : theme.palette.background.paper,
-                        boxShadow: theme.palette.mode === 'dark'
-                          ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.2)}`
-                          : '0 8px 32px rgba(0,0,0,0.1)',
-                        border: theme.palette.mode === 'dark'
-                          ? `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
-                          : 'none',
-                        animation: 'fadeInUp 0.5s ease-out',
-                        '@keyframes fadeInUp': {
-                          '0%': { opacity: 0, transform: 'translateY(20px)' },
-                          '100%': { opacity: 1, transform: 'translateY(0)' }
-                        }
-                      }}
-                    >
-                      {userProgress ? (
-                        <>
-                          <Typography variant="h6" gutterBottom>Your Progress</Typography>
-                          
+                    {enrollmentStatus.isEnrolled ? (
+                      <>
+                        {/* Progress bar - only show if enrolled */}
+                        {userProgress && (
                           <Box sx={{ mb: 3 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                              <Typography variant="body2" color="text.secondary">Completion</Typography>
-                              <Typography variant="body2" fontWeight="medium">
-                                {Math.round(userProgress.completionPercentage)}%
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                              <Typography variant="body2" color="text.secondary">
+                                Your Progress
+                              </Typography>
+                              <Typography variant="body2" color="text.primary" fontWeight="medium">
+                                {userProgress.completionPercentage || 0}%
                               </Typography>
                             </Box>
                             <LinearProgress 
                               variant="determinate" 
-                              value={userProgress.completionPercentage} 
+                              value={userProgress.completionPercentage || 0} 
                               sx={{ 
                                 height: 8, 
-                                borderRadius: 2,
-                                mb: 1,
-                                backgroundImage: 'linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent)',
-                                backgroundSize: '40px 40px',
-                                animation: 'progressAnimation 2s linear infinite',
-                                '@keyframes progressAnimation': {
-                                  '0%': {
-                                    backgroundPosition: '0 0'
-                                  },
-                                  '100%': {
-                                    backgroundPosition: '40px 0'
-                                  }
-                                },
-                                '& .MuiLinearProgress-bar': {
-                                  background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
-                                }
+                                borderRadius: 1,
+                                bgcolor: alpha(theme.palette.primary.main, 0.1)
                               }} 
                             />
-                            <Typography variant="body2" color="text.secondary">
-                              {course.videos.filter(v => v.completed).length} of {course.totalVideos} videos completed
-                            </Typography>
                           </Box>
-                          
-                          <Divider sx={{ my: 2 }} />
-                          
-                          <Typography variant="subtitle1" gutterBottom>
-                            Continue Learning
-                          </Typography>
-                          
-                          {userProgress.lastWatchedVideo && (
-                            <Box sx={{ mb: 3 }}>
-                              <Paper 
-                                elevation={1}
-                                sx={{ 
-                                  p: 2, 
-                                  borderRadius: 2,
-                                  mb: 2,
-                                  backgroundColor: alpha(theme.palette.primary.main, 0.05),
-                                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                                  position: 'relative',
-                                  overflow: 'hidden',
-                                  '&::after': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, transparent 50%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
-                                    zIndex: 0
-                                  }
-                                }}
-                              >
-                                <Typography variant="subtitle2" gutterBottom>
-                                  {userProgress.lastWatchedVideo.title}
-                                </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <AccessTimeIcon sx={{ fontSize: '0.875rem', mr: 0.5, color: 'text.secondary' }} />
-                                    <Typography variant="caption" color="text.secondary">
-                                      {userProgress.lastWatchedVideo.duration}
-                                    </Typography>
-                                  </Box>
-                                  
-                                  <IconButton size="small" color="primary">
-                                    <PlayCircleOutlineIcon />
-                                  </IconButton>
-                                </Box>
-                              </Paper>
-                            </Box>
-                          )}
-                          
-                          <Button
-                            variant="contained"
-                            fullWidth
-                            size="large"
-                            startIcon={<PlayArrowIcon />}
-                            onClick={handleContinueLearning}
+                        )}
+                        {/* Only videos in orderedContent */}
+                        {course.videos && course.videos.length > 0 ? (
+                          <Box sx={{ mt: 2 }}>
+                            {course.videos.map((video, index) => (
+                              <VideoListItem
+                                key={video.VideoID || video.id}
+                                video={video}
+                                index={index}
+                                isCompleted={videoProgress[video.VideoID]?.isCompleted}
+                                isLocked={false}
+                                onVideoClick={handleVideoClick}
+                                isActive={currentVideo?.VideoID === video.VideoID}
+                              />
+                            ))}
+                          </Box>
+                        ) : (
+                          <Paper 
+                            elevation={0}
                             sx={{ 
-                              py: 1.5,
+                              p: 4, 
+                              textAlign: 'center',
                               borderRadius: 2,
-                              mt: 'auto',
-                              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                              '&:hover': {
-                                background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                                transform: 'translateY(-2px)',
-                                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`
-                              },
-                              transition: 'all 0.3s ease',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              '&::after': {
-                                content: '""',
-                                position: 'absolute',
-                                top: '-50%',
-                                left: '-50%',
-                                right: '-50%',
-                                bottom: '-50%',
-                                background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
-                                transform: 'scale(0)',
-                                transition: 'transform 0.5s ease-out',
-                              },
-                              '&:hover::after': {
-                                transform: 'scale(1)'
-                              }
+                              bgcolor: alpha(theme.palette.background.paper, 0.6)
                             }}
                           >
-                            Continue Learning
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Typography variant="h6" gutterBottom fontWeight="bold">Enroll in this Course</Typography>
-                          
-                          <Box sx={{ mb: 3 }}>
-                            <Typography variant="body2">
-                              Get full access to all videos, quizzes, and downloadable resources.
+                            <InfoIcon color="info" sx={{ fontSize: 40, mb: 2, opacity: 0.6 }} />
+                            <Typography variant="body1" color="text.secondary">
+                              No videos available for this course yet
                             </Typography>
-                          </Box>
-                          
-                          <List sx={{ mb: 'auto' }}>
-                            <ListItem sx={{ p: 0, mb: 1 }}>
-                              <ListItemIcon sx={{ minWidth: 36 }}>
-                                <CheckCircleIcon color="success" fontSize="small" />
-                              </ListItemIcon>
-                              <ListItemText 
-                                primary="Full lifetime access" 
-                                primaryTypographyProps={{ variant: 'body2' }}
-                              />
-                            </ListItem>
-                            
-                            <ListItem sx={{ p: 0, mb: 1 }}>
-                              <ListItemIcon sx={{ minWidth: 36 }}>
-                                <CheckCircleIcon color="success" fontSize="small" />
-                              </ListItemIcon>
-                              <ListItemText 
-                                primary="Access on mobile and desktop" 
-                                primaryTypographyProps={{ variant: 'body2' }}
-                              />
-                            </ListItem>
-                            
-                            <ListItem sx={{ p: 0, mb: 1 }}>
-                              <ListItemIcon sx={{ minWidth: 36 }}>
-                                <CheckCircleIcon color="success" fontSize="small" />
-                              </ListItemIcon>
-                              <ListItemText 
-                                primary="NFT completion reward" 
-                                primaryTypographyProps={{ variant: 'body2' }}
-                              />
-                            </ListItem>
-                          </List>
-                          
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            size="large"
-                            startIcon={<HowToRegIcon />}
-                            onClick={handleEnroll}
-                            sx={{ 
-                              py: 1.5,
-                              borderRadius: 2,
-                              mt: 'auto',
-                              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                              '&:hover': {
-                                background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                                transform: 'translateY(-2px)',
-                                boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`
-                              },
-                              transition: 'all 0.3s ease',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              '&::after': {
-                                content: '""',
-                                position: 'absolute',
-                                top: '-50%',
-                                left: '-50%',
-                                right: '-50%',
-                                bottom: '-50%',
-                                background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
-                                transform: 'scale(0)',
-                                transition: 'transform 0.5s ease-out',
-                              },
-                              '&:hover::after': {
-                                transform: 'scale(1)'
-                              }
-                            }}
-                          >
-                            Enroll Now
-                          </Button>
-                          
-                          <Typography variant="body2" sx={{ mt: 2, textAlign: 'center', color: 'text.secondary' }}>
-                            First 2 videos available as preview
-                          </Typography>
-                        </>
-                      )}
-                      
-                      {/* Background decoration */}
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: -30,
-                          right: -30,
-                          width: 150,
-                          height: 150,
-                          borderRadius: '50%',
-                          background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.1)}, transparent 70%)`,
-                          zIndex: 0
+                          </Paper>
+                        )}
+                      </>
+                    ) : (
+                      /* Not enrolled case */
+                      <Paper 
+                        elevation={2}
+                        sx={{ 
+                          p: 4, 
+                          borderRadius: 2,
+                          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                          background: `linear-gradient(45deg, ${alpha(theme.palette.background.paper, 0.9)}, ${alpha(theme.palette.background.default, 0.9)})`,
+                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.1)}`,
+                          position: 'relative',
+                          overflow: 'hidden'
                         }}
-                      />
-                    </Paper>
-                  </Grid>
+                      >
+                        <LockIcon sx={{ 
+                          position: 'absolute', 
+                          right: 30, 
+                          top: 30, 
+                          fontSize: 60, 
+                          color: alpha(theme.palette.primary.main, 0.1),
+                          transform: 'rotate(10deg)'
+                        }} />
+                        <Typography variant="h6" gutterBottom>
+                          Enroll to Access Course Content
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" paragraph>
+                          Enroll in this course to access all videos, quizzes, and resources. Track your progress and earn a certificate upon completion.
+                        </Typography>
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          onClick={handleEnroll}
+                          disabled={enrollmentStatus.isLoading}
+                          startIcon={<SchoolIcon />}
+                          sx={{ mt: 1 }}
+                        >
+                          {enrollmentStatus.isLoading ? 'Processing...' : 'Enroll Now'}
+                        </Button>
+                      </Paper>
+                    )}
+                  </Box>
+                )}
+
+                {/* Quiz Tab */}
+                {activeTab === 2 && (
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                      Course Quizzes
+                      {courseQuizzes && (
+                        <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                          ({(courseQuizzes.videoQuizzes?.length || 0) + (courseQuizzes.courseLevelQuizzes?.length || 0)} quizzes)
+                        </Typography>
+                      )}
+                    </Typography>
+                    
+                    {enrollmentStatus.isEnrolled ? (
+                      <>
+                        {/* Course quizzes list */}
+                        {courseQuizzes && (courseQuizzes.videoQuizzes?.length > 0 || courseQuizzes.courseLevelQuizzes?.length > 0) ? (
+                          <Box sx={{ mt: 2 }}>
+                            {/* Video-specific quizzes section */}
+                            {courseQuizzes.videoQuizzes && courseQuizzes.videoQuizzes.length > 0 && (
+                              <>
+                                <Typography variant="subtitle1" fontWeight="medium" color="primary.main" sx={{ mb: 2, mt: 3 }}>
+                                  Video Quizzes
+                                </Typography>
+                                {courseQuizzes.videoQuizzes.map((quiz) => (
+                                  <CourseQuiz key={quiz.QuizID} quiz={quiz} videoProgress={videoProgress} />
+                                ))}
+                              </>
+                            )}
+                            
+                            {/* Course-level quizzes section */}
+                            {courseQuizzes.courseLevelQuizzes && courseQuizzes.courseLevelQuizzes.length > 0 && (
+                              <>
+                                <Typography variant="subtitle1" fontWeight="medium" color="primary.main" sx={{ mb: 2, mt: 3 }}>
+                                  Course Quizzes
+                                </Typography>
+                                {courseQuizzes.courseLevelQuizzes.map((quiz) => (
+                                  <CourseQuiz key={quiz.QuizID} quiz={quiz} videoProgress={videoProgress} />
+                                ))}
+                              </>
+                            )}
+                          </Box>
+                        ) : (
+                          <Paper 
+                            elevation={0}
+                            sx={{ 
+                              p: 4, 
+                              textAlign: 'center',
+                              borderRadius: 2,
+                              bgcolor: alpha(theme.palette.background.paper, 0.6)
+                            }}
+                          >
+                            <InfoIcon color="info" sx={{ fontSize: 40, mb: 2, opacity: 0.6 }} />
+                            <Typography variant="body1" color="text.secondary">
+                              No quizzes available for this course yet
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              Check back later for updates
+                            </Typography>
+                          </Paper>
+                        )}
+                      </>
+                    ) : (
+                      /* Not enrolled case */
+                      <Paper 
+                        elevation={2}
+                        sx={{ 
+                          p: 4, 
+                          borderRadius: 2,
+                          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                          background: `linear-gradient(45deg, ${alpha(theme.palette.background.paper, 0.9)}, ${alpha(theme.palette.background.default, 0.9)})`,
+                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.1)}`,
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <LockIcon sx={{ 
+                          position: 'absolute', 
+                          right: 30, 
+                          top: 30, 
+                          fontSize: 60, 
+                          color: alpha(theme.palette.primary.main, 0.1),
+                          transform: 'rotate(10deg)'
+                        }} />
+                        <Typography variant="h6" gutterBottom>
+                          Enroll to Access Course Quizzes
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" paragraph>
+                          Enroll in this course to test your knowledge with quizzes and track your progress.
+                        </Typography>
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          onClick={handleEnroll}
+                          disabled={enrollmentStatus.isLoading}
+                          startIcon={<SchoolIcon />}
+                          sx={{ mt: 1 }}
+                        >
+                          {enrollmentStatus.isLoading ? 'Processing...' : 'Enroll Now'}
+                        </Button>
+                      </Paper>
+                    )}
+                  </Box>
+                )}
+                
+                {/* Resources Tab */}
+                {activeTab === 3 && (
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                      Course Resources
+                    </Typography>
+                    
+                    {enrollmentStatus.isEnrolled ? (
+                      <>
+                        {/* Course resources list */}
+                        {course.resources && course.resources.length > 0 ? (
+                          <Box sx={{ mt: 2 }}>
+                            <List>
+                              {course.resources.map((resource, index) => (
+                                <Paper
+                                  key={index}
+                                  elevation={1}
+                                  sx={{
+                                    mb: 2,
+                                    borderRadius: 2,
+                                    overflow: 'hidden',
+                                    transition: 'all 0.2s',
+                                    '&:hover': {
+                                      transform: 'translateY(-2px)',
+                                      boxShadow: 3
+                                    }
+                                  }}
+                                >
+                                  <ListItem
+                                    component="a"
+                                    href={resource.url || '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{
+                                      display: 'flex',
+                                      padding: 2,
+                                      textDecoration: 'none',
+                                      color: 'inherit'
+                                    }}
+                                  >
+                                    <ListItemIcon sx={{ minWidth: 56 }}>
+                                      <Box
+                                        sx={{
+                                          width: 40,
+                                          height: 40,
+                                          borderRadius: '50%',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          bgcolor: alpha(theme.palette.primary.main, 0.1)
+                                        }}
+                                      >
+                                        <ArticleIcon color="primary" />
+                                      </Box>
+                                    </ListItemIcon>
+                                    <ListItemText
+                                      primary={
+                                        <Typography variant="subtitle1" fontWeight="medium">
+                                          {resource.title || resource.name || `Resource ${index + 1}`}
+                                        </Typography>
+                                      }
+                                      secondary={
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                          {resource.description || "Supplementary material for this course"}
+                                        </Typography>
+                                      }
+                                    />
+                                    <Chip
+                                      label={resource.type || "Document"}
+                                      size="small"
+                                      sx={{
+                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                        color: 'primary.main',
+                                        fontWeight: 'medium'
+                                      }}
+                                    />
+                                  </ListItem>
+                                </Paper>
+                              ))}
+                            </List>
+                          </Box>
+                        ) : (
+                          <Paper 
+                            elevation={0}
+                            sx={{ 
+                              p: 4, 
+                              textAlign: 'center',
+                              borderRadius: 2,
+                              bgcolor: alpha(theme.palette.background.paper, 0.6)
+                            }}
+                          >
+                            <FolderOpenIcon color="info" sx={{ fontSize: 40, mb: 2, opacity: 0.6 }} />
+                            <Typography variant="body1" color="text.secondary">
+                              No resources available for this course yet
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              Check back later for updates
+                            </Typography>
+                          </Paper>
+                        )}
+                      </>
+                    ) : (
+                      /* Not enrolled case */
+                      <Paper 
+                        elevation={2}
+                        sx={{ 
+                          p: 4, 
+                          borderRadius: 2,
+                          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                          background: `linear-gradient(45deg, ${alpha(theme.palette.background.paper, 0.9)}, ${alpha(theme.palette.background.default, 0.9)})`,
+                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.1)}`,
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <LockIcon sx={{ 
+                          position: 'absolute', 
+                          right: 30, 
+                          top: 30, 
+                          fontSize: 60, 
+                          color: alpha(theme.palette.primary.main, 0.1),
+                          transform: 'rotate(10deg)'
+                        }} />
+                        <Typography variant="h6" gutterBottom>
+                          Enroll to Access Course Resources
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" paragraph>
+                          Enroll in this course to access all supplementary materials and resources.
+                        </Typography>
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          onClick={handleEnroll}
+                          disabled={enrollmentStatus.isLoading}
+                          startIcon={<SchoolIcon />}
+                          sx={{ mt: 1 }}
+                        >
+                          {enrollmentStatus.isLoading ? 'Processing...' : 'Enroll Now'}
+                        </Button>
+                      </Paper>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            </Grid>
+            
+            {/* Right Column - Sticky Course Preview */}
+            <Grid item xs={12} md={4}>
+              {/* Sticky Course Preview Panel içinde sabit kalıyor */}
+              <Box
+                sx={{
+                  position: 'sticky',
+                  top: 100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '100%',
+                  maxHeight: 'calc(100vh - 120px)',
+                  zIndex: 1,
+                  transition: 'all 0.3s ease-in-out',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  boxShadow: '0 5px 25px rgba(0,0,0,0.2)',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                  bgcolor: alpha(theme.palette.background.paper, 0.85),
+                  animation: 'slideInFromRight 0.5s ease-out',
+                  '@keyframes slideInFromRight': {
+                    '0%': {
+                      transform: 'translateX(30px)',
+                      opacity: 0,
+                    },
+                    '100%': {
+                      transform: 'translateX(0)',
+                      opacity: 1,
+                    },
+                  },
+                  '&:hover': {
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
+                    transform: 'translateY(2px)',
+                  }
+                }}
+              >
+                <Box sx={{ 
+                  p: 3,
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '3px',
+                    background: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  }
+                }}>
+                  {/* Course Title */}
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 1.5 }}>
+                    {course?.title}
+                  </Typography>
                   
-                  {/* What You'll Learn Card */}
-                  <Grid item xs={12} sm={6} md={12}>
-                    <Paper 
-                      elevation={2} 
-                      sx={{ 
-                        p: 3, 
-                        borderRadius: 3,
-                        position: 'relative',
-                        overflow: 'hidden',
-                        height: {xs: 'auto', md: '350px'},
+                  {/* Progress indicator - only if enrolled */}
+                  {enrollmentStatus.isEnrolled && userProgress && (
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Typography variant="body1" color="text.secondary">
+                          Progress
+                        </Typography>
+                        <Typography variant="body1" color="text.primary" fontWeight="medium">
+                          {userProgress.completionPercentage || 0}%
+                        </Typography>
+                      </Box>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={userProgress.completionPercentage || 0} 
+                        sx={{ 
+                          height: 8, 
+                          borderRadius: 1,
+                          bgcolor: alpha(theme.palette.primary.main, 0.1)
+                        }} 
+                      />
+                    </Box>
+                  )}
+                  
+                  {/* Stats */}
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(3, 1fr)', 
+                    gap: 3, 
+                    mb: 3, 
+                    justifyContent: 'space-between' 
+                  }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Box sx={{ 
                         display: 'flex',
-                        flexDirection: 'column',
-                        background: theme.palette.mode === 'dark'
-                          ? `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.9)}, ${alpha(theme.palette.background.paper, 0.7)})`
-                          : theme.palette.background.paper,
-                        backdropFilter: 'blur(10px)',
-                        borderLeft: `4px solid ${theme.palette.secondary.main}`,
-                        animation: 'fadeInUp 0.5s ease-out 0.2s both',
-                        '@keyframes fadeInUp': {
-                          '0%': { opacity: 0, transform: 'translateY(20px)' },
-                          '100%': { opacity: 1, transform: 'translateY(0)' }
-                        }
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        mb: 1,
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1)
+                      }}>
+                        <VideoLibraryIcon color="primary" />
+                      </Box>
+                      <Typography variant="body2" fontWeight="medium" align="center">
+                        {course?.totalVideos || 0} videos
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Box sx={{ 
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        mb: 1,
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1)
+                      }}>
+                        <AccessTimeIcon color="primary" />
+                      </Box>
+                      <Typography variant="body2" fontWeight="medium" align="center">
+                        {course?.formattedDuration || 'N/A'}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <Box sx={{ 
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        mb: 1,
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        bgcolor: alpha(theme.palette.primary.main, 0.1)
+                      }}>
+                        <SchoolIcon color="primary" />
+                      </Box>
+                      <Typography variant="body2" fontWeight="medium" align="center">
+                        {typeof course?.studentsCount === 'number' 
+                          ? course.studentsCount.toLocaleString() 
+                          : parseInt(course?.studentsCount || '0', 10).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  {/* Action Button */}
+                  {enrollmentStatus.isEnrolled ? (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      size="large"
+                      startIcon={<PlayArrowIcon />}
+                      onClick={handleContinueLearning}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: 2,
+                        fontWeight: 'bold',
+                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 15px rgba(0, 0, 0, 0.2)',
+                        },
+                        transition: 'all 0.3s ease'
                       }}
                     >
-                      <Typography variant="h6" gutterBottom fontWeight="bold">What You'll Learn</Typography>
-                      
-                      <List disablePadding dense sx={{ flex: 1 }}>
-                        {['Understand blockchain fundamentals', 
-                          'Learn about different consensus mechanisms', 
-                          'Explore real-world blockchain use cases', 
-                          'Understand smart contracts and dApps', 
-                          'Gain insights into the future of blockchain'].map((item, index) => (
-                          <ListItem 
-                            key={index} 
-                            disablePadding 
-                            sx={{ 
-                              mb: 1.5,
-                              opacity: 0,
-                              animation: `fadeInRight 0.5s ease forwards ${0.3 + index * 0.1}s`,
-                              '@keyframes fadeInRight': {
-                                '0%': { opacity: 0, transform: 'translateX(-20px)' },
-                                '100%': { opacity: 1, transform: 'translateX(0)' }
-                              }
-                            }}
-                          >
-                            <ListItemIcon sx={{ minWidth: 32 }}>
-                              <CheckCircleIcon sx={{ color: theme.palette.secondary.main }} fontSize="small" />
-                            </ListItemIcon>
-                            <ListItemText 
-                              primary={item} 
-                              primaryTypographyProps={{ variant: 'body2', fontWeight: 'medium' }}
-                            />
-                          </ListItem>
-                        ))}
-                      </List>
-                      
-                      {/* Background decorations */}
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          bottom: -30,
-                          right: -30,
-                          width: 120,
-                          height: 120,
-                          borderRadius: '50%',
-                          background: `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.05)}, transparent 70%)`,
-                          zIndex: 0
-                        }}
-                      />
-                    </Paper>
-                  </Grid>
-                </Grid>
+                      Continue Learning
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      size="large"
+                      startIcon={<SchoolIcon />}
+                      onClick={handleEnroll}
+                      disabled={enrollmentStatus.isLoading}
+                      sx={{
+                        py: 1.5,
+                        borderRadius: 2,
+                        fontWeight: 'bold',
+                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 15px rgba(0, 0, 0, 0.2)',
+                        },
+                        transition: 'all 0.3s ease'
+                      }}
+                    >
+                      {enrollmentStatus.isLoading ? 'Processing...' : 'Enroll Now'}
+                    </Button>
+                  )}
+                </Box>
               </Box>
             </Grid>
           </Grid>

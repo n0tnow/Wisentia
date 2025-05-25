@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import {
   Container,
   Typography,
@@ -44,13 +46,324 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import StarIcon from '@mui/icons-material/Star';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import CloseIcon from '@mui/icons-material/Close';
-import { useRouter } from 'next/navigation';
 
 // Course Detail Modal Component
 const CourseDetailModal = ({ open, onClose, course, onEnroll }) => {
   const theme = useTheme();
+  const router = useRouter();
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false);
+  const [courseDetails, setCourseDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [durationData, setDurationData] = useState(null);
+  const [durationLoading, setDurationLoading] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState(null);
+  
+  // Zorluk seviyesine göre renk belirleyen fonksiyon
+  const getDifficultyColor = (difficulty) => {
+    switch(difficulty?.toLowerCase()) {
+      case 'beginner':
+        return 'success';
+      case 'intermediate':
+        return 'primary';
+      case 'advanced':
+        return 'secondary';
+      default:
+        return 'primary';
+    }
+  };
+  
+  // Add a clear handleEnroll function to handle enrollment directly in the modal
+  const handleEnroll = async () => {
+    if (!course || !course.id || isEnrolled || enrollmentLoading) return;
+    
+    try {
+      setEnrollmentLoading(true);
+      setEnrollmentError(null);
+      
+      // Call the parent onEnroll function which handles the API request
+      await onEnroll(course.id);
+      
+      // If we reach here, the enrollment was successful
+      setIsEnrolled(true);
+      
+      // Show success message
+      if (typeof toast !== 'undefined') {
+        toast.success('Successfully enrolled in course!');
+      }
+      
+      // Navigate to course page after short delay to allow user to see the toast
+      setTimeout(() => {
+        router.push(`/courses/${course.id}`);
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+      setEnrollmentError(error.message || 'Failed to enroll in course. Please try again.');
+      
+      if (typeof toast !== 'undefined') {
+        toast.error(error.message || 'Failed to enroll in course. Please try again.');
+      }
+    } finally {
+      setEnrollmentLoading(false);
+    }
+  };
+  
+  // Load all course data in a single combined fetch  
+  useEffect(() => {    
+    const fetchAllCourseData = async () => {      
+      if (!course || !open) return;            
+      
+      try {        
+        setDetailsLoading(true);        
+        setDurationLoading(true);                
+        
+        // Only check enrollment if there's a valid token        
+        const token = localStorage.getItem('access_token');                
+        
+        // Create an object to hold all our data        
+        const allData = {};                
+        
+        // Use Promise.all to fetch all data in parallel        
+        await Promise.all([          
+          // 1. Fetch course details          
+          fetch(`/api/courses/${course.id}?t=${Date.now()}`, {            
+            headers: {              
+              'Cache-Control': 'no-cache',              
+              'Pragma': 'no-cache',              
+              'Expires': '0'            
+            },            
+            cache: 'no-store'          
+          }).then(async (res) => {            
+            if (res.ok) {              
+              const data = await res.json();              
+              allData.courseDetails = data;            
+            }          
+          }).catch(e => console.error("Error fetching course details:", e)),                    
+          
+          // 2. Fetch course duration (optional)          
+          fetch(`/api/courses/${course.id}/duration`).then(async (res) => {            
+            if (res.ok) {              
+              const data = await res.json();              
+              allData.durationData = data;            
+            }          
+          }).catch(e => console.error("Error fetching duration:", e)),                    
+          
+          // 3. Check enrollment status (if user is logged in)          
+          token ?             
+            fetch(`/api/courses/enrollment/status/${course.id}/`, {              
+              headers: { 'Authorization': `Bearer ${token}` },
+              cache: 'no-store'            
+            }).then(async (res) => {              
+              if (res.ok) {                
+                const data = await res.json();                
+                allData.enrollmentStatus = data;              
+              }            
+            }).catch(e => console.error("Error checking enrollment:", e))            
+            : Promise.resolve()        
+        ]);                
+        
+        // Now update states with all the data we've collected        
+        if (allData.courseDetails) {          
+          setCourseDetails(allData.courseDetails);        
+        }                
+        
+        if (allData.durationData) {          
+          setDurationData(allData.durationData);        
+        }                
+        
+        // Check multiple possible enrollment status flags
+        if (allData.enrollmentStatus) {
+          console.log('Enrollment status data:', allData.enrollmentStatus);
+          
+          // Primary check: is_enrolled field - this is the most reliable indicator
+          if (allData.enrollmentStatus.is_enrolled === true) {
+            console.log('User is enrolled based on is_enrolled flag');
+            setIsEnrolled(true);
+          } else {
+            // Secondary checks for various API response formats
+            const isUserEnrolled = !!(
+              allData.enrollmentStatus.isEnrolled || 
+              allData.enrollmentStatus.enrollment || 
+              allData.enrollmentStatus.enrollment_id || 
+              allData.enrollmentStatus.progress_id || 
+              (allData.enrollmentStatus.progress && allData.enrollmentStatus.progress.completion_percentage !== undefined) ||
+              allData.enrollmentStatus.message === 'User already enrolled in this course'
+            );
+            console.log('Enrollment status check result:', isUserEnrolled);
+            setIsEnrolled(isUserEnrolled);
+          }        
+        } else if (token) {          
+          setIsEnrolled(false);        
+        }
+      } catch (error) {        
+        console.error("Error fetching course data:", error);      
+      } finally {        
+        setDetailsLoading(false);        
+        setDurationLoading(false);      
+      }    
+    };        
+    
+    fetchAllCourseData();  
+  }, [course, open]);
+  
+  // Add a manual refresh function for course details
+  const refreshCourseDetails = async () => {
+    if (!course) return;
+    
+    try {
+      setDetailsLoading(true);
+      // Force a full refresh with unique timestamp
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/courses/${course.id}?t=${timestamp}&refresh=true`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCourseDetails(data);
+      }
+    } catch (error) {
+      console.error("Error refreshing course details:", error);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+  
+  // Attach this function to the course detail modal
+  useEffect(() => {
+    // Automatically refresh data when modal opens
+    if (open && course) {
+      refreshCourseDetails();
+    }
+  }, [open, course?.id]);
+  
+  // Check enrollment status specifically when modal opens
+  useEffect(() => {
+    const checkEnrollmentStatus = async () => {
+      if (!open || !course) return;
+      setEnrollmentError(null);
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        setIsEnrolled(false);
+        return;
+      }
+      try {
+        const response = await fetch(`/api/courses/enrollment/status/${course.id}/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (typeof data.is_enrolled === 'boolean') {
+            setIsEnrolled(data.is_enrolled);
+          } else {
+            setEnrollmentError('Could not retrieve enrollment status. Please try again.');
+            setIsEnrolled(false);
+          }
+        } else {
+          setEnrollmentError('Could not retrieve enrollment status. Please try again.');
+          setIsEnrolled(false);
+        }
+      } catch (error) {
+        setEnrollmentError('Could not retrieve enrollment status. Please try again.');
+        setIsEnrolled(false);
+      } finally {
+        setEnrollmentLoading(false);
+      }
+    };
+    if (open && course) {
+      setEnrollmentLoading(true);
+      checkEnrollmentStatus();
+    }
+  }, [open, course?.id]);
   
   if (!course) return null;
+  
+  // Combine basic course data with detailed data if available
+  const displayData = {
+    ...course,
+    ...courseDetails
+  };
+  
+  // Format duration for display
+  const displayDuration = () => {
+    // First check if we have dedicated duration data from the API
+    if (durationData && durationData.formatted) {
+      return durationData.formatted;
+    }
+    
+    // Next check for formatted duration directly from the course details
+    if (displayData.formattedDuration) {
+      // Don't display "0 minutes" - show something more meaningful
+      if (displayData.formattedDuration === "0 minutes") {
+        return "Course duration available after enrollment";
+      }
+      return displayData.formattedDuration;
+    }
+    
+    // If we have totalDuration in seconds, format it
+    if (displayData.totalDuration !== undefined) {
+      if (displayData.totalDuration === 0) {
+        return "Course duration available after enrollment";
+      }
+      return formatDuration(displayData.totalDuration);
+    }
+    
+    // Fall back to basic course data duration
+    if (displayData.duration && displayData.duration !== '-') {
+      return displayData.duration;
+    }
+    
+    return "Course duration available after enrollment";
+  };
+  
+  // Format enrollment count for display
+  const displayEnrollmentCount = () => {
+    // Try all possible property names for enrollment count
+    const checkProperties = ['EnrolledUsers', 'enrolledUsers', 'enrolled_users', 'enrolledStudents', 'enrollmentCount'];
+    
+    let count = 0;
+    // Check each possible property name
+    for (const prop of checkProperties) {
+      if (displayData[prop] !== undefined && displayData[prop] !== null) {
+        count = parseInt(displayData[prop], 10);
+        console.log(`Found enrollment count in property '${prop}': ${count}`);
+        break;
+      }
+    }
+    
+    // Ensure we have a valid number
+    count = isNaN(count) ? 0 : count;
+    
+    // Debug logging
+    console.log('Course details data:', displayData);
+    console.log('Final enrollment count:', count);
+    
+    return `${count} ${count === 1 ? 'student' : 'students'}`;
+  };
+  
+  // Get video count
+  const getVideoCount = () => {
+    if (durationData && durationData.videoCount !== undefined) {
+      return durationData.videoCount;
+    }
+    return displayData.videoCount || 0;
+  };
+  
+  // Handle navigation to course content
+  const handleViewCourse = () => {
+    onClose();
+    router.push(`/courses/${course.id}`);
+  };
   
   return (
     <Modal
@@ -96,7 +409,11 @@ const CourseDetailModal = ({ open, onClose, course, onEnroll }) => {
             <Box
               sx={{
                 height: 200,
-                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.8)}, ${alpha(theme.palette.secondary.main, 0.8)})`,
+                background: displayData.thumbnailURL 
+                  ? `url(${displayData.thumbnailURL})` 
+                  : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.8)}, ${alpha(theme.palette.secondary.main, 0.8)})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
                 position: 'relative',
               }}
             />
@@ -139,19 +456,19 @@ const CourseDetailModal = ({ open, onClose, course, onEnroll }) => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
                   <Chip 
-                    label={course.difficulty} 
+                    label={displayData.difficulty} 
                     size="small" 
                     sx={{ 
                       mr: 1, 
                       bgcolor: 
-                        course.difficulty === 'Beginner' ? theme.palette.success.main :
-                        course.difficulty === 'Intermediate' ? theme.palette.primary.main :
+                        displayData.difficulty === 'Beginner' ? theme.palette.success.main :
+                        displayData.difficulty === 'Intermediate' ? theme.palette.primary.main :
                         theme.palette.secondary.main,
                       color: 'white'
                     }} 
                   />
                   <Chip 
-                    label={course.category} 
+                    label={displayData.category} 
                     size="small" 
                     sx={{ 
                       bgcolor: 'rgba(255, 255, 255, 0.2)', 
@@ -159,7 +476,9 @@ const CourseDetailModal = ({ open, onClose, course, onEnroll }) => {
                     }} 
                   />
                 </Box>
-                <Rating value={course.rating || 4.5} precision={0.1} size="small" readOnly />
+                {displayData.rating !== '-' && (
+                  <Rating value={parseFloat(displayData.rating) || 0} precision={0.1} size="small" readOnly />
+                )}
               </Box>
             </Box>
           </Box>
@@ -167,63 +486,98 @@ const CourseDetailModal = ({ open, onClose, course, onEnroll }) => {
           {/* Course details */}
           <Box sx={{ p: 3 }}>
             <Typography variant="h5" component="h2" fontWeight="bold" gutterBottom>
-              {course.title}
+              {displayData.title}
             </Typography>
             
             <Typography variant="body1" paragraph>
-              {course.description || 'No description available.'}
+              {displayData.description || 'No description available.'}
             </Typography>
             
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <Avatar 
-                src={course.instructorAvatar || '/default-avatar.jpg'} 
-                alt={course.instructorName}
+                src={displayData.instructorAvatar || '/default-avatar.jpg'} 
+                alt={displayData.instructorName}
                 sx={{ width: 32, height: 32, mr: 1 }}
               />
               <Typography variant="subtitle2">
-                {course.instructorName}
+                {displayData.instructorName}
               </Typography>
             </Box>
             
             <Divider sx={{ my: 2 }} />
             
-            <Grid container spacing={2} sx={{ mb: 3 }}>
+            {/* Updated stats layout with better spacing and centering */}
+            <Grid container spacing={3} sx={{ mb: 3, justifyContent: 'center' }}>
               <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <AccessTimeIcon color="primary" />
-                  <Typography variant="body2" color="text.secondary">Duration</Typography>
-                  <Typography variant="subtitle2">{course.duration}</Typography>
+                <Box sx={{ textAlign: 'center', p: 1 }}>
+                  <AccessTimeIcon color="primary" sx={{ fontSize: 28, mb: 1 }}/>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>Duration</Typography>
+                  <Typography variant="subtitle2">
+                    {durationLoading || detailsLoading 
+                      ? <CircularProgress size={16} />
+                      : displayDuration()}
+                  </Typography>
                 </Box>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <VideoLibraryIcon color="primary" />
-                  <Typography variant="body2" color="text.secondary">Videos</Typography>
-                  <Typography variant="subtitle2">{course.videoCount} videos</Typography>
+                <Box sx={{ textAlign: 'center', p: 1 }}>
+                  <VideoLibraryIcon color="primary" sx={{ fontSize: 28, mb: 1 }}/>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>Videos</Typography>
+                  <Typography variant="subtitle2">
+                    {durationLoading || detailsLoading 
+                      ? <CircularProgress size={16} /> 
+                      : `${getVideoCount()} ${getVideoCount() === 1 ? 'video' : 'videos'}`}
+                  </Typography>
                 </Box>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <StarIcon color="warning" />
-                  <Typography variant="body2" color="text.secondary">Rating</Typography>
-                  <Typography variant="subtitle2">{course.rating}/5</Typography>
+                <Box sx={{ textAlign: 'center', p: 1 }}>
+                  <StarIcon color="warning" sx={{ fontSize: 28, mb: 1 }}/>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>Rating</Typography>
+                  <Typography variant="subtitle2">
+                    {detailsLoading 
+                      ? <CircularProgress size={16} /> 
+                      : (displayData.rating && displayData.rating !== '-' 
+                          ? `${typeof displayData.rating === 'number' 
+                              ? displayData.rating.toFixed(1) 
+                              : displayData.rating}/5` 
+                          : 'Not rated')}
+                  </Typography>
                 </Box>
               </Grid>
               <Grid item xs={6} sm={3}>
-                <Box sx={{ textAlign: 'center' }}>
-                  <HowToRegIcon color="primary" />
-                  <Typography variant="body2" color="text.secondary">Enrolled</Typography>
-                  <Typography variant="subtitle2">158 students</Typography>
+                <Box sx={{ textAlign: 'center', p: 1 }}>
+                  <HowToRegIcon color="primary" sx={{ fontSize: 28, mb: 1 }}/>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>Enrolled</Typography>
+                  <Typography variant="subtitle2">
+                    {detailsLoading 
+                      ? <CircularProgress size={16} /> 
+                      : displayEnrollmentCount()}
+                  </Typography>
                 </Box>
               </Grid>
             </Grid>
             
+            {/* Debug enrollment status */}
+            <Box sx={{ mb: 2, p: 1, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Debug: isEnrolled={isEnrolled ? 'true' : 'false'}
+              </Typography>
+            </Box>
+            
+            {/* Conditionally display Enroll or View button based on enrollment status */}
+            {enrollmentError && (
+              <Box sx={{ mb: 2 }}>
+                <Alert severity="error">{enrollmentError}</Alert>
+              </Box>
+            )}
             <Button
               variant="contained"
               size="large"
-              startIcon={<HowToRegIcon />}
+              startIcon={isEnrolled ? <PlayArrowIcon /> : <HowToRegIcon />}
               fullWidth
-              onClick={() => onEnroll(course.id)}
+              onClick={isEnrolled ? handleViewCourse : handleEnroll}
+              disabled={enrollmentLoading}
               sx={{
                 py: 1.5,
                 background: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
@@ -232,7 +586,7 @@ const CourseDetailModal = ({ open, onClose, course, onEnroll }) => {
                 }
               }}
             >
-              Enroll Now
+              {enrollmentLoading ? 'Processing...' : (isEnrolled ? 'Continue' : 'Enroll Now')}
             </Button>
           </Box>
         </Box>
@@ -258,6 +612,45 @@ const CourseCard = ({ course, onClick, index = 0 }) => {
         return theme.palette.secondary.main;
       default:
         return theme.palette.primary.main;
+    }
+  };
+
+  // Format duration from seconds to hours and minutes
+  const formatCardDuration = (duration) => {
+    // If duration is undefined or null, try to use totalDuration
+    if (!duration || duration === '-') {
+      if (course.totalDuration !== undefined) {
+        duration = course.totalDuration;
+      } else {
+        return "New";
+      }
+    }
+    
+    // Check if duration is already formatted with h/m
+    if (typeof duration === 'string' && (duration.includes('h') || duration.includes('m'))) {
+      return duration;
+    }
+    
+    // Try to parse as number if it's not already formatted
+    try {
+      const totalSeconds = parseInt(duration);
+      if (isNaN(totalSeconds) || totalSeconds === 0) {
+        return "New";
+      }
+      
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+      } else if (minutes > 0) {
+        return `${minutes}m`;
+      } else {
+        return "< 1m";
+      }
+    } catch (e) {
+      console.log("Error formatting duration:", e);
+      return "New";
     }
   };
 
@@ -315,7 +708,11 @@ const CourseCard = ({ course, onClick, index = 0 }) => {
               height: 0,
               paddingTop: '56.25%', // 16:9 aspect ratio
               backgroundColor: alpha(theme.palette.primary.main, 0.1),
-              backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.8)}, ${alpha(theme.palette.secondary.main, 0.8)})`,
+              backgroundImage: course.thumbnailURL 
+                ? `url(${course.thumbnailURL})` 
+                : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.8)}, ${alpha(theme.palette.secondary.main, 0.8)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}
           />
           
@@ -392,7 +789,14 @@ const CourseCard = ({ course, onClick, index = 0 }) => {
           )}
         </Box>
         
-        <CardContent sx={{ flexGrow: 1, p: 1.5, zIndex: 1 }}>
+        <CardContent sx={{ 
+          flexGrow: 1, 
+          p: 1.5, 
+          zIndex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '180px', // Increased height
+        }}>
           <Typography 
             variant="subtitle1" 
             component="h3" 
@@ -401,7 +805,7 @@ const CourseCard = ({ course, onClick, index = 0 }) => {
               fontWeight: 600,
               fontSize: '0.85rem',
               lineHeight: 1.2,
-              height: '2rem',
+              height: '2.4rem', // Increased height
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
@@ -417,11 +821,11 @@ const CourseCard = ({ course, onClick, index = 0 }) => {
             color="text.secondary" 
             sx={{ 
               mb: 1,
-              height: '2.4rem',
+              height: '4.5rem',  // Increased height (4 lines)
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 4,  // Increased to 4 lines
               WebkitBoxOrient: 'vertical',
               fontSize: '0.75rem',
             }}
@@ -432,7 +836,7 @@ const CourseCard = ({ course, onClick, index = 0 }) => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <Avatar 
               src={course.instructorAvatar || '/default-avatar.jpg'} 
-              alt={course.instructorName}
+              alt={course.instructorName || 'Instructor'}
               sx={{ 
                 width: 20, 
                 height: 20, 
@@ -450,78 +854,78 @@ const CourseCard = ({ course, onClick, index = 0 }) => {
                 fontSize: '0.7rem',
               }}
             >
-              {course.instructorName}
+              {course.instructorName || 'Instructor'}
             </Typography>
           </Box>
           
           <Divider sx={{ my: 0.75 }} />
           
+          {/* Course stats - improved visibility and formatting */}
           <Box sx={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center',
-            mt: 0.75
+            mt: 'auto', // Push to bottom
+            pt: 1
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <AccessTimeIcon 
-                fontSize="small" 
+                color="primary"
                 sx={{ 
                   mr: 0.5, 
-                  color: 'text.secondary', 
-                  fontSize: '0.7rem',
+                  fontSize: '0.8rem',
                 }} 
               />
               <Typography 
                 variant="body2" 
-                color="text.secondary"
+                fontWeight={500}
                 sx={{ 
                   fontSize: '0.7rem',
                 }}
               >
-                {course.duration || '3h 20m'}
+                {formatCardDuration(course.duration)}
               </Typography>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <VideoLibraryIcon 
-                fontSize="small" 
+                color="primary"
                 sx={{ 
                   mr: 0.5, 
-                  color: 'text.secondary', 
-                  fontSize: '0.7rem',
+                  fontSize: '0.8rem',
                 }} 
               />
               <Typography 
                 variant="body2" 
-                color="text.secondary"
+                fontWeight={500}
                 sx={{ 
                   fontSize: '0.7rem',
                 }}
               >
-                {course.videoCount || 12}
+                {course.videoCount} {course.videoCount === 1 ? 'video' : 'videos'}
               </Typography>
             </Box>
             
-            {course.rating && (
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <StarIcon 
-                  sx={{ 
-                    color: theme.palette.warning.main, 
-                    fontSize: '0.7rem', 
-                    mr: 0.5,
-                  }} 
-                />
-                <Typography 
-                  variant="body2" 
-                  fontWeight={500}
-                  sx={{ 
-                    fontSize: '0.7rem',
-                  }}
-                >
-                  {course.rating}
-                </Typography>
-              </Box>
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <StarIcon 
+                sx={{ 
+                  color: theme.palette.warning.main, 
+                  fontSize: '0.8rem', 
+                  mr: 0.5,
+                }} 
+              />
+              <Typography 
+                variant="body2" 
+                fontWeight={500}
+                sx={{ 
+                  fontSize: '0.7rem',
+                }}
+              >
+                {course.rating === '-' || !course.rating ? 'New' : 
+                  typeof course.rating === 'number' ? course.rating.toFixed(1) : 
+                  parseFloat(course.rating).toFixed(1)}
+              </Typography>
+            </Box>
           </Box>
         </CardContent>
       </Card>
@@ -666,8 +1070,8 @@ const ScrollableSection = ({ title, courses, onCourseClick }) => {
           <Box 
             key={course.id} 
             sx={{ 
-              minWidth: { xs: '160px', sm: '180px', md: '200px' }, // Sabit küçük genişlikler
-              maxWidth: { xs: '160px', sm: '180px', md: '200px' },
+              minWidth: { xs: '220px', sm: '240px', md: '280px' }, // Increased card width
+              maxWidth: { xs: '220px', sm: '240px', md: '280px' },
               flexShrink: 0
             }}
           >
@@ -687,8 +1091,60 @@ const ScrollableSection = ({ title, courses, onCourseClick }) => {
 const GlowingStarsBackground = () => {
   const theme = useTheme();
   
+  // Use useEffect to handle the dynamic aspects after initial render
+  const [starsGenerated, setStarsGenerated] = useState(false);
+  const backgroundRef = useRef(null);
+  
+  // Generate star positions and animations only on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined' && backgroundRef.current && !starsGenerated) {
+      // Clear any existing stars
+      while (backgroundRef.current.firstChild) {
+        backgroundRef.current.removeChild(backgroundRef.current.firstChild);
+      }
+      
+      // Add small stars
+      for (let i = 0; i < 70; i++) {
+        const star = document.createElement('div');
+        star.className = `star MuiBox-root`;
+        star.style.position = 'absolute';
+        star.style.width = Math.random() < 0.7 ? '1px' : '2px';
+        star.style.height = star.style.width;
+        star.style.backgroundColor = i % 5 === 0 ? theme.palette.secondary.main : theme.palette.primary.main;
+        star.style.borderRadius = '50%';
+        star.style.top = `${Math.random() * 100}%`;
+        star.style.left = `${Math.random() * 100}%`;
+        star.style.animation = `twinkle-${i % 3} ${2 + Math.random() * 4}s infinite ease-in-out`;
+        star.style.opacity = 0.6 + Math.random() * 0.4;
+        backgroundRef.current.appendChild(star);
+      }
+      
+      // Add larger glow stars
+      for (let i = 0; i < 20; i++) {
+        const size = 1 + Math.random() * 2;
+        const glowStar = document.createElement('div');
+        glowStar.className = `glow-star MuiBox-root`;
+        glowStar.style.position = 'absolute';
+        glowStar.style.width = `${size}px`;
+        glowStar.style.height = `${size}px`;
+        glowStar.style.backgroundColor = i % 2 === 0 ? theme.palette.primary.main : theme.palette.secondary.main;
+        glowStar.style.borderRadius = '50%';
+        glowStar.style.boxShadow = i % 2 === 0 
+          ? `0 0 ${5 + Math.random() * 10}px ${theme.palette.primary.main}`
+          : `0 0 ${5 + Math.random() * 10}px ${theme.palette.secondary.main}`;
+        glowStar.style.top = `${Math.random() * 100}%`;
+        glowStar.style.left = `${Math.random() * 100}%`;
+        glowStar.style.animation = `pulse-${i % 5} ${4 + Math.random() * 6}s infinite alternate`;
+        backgroundRef.current.appendChild(glowStar);
+      }
+      
+      setStarsGenerated(true);
+    }
+  }, [theme, starsGenerated]);
+  
   return (
     <Box
+      ref={backgroundRef}
       className="stars-container"
       sx={{
         position: 'fixed',
@@ -699,50 +1155,7 @@ const GlowingStarsBackground = () => {
         overflow: 'hidden',
         zIndex: -1,
       }}
-    >
-      {/* Small star particles */}
-      {[...Array(70)].map((_, i) => (
-        <Box
-          key={`star-${i}`}
-          className="star"
-          sx={{
-            position: 'absolute',
-            width: Math.random() < 0.7 ? '1px' : '2px',
-            height: Math.random() < 0.7 ? '1px' : '2px',
-            backgroundColor: i % 5 === 0 ? theme.palette.secondary.main : theme.palette.primary.main,
-            borderRadius: '50%',
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            animation: `twinkle-${i % 3} ${2 + Math.random() * 4}s infinite ease-in-out`,
-            opacity: 0.6 + Math.random() * 0.4,
-          }}
-        />
-      ))}
-      
-      {/* Larger glow stars */}
-      {[...Array(20)].map((_, i) => {
-        const size = 1 + Math.random() * 2;
-        return (
-          <Box
-            key={`glow-star-${i}`}
-            className="glow-star"
-            sx={{
-              position: 'absolute',
-              width: size,
-              height: size,
-              backgroundColor: i % 2 === 0 ? theme.palette.primary.main : theme.palette.secondary.main,
-              borderRadius: '50%',
-              boxShadow: i % 2 === 0 
-                ? `0 0 ${5 + Math.random() * 10}px ${theme.palette.primary.main}`
-                : `0 0 ${5 + Math.random() * 10}px ${theme.palette.secondary.main}`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `pulse-${i % 5} ${4 + Math.random() * 6}s infinite alternate`,
-            }}
-          />
-        );
-      })}
-    </Box>
+    />
   );
 };
 
@@ -754,11 +1167,12 @@ export default function CoursesPage() {
   // State for courses data and filters
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   
   // State for course detail modal
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false);
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -770,9 +1184,9 @@ export default function CoursesPage() {
   const [difficulty, setDifficulty] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   
-  // Categories and difficulties
-  const categories = ['Web Development', 'Blockchain', 'Programming', 'Design', 'Marketing', 'Business'];
-  const difficulties = ['Beginner', 'Intermediate', 'Advanced'];
+  // Categories and difficulties - will be populated from API data
+  const [categories, setCategories] = useState([]);
+  const [difficulties, setDifficulties] = useState(['Beginner', 'Intermediate', 'Advanced']);
   
   // Fetch courses from API
   const fetchCourses = async () => {
@@ -784,158 +1198,43 @@ export default function CoursesPage() {
       if (category) queryParams.append('category', category);
       if (difficulty) queryParams.append('difficulty', difficulty);
       queryParams.append('page', page);
+      // Add cache-busting timestamp to prevent caching
+      queryParams.append('t', new Date().getTime());
       
-      // Mock data for development
-      const mockData = {
-        courses: [
-          {
-            id: 1,
-            title: 'Introduction to Blockchain',
-            description: 'Learn the basics of blockchain technology and how it works.',
-            category: 'Blockchain',
-            difficulty: 'Beginner',
-            thumbnailURL: '/placeholder-course1.jpg',
-            instructorName: 'John Doe',
-            instructorAvatar: '/avatar1.jpg',
-            videoCount: 12,
-            duration: '4h 20m',
-            rating: 4.8,
-            featured: true
-          },
-          {
-            id: 2,
-            title: 'Smart Contract Development',
-            description: 'Build decentralized applications using smart contracts.',
-            category: 'Blockchain',
-            difficulty: 'Intermediate',
-            thumbnailURL: '/placeholder-course2.jpg',
-            instructorName: 'Jane Smith',
-            instructorAvatar: '/avatar2.jpg',
-            videoCount: 18,
-            duration: '6h 45m',
-            rating: 4.9,
-            featured: true
-          },
-          {
-            id: 3,
-            title: 'Web3 Frontend Development',
-            description: 'Create modern web interfaces for blockchain applications.',
-            category: 'Web Development',
-            difficulty: 'Intermediate',
-            thumbnailURL: '/placeholder-course3.jpg',
-            instructorName: 'David Johnson',
-            instructorAvatar: '/avatar3.jpg',
-            videoCount: 15,
-            duration: '5h 30m',
-            rating: 4.7,
-            featured: true
-          },
-          {
-            id: 4,
-            title: 'Cryptocurrency Trading Basics',
-            description: 'Learn the fundamentals of trading cryptocurrencies.',
-            category: 'Business',
-            difficulty: 'Beginner',
-            thumbnailURL: '/placeholder-course4.jpg',
-            instructorName: 'Sarah Williams',
-            instructorAvatar: '/avatar4.jpg',
-            videoCount: 10,
-            duration: '3h 15m',
-            rating: 4.6
-          },
-          {
-            id: 5,
-            title: 'NFT Creation and Marketing',
-            description: 'Design, mint, and sell your own NFT collections.',
-            category: 'Design',
-            difficulty: 'Intermediate',
-            thumbnailURL: '/placeholder-course5.jpg',
-            instructorName: 'Michael Brown',
-            instructorAvatar: '/avatar5.jpg',
-            videoCount: 14,
-            duration: '4h 50m',
-            rating: 4.5,
-            featured: true
-          },
-          {
-            id: 6,
-            title: 'Blockchain Security',
-            description: 'Understand security best practices for blockchain applications.',
-            category: 'Blockchain',
-            difficulty: 'Advanced',
-            thumbnailURL: '/placeholder-course6.jpg',
-            instructorName: 'Emily Davis',
-            instructorAvatar: '/avatar6.jpg',
-            videoCount: 16,
-            duration: '5h 40m',
-            rating: 4.9
-          },
-          {
-            id: 7,
-            title: 'JavaScript for Web3',
-            description: 'Master JavaScript for blockchain development.',
-            category: 'Programming',
-            difficulty: 'Intermediate',
-            thumbnailURL: '/placeholder-course7.jpg',
-            instructorName: 'Alex Johnson',
-            instructorAvatar: '/avatar7.jpg',
-            videoCount: 20,
-            duration: '7h 15m',
-            rating: 4.7
-          },
-          {
-            id: 8,
-            title: 'DeFi Fundamentals',
-            description: 'Explore the world of Decentralized Finance.',
-            category: 'Blockchain',
-            difficulty: 'Intermediate',
-            thumbnailURL: '/placeholder-course8.jpg',
-            instructorName: 'Jessica Chen',
-            instructorAvatar: '/avatar8.jpg',
-            videoCount: 14,
-            duration: '5h 20m',
-            rating: 4.8,
-            featured: true
-          },
-          {
-            id: 9,
-            title: 'React for Web3 Applications',
-            description: 'Build modern user interfaces for blockchain applications using React.',
-            category: 'Web Development',
-            difficulty: 'Intermediate',
-            thumbnailURL: '/placeholder-course9.jpg',
-            instructorName: 'Robert Wilson',
-            instructorAvatar: '/avatar9.jpg',
-            videoCount: 16,
-            duration: '6h 10m',
-            rating: 4.6
-          }
-        ],
-        totalPages: 3
-      };
+      // Fetch real data from API
+      const response = await fetch(`/api/courses?${queryParams.toString()}`);
       
-      // Filter mock data based on filters
-      let filteredCourses = [...mockData.courses];
-      
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        filteredCourses = filteredCourses.filter(course => 
-          course.title.toLowerCase().includes(query) || 
-          course.description.toLowerCase().includes(query)
-        );
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses');
       }
       
-      if (category) {
-        filteredCourses = filteredCourses.filter(course => course.category === category);
-      }
+      const coursesData = await response.json();
       
-      if (difficulty) {
-        filteredCourses = filteredCourses.filter(course => course.difficulty === difficulty);
-      }
+      // Map API response to frontend model
+      const formattedCourses = coursesData.map(course => ({
+        id: course.CourseID,
+        title: course.Title,
+        description: course.Description,
+        category: course.Category,
+        difficulty: course.Difficulty,
+        thumbnailURL: course.ThumbnailURL || '/placeholder-course.jpg',
+        instructorName: course.InstructorName || 'Admin',
+        videoCount: course.VideoCount || 0,
+        enrolledCount: course.EnrolledUsers || '0', // Convert to '0' instead of '-' for clarity
+        creationDate: course.CreationDate,
+        // Format duration properly based on seconds if available
+        duration: course.TotalDuration 
+          ? formatDuration(course.TotalDuration)
+          : course.TotalDuration === 0 ? '0 minutes' : '-',
+        // Use actual rating if available, otherwise mark with hyphen
+        rating: course.Rating || '-',
+        // Mark some courses as featured
+        featured: course.Featured || false
+      }));
       
       // Set courses and total pages
-      setCourses(filteredCourses);
-      setTotalPages(Math.ceil(filteredCourses.length / 12)); // 12 courses per page
+      setCourses(formattedCourses);
+      setTotalPages(Math.ceil(formattedCourses.length / 12)); // 12 courses per page
       setError('');
     } catch (error) {
       console.error('Failed to fetch courses:', error);
@@ -946,10 +1245,41 @@ export default function CoursesPage() {
     }
   };
   
+  // Format duration from seconds to hours and minutes with better handling of zero values
+  const formatDuration = (totalSeconds) => {
+    if (totalSeconds === undefined || totalSeconds === null) return '-';
+    if (totalSeconds === 0) return '0 minutes';
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
+    } else {
+      return `${minutes}m`;
+    }
+  };
+  
   // Fetch courses when filters or page changes
   useEffect(() => {
     fetchCourses();
   }, [page, searchQuery, category, difficulty]);
+  
+  // Extract unique categories from course data
+  useEffect(() => {
+    if (courses.length > 0) {
+      // Normalize categories by converting to lowercase and trimming spaces
+      // to ensure courses with same category but different casing are grouped together
+      const normalizedCourses = courses.map(course => ({
+        ...course,
+        category: course.category ? course.category.trim() : 'Uncategorized'
+      }));
+      
+      // Get unique categories, sorted alphabetically
+      const uniqueCategories = [...new Set(normalizedCourses.map(course => course.category))].sort();
+      setCategories(uniqueCategories);
+    }
+  }, [courses]);
   
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -991,21 +1321,102 @@ export default function CoursesPage() {
     setModalOpen(false);
   };
   
-  const handleEnrollCourse = (courseId) => {
-    // Close the modal
-    setModalOpen(false);
-    // Navigate to course detail page
-    router.push(`/courses/${courseId}`);
+  const handleEnrollCourse = async (courseId) => {
+    try {
+      // Check if user is logged in
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        router.push('/login?redirect=/courses');
+        return;
+      }
+      
+      console.log('Enrolling in course ID:', courseId);
+      setEnrollmentLoading(true);
+      
+      // Call the enrollment API
+      const response = await fetch(`/api/courses/${courseId}/enroll`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log('Backend API response status:', response.status);
+      const data = await response.json();
+      console.log('Enrollment response:', data);
+      
+      // Consider success based on response.ok and data.success, not just enrollment_id
+      if (!response.ok) {
+        // If user is already enrolled, still mark as enrolled
+        if (data.message === 'User already enrolled in this course') {
+          console.log('Already enrolled. Setting enrolled state to true.');
+          setIsEnrolled(true);
+          if (typeof toast !== 'undefined') {
+            toast.info('You are already enrolled in this course');
+          }
+          // Navigate to course detail page for already enrolled users
+          router.push(`/courses/${courseId}`);
+          return;
+        }
+        
+        const errorMessage = data.error || 'Failed to enroll in course';
+        console.error('Enrollment error:', errorMessage);
+        if (typeof toast !== 'undefined') {
+          toast.error(errorMessage);
+        }
+        return;
+      }
+      
+      // Check if enrollment was successful based on response and data.success
+      if (response.ok && (data.success || data.message?.includes('Successfully'))) {
+        // Successfully enrolled - update UI
+        console.log('Successfully enrolled in course');
+        setIsEnrolled(true);
+        
+        // Show success message
+        if (typeof toast !== 'undefined') {
+          toast.success('Successfully enrolled in course!');
+        }
+        
+        // Navigate to course detail page
+        router.push(`/courses/${courseId}`);
+      } else {
+        // This should rarely happen (successful response but no success flag)
+        console.error('Unexpected enrollment response:', data);
+        if (typeof toast !== 'undefined') {
+          toast.error('Unexpected response. Please try again.');
+        }
+      }
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      if (typeof toast !== 'undefined') {
+        toast.error('Failed to enroll in course. Please try again.');
+      }
+    } finally {
+      setEnrollmentLoading(false);
+    }
   };
   
-  // Get featured courses
+  // Get featured courses - handle empty case
   const getFeaturedCourses = () => {
+    // If courses is empty, return empty array
+    if (!courses.length) return [];
+    
+    // Otherwise filter for featured courses
     return courses.filter(course => course.featured);
   };
   
-  // Group courses by category
+  // Group courses by category - handle empty case
   const getCoursesByCategory = (categoryName) => {
-    return courses.filter(course => course.category === categoryName);
+    // If courses is empty, return empty array
+    if (!courses.length) return [];
+    
+    // Filter by category, normalizing the comparison to handle case differences
+    return courses.filter(course => {
+      const normalizedCourseCategory = course.category ? course.category.trim() : 'Uncategorized';
+      return normalizedCourseCategory === categoryName;
+    });
   };
 
   // Calculate courses for current page
@@ -1355,18 +1766,24 @@ export default function CoursesPage() {
               }} 
             />
             <Typography variant="h6" paragraph>
-              No courses found matching your criteria
+              {searchQuery || category || difficulty 
+                ? "No courses found matching your criteria" 
+                : "No courses available yet"}
             </Typography>
             <Typography color="text.secondary" sx={{ mb: 3 }}>
-              Try adjusting your search or filters
+              {searchQuery || category || difficulty 
+                ? "Try adjusting your search or filters"
+                : "Courses are being prepared and will be available soon"}
             </Typography>
-            <Button
-              variant="contained"
-              onClick={handleClearFilters}
-              color="primary"
-            >
-              Clear Filters
-            </Button>
+            {(searchQuery || category || difficulty) && (
+              <Button
+                variant="contained"
+                onClick={handleClearFilters}
+                color="primary"
+              >
+                Clear Filters
+              </Button>
+            )}
           </Box>
         )}
       </Container>

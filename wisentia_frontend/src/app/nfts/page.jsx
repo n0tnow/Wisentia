@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Container, Typography, Grid, Box, Chip, Button, CircularProgress,
+  Container, Typography, Box, Chip, Button, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert,
   Paper, Divider, IconButton, useTheme, alpha, useMediaQuery,
-  Collapse, InputAdornment, Menu, MenuItem, Snackbar, Avatar, CardMedia, CardContent
+  Collapse, InputAdornment, Menu, MenuItem, Snackbar, Avatar, CardMedia, CardContent,
+  Grid, Skeleton, Checkbox, Tooltip
 } from '@mui/material';
 import {
   Token as TokenIcon, ShoppingCart as ShoppingCartIcon, AccountBalanceWallet as AccountBalanceWalletIcon,
@@ -15,10 +16,15 @@ import {
   ArrowForward as ArrowForwardIcon, ArrowBack as ArrowBackIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon, KeyboardArrowUp as KeyboardArrowUpIcon,
   Search as SearchIcon, SwapHoriz as SwapHorizIcon, Check as CheckIcon,
-  AutoAwesome as AutoAwesomeIcon
+  AutoAwesome as AutoAwesomeIcon, CheckCircle as CheckCircleIcon,
+  Diamond as DiamondIcon, School as SchoolIcon, Whatshot as WhatshotIcon, Collections as CollectionsIcon,
+  NavigateBefore as NavigateBeforeIcon, NavigateNext as NavigateNextIcon,
+  FilterAltOff as FilterAltOffIcon, AccessTime as AccessTimeIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import detectEthereumProvider from '@metamask/detect-provider';
+import dynamic from 'next/dynamic';
 
 // Mock veri - kısaltılmış
 const PUBLIC_NFT_MOCK_DATA = [
@@ -72,27 +78,224 @@ const USER_NFT_MOCK_DATA = [
 ];
 
 // NFT kategorileri
-// NFT kategorilerini güncelle
 const NFT_CATEGORIES = [
-  // Abonelik NFT'lerini en başa koy
-  { id: 'subscriptions', title: 'Subscription Plans', icon: <StarIcon />, type: 'subscription' },
-  { id: 'achievements', title: 'Achievement NFTs', icon: <EmojiEventsIcon />, type: 'achievement' },
-  { id: 'courses', title: 'Course Completion NFTs', icon: <LocalFireDepartmentIcon />, type: 'course_completion' },
-  { id: 'minted', title: 'Minted NFTs', icon: <VerifiedIcon />, condition: nft => nft.isMinted },
-  { id: 'rare', title: 'Rare & Legendary NFTs', icon: <AutoAwesomeIcon />, condition: nft => ['Rare', 'Epic', 'Legendary'].includes(nft.rarity) }
+  {
+    id: 'all',
+    label: 'All NFTs',
+    icon: <DiamondIcon />,
+    color: 'primary',
+    condition: nft => true
+  },
+  {
+    id: 'subscription',
+    label: 'Subscriptions',
+    icon: <StarIcon />,
+    type: 'subscription',
+    color: 'secondary'
+  },
+  {
+    id: 'achievement',
+    label: 'Achievements',
+    icon: <EmojiEventsIcon />,
+    type: 'achievement',
+    color: 'success'
+  },
+  {
+    id: 'course_completion',
+    label: 'Course Completions',
+    icon: <SchoolIcon />,
+    type: 'course_completion',
+    color: 'warning'
+  },
+  {
+    id: 'quest_reward',
+    label: 'Quest Rewards',
+    icon: <AutoAwesomeIcon />,
+    type: 'quest_reward',
+    color: 'info'
+  },
+  {
+    id: 'legendary',
+    label: 'Legendary',
+    icon: <WhatshotIcon />,
+    color: 'warning',
+    condition: nft => nft.rarity?.toLowerCase() === 'legendary'
+  },
+  {
+    id: 'owned',
+    label: 'My Collection',
+    icon: <CollectionsIcon />,
+    color: 'success',
+    condition: nft => !nft.isPublic
+  }
 ];
+
+// Create a new NFTCardGrid component that uses virtualized rendering
+const NFTCardGrid = ({ nfts, isTradeMode, searchQuery, selectedCategoryFilter, selectedRarityFilter, selectedTypeFilter }) => {
+  const gridRef = useRef(null);
+  const [displayCount, setDisplayCount] = useState(20); // Start with more items for initial view
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Memoize filtered NFTs to prevent unnecessary recalculations
+  const filteredNfts = useMemo(() => {
+    return nfts.filter(nft => {
+      // Search query filter
+      if (searchQuery && !nft.title?.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+
+      // Category filter
+      if (selectedCategoryFilter && selectedCategoryFilter !== 'all') {
+        if (nft.collection?.toLowerCase() !== selectedCategoryFilter.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // Rarity filter
+      if (selectedRarityFilter && selectedRarityFilter !== 'all') {
+        if (nft.rarity?.toLowerCase() !== selectedRarityFilter.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // Type filter
+      if (selectedTypeFilter && selectedTypeFilter !== 'all') {
+        if (nft.type?.toLowerCase() !== selectedTypeFilter.toLowerCase()) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [nfts, searchQuery, selectedCategoryFilter, selectedRarityFilter, selectedTypeFilter]);
+
+  // Optimized scroll handler with debounce
+  const handleScroll = useCallback(() => {
+    if (isLoading || displayCount >= filteredNfts.length) return;
+    
+    const bottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 800;
+    if (bottom) {
+      setIsLoading(true);
+      // Use setTimeout to prevent UI blocking
+      setTimeout(() => {
+        setDisplayCount(prevCount => {
+          const newCount = Math.min(prevCount + 12, filteredNfts.length);
+          setIsLoading(false);
+          return newCount;
+        });
+      }, 100);
+    }
+  }, [displayCount, filteredNfts.length, isLoading]);
+
+  // Setup optimized scroll listener
+  useEffect(() => {
+    const throttledScroll = throttle(handleScroll, 200);
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', throttledScroll);
+    };
+  }, [handleScroll]);
+
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(20); // Show more initially for better UX
+    window.scrollTo({ top: 0 });
+  }, [searchQuery, selectedCategoryFilter, selectedRarityFilter, selectedTypeFilter]);
+
+  // Calculate items to display based on current count
+  const displayedNfts = useMemo(() => {
+    return filteredNfts.slice(0, displayCount);
+  }, [filteredNfts, displayCount]);
+
+  return (
+    <Box ref={gridRef}>
+      <Grid container spacing={2}>
+        {displayedNfts.map((nft) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={nft.userNftId || nft.nftId}>
+            <NFTCard nft={nft} isTradeMode={isTradeMode} />
+          </Grid>
+        ))}
+      </Grid>
+      
+      {/* Loading indicator */}
+      {displayCount < filteredNfts.length && (
+        <Box sx={{ textAlign: 'center', my: 4 }}>
+          <CircularProgress size={30} />
+        </Box>
+      )}
+      
+      {/* Empty state */}
+      {filteredNfts.length === 0 && (
+        <Box sx={{ textAlign: 'center', my: 8 }}>
+          <Typography variant="h6" color="textSecondary" gutterBottom>
+            No NFTs found for this filter combination
+          </Typography>
+          <Button 
+            variant="outlined" 
+            startIcon={<FilterAltOffIcon />}
+            onClick={() => {
+              // Reset filters
+              setSearchQuery('');
+              setSelectedCategoryFilter('all');
+              setSelectedRarityFilter('all');
+              setSelectedTypeFilter('all');
+            }}
+          >
+            Clear Filters
+          </Button>
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+// Simple throttle function to improve scroll performance
+function throttle(func, limit) {
+  let inThrottle;
+  return function() {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
 
 export default function NFTsPage() {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
-  // State
-  const [pageLoading, setPageLoading] = useState(true);
+  // Utility functions for type conversion
+  const mapTypeIdToString = (typeId) => {
+    const typeMap = {
+      1: 'achievement',
+      2: 'subscription',
+      3: 'quest_reward',
+      4: 'course_completion'
+    };
+    return typeMap[typeId] || 'standard';
+  };
+  
+  const mapTypeStringToId = (typeString) => {
+    const typeMap = {
+      'achievement': 1,
+      'subscription': 2, 
+      'quest_reward': 3,
+      'course_completion': 4
+    };
+    return typeMap[typeString] || 1;
+  };
+  
+    // Note: formatRarity function is defined later
+  
+  // State definitions
+  const [pageLoading, setPageLoading] = useState(false);
+  const [error, setError] = useState('');
   const [nfts, setNfts] = useState([]);
   const [publicNfts, setPublicNfts] = useState([]);
-  const [error, setError] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
   const [walletConnecting, setWalletConnecting] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
@@ -191,58 +394,228 @@ export default function NFTsPage() {
     }
   };
   
-  // Veri yükleme
-  // Ana NFT sayfasındaki useEffect fonksiyonunu güncelle
-useEffect(() => {
+  // Helper function to process image URIs
+  const processImageUri = (imageUri) => {
+    if (!imageUri) {
+      return 'https://via.placeholder.com/300/0a192f/64ffda?text=NFT';
+    }
+    
+    // For absolute URLs, leave as is
+    if (imageUri.startsWith('http://') || imageUri.startsWith('https://') || imageUri.startsWith('ipfs://')) {
+      return imageUri;
+    }
+    
+    // For relative media paths from backend
+    if (imageUri.startsWith('/media')) {
+      return `http://localhost:8000${imageUri}`;
+    }
+    
+    // For any other path format
+    if (!imageUri.includes('://')) {
+      // Local file path or relative path
+      return `/media/uploads/nft_images/${imageUri}`;
+    }
+    
+    return imageUri;
+  };
+  
+  // Helper function to process NFT data consistently
+  const processNftData = (nft, isPublic = false) => {
+    // Handle image URI
+    const imageUri = processImageUri(nft.ImageURI || nft.imageUri || nft.ImageURL || nft.imageUrl);
+    
+    // Handle NFT type - convert from typeId if needed
+    let nftType = nft.NFTType || nft.nftType || nft.type || 'standard';
+    if (typeof nft.NFTTypeID === 'number' || typeof nft.nftTypeId === 'number') {
+      nftType = mapTypeIdToString(nft.NFTTypeID || nft.nftTypeId);
+    }
+    
+    // Process BlockchainMetadata if available
+    let parsedMetadata = {};
+    if (nft.BlockchainMetadata || nft.blockchainMetadata) {
+      try {
+        parsedMetadata = JSON.parse(nft.BlockchainMetadata || nft.blockchainMetadata || '{}');
+      } catch (e) {
+        // Silently handle metadata parsing errors
+      }
+    }
+    
+    // Rarity handling - CRITICAL PRIORITY ORDER:
+    // 1. Direct database Rarity field
+    // 2. rarity property from API
+    // 3. rarity from parsed metadata
+    // 4. Type-based default (subscription → Legendary etc.)
+    let rarity;
+    
+    // First check official database field
+    if (nft.Rarity) {
+      rarity = nft.Rarity;
+    }
+    // Then check if API provided a processed rarity
+    else if (nft.rarity) {
+      rarity = nft.rarity;
+    }
+    // Then check metadata
+    else if (parsedMetadata.rarity) {
+      rarity = parsedMetadata.rarity;
+    }
+    // Last resort - type-based default
+    else {
+      switch (nftType) {
+        case 'subscription':
+          rarity = 'Legendary';
+          break;
+        case 'achievement':
+          rarity = 'Epic';
+          break;
+        case 'course_completion':
+          rarity = 'Rare';
+          break;
+        default:
+          rarity = 'Common';
+      }
+    }
+    
+    // Ensure consistent capitalization
+    if (typeof rarity === 'string') {
+      rarity = rarity.charAt(0).toUpperCase() + rarity.slice(1).toLowerCase();
+    }
+    
+    // Handle collection name
+    const collection = nft.Collection || nft.collection || nft.Title || nft.title || '';
+    
+    // Create base NFT object
+    const processedNft = {
+      nftId: nft.NFTID || nft.nftId,
+      title: nft.Title || nft.title,
+      description: nft.Description || nft.description,
+      imageUri: imageUri,
+      type: nftType,
+      rarity: rarity,
+      collection: collection,
+      price: nft.Price || nft.price || nft.TradeValue || nft.tradeValue || 0,
+      isActive: nft.IsActive === 1 || nft.IsActive === true,
+      metadata: parsedMetadata
+    };
+    
+    // Add public or user-owned specific fields
+    if (isPublic) {
+      processedNft.isPublic = true;
+      processedNft.planId = nft.PlanId || nft.planId;
+    } else {
+      processedNft.userNftId = nft.UserNFTID || nft.userNftId;
+      processedNft.acquisitionDate = nft.AcquisitionDate || nft.acquisitionDate;
+      processedNft.expiryDate = nft.ExpiryDate || nft.expiryDate;
+      processedNft.isMinted = nft.IsMinted === 1 || nft.IsMinted === true || nft.isMinted === true;
+      processedNft.transactionHash = nft.TransactionHash || nft.transactionHash;
+    }
+    
+    return processedNft;
+  };
+
+  // Standalone loadData function that can be called from anywhere
   const loadData = async () => {
     try {
       setPageLoading(true);
+      setError(null); // Clear previous errors
       
-      // Tüm NFT'leri getir
-      const publicNftsResponse = await fetch('/api/normal-user/nfts/available');
+      // Fetch all available NFTs
+      const publicNftsResponse = await fetch('/api/nfts/available');
+      
       if (!publicNftsResponse.ok) {
-        throw new Error(`Failed to fetch NFTs: ${publicNftsResponse.status}`);
+        const errorData = await publicNftsResponse.json();
+        throw new Error(errorData.message || `Failed to fetch available NFTs: ${publicNftsResponse.status}`);
       }
+      
       const publicNftsData = await publicNftsResponse.json();
       
-      // API yanıtını normalize et (field adlarındaki farklılıkları düzelt)
-      const formattedPublicNfts = publicNftsData.map(nft => ({
-        nftId: nft.nftId,
-        title: nft.title,
-        description: nft.description,
-        imageUri: nft.imageUri,
-        type: nft.type,
-        rarity: nft.rarity,
-        collection: nft.collection,
-        price: nft.price || nft.tradeValue,
-        isPublic: true,
-        planId: nft.planId // Abonelik planı ID'si (varsa)
-      }));
+      // Check if we received an error response
+      if (publicNftsData.error) {
+        throw new Error(publicNftsData.message || 'Failed to load NFT data');
+      }
+      
+      // Validate that we received an array of NFTs
+      if (!Array.isArray(publicNftsData)) {
+        throw new Error('Invalid data format received from server');
+      }
+      
+      // Process NFT data with our helper function
+      const formattedPublicNfts = publicNftsData.map(nft => processNftData(nft, true));
+      
+      // Check if we have the expected NFT rarity values
+      console.log('NFT rarity check:');
+      formattedPublicNfts.forEach(nft => {
+        console.log(`NFT ID: ${nft.nftId}, Title: ${nft.title}, Rarity: ${nft.rarity}`);
+        
+        // Verify if we have plan3 NFT with the correct rarity
+        if (nft.title.toLowerCase() === 'plan3' && nft.rarity.toLowerCase() !== 'legendary') {
+          console.warn(`⚠️ Plan3 NFT (ID: ${nft.nftId}) has incorrect rarity: ${nft.rarity}, should be Legendary`);
+        }
+      });
       
       setPublicNfts(formattedPublicNfts);
       
       if (isAuthenticated()) {
-        // Kullanıcının NFT'lerini getir
-        const userNftsResponse = await fetch('/api/normal-user/nfts/user');
+        // Fetch user's owned NFTs
+        const userNftsResponse = await fetch('/api/nfts/user');
+        
         if (userNftsResponse.ok) {
           const userNftsData = await userNftsResponse.json();
-          setNfts(userNftsData);
+          
+          // Process user NFT data with our helper function
+          const formattedUserNfts = userNftsData.map(nft => processNftData(nft, false));
+          setNfts(formattedUserNfts);
         } else {
-          console.error(`Failed to fetch user NFTs: ${userNftsResponse.status}`);
+          // Don't throw error for user NFTs - just show a warning
+          setError('Note: Your owned NFTs could not be loaded. Public NFTs are still available.');
         }
         
-        if (user?.walletAddress) setWalletAddress(user.walletAddress);
+        // Set wallet address if available
+        if (user?.walletAddress) {
+          setWalletAddress(user.walletAddress);
+        }
       }
     } catch (err) {
-      console.error("Error loading NFT data:", err);
-      setError('An error occurred while loading NFT data. Please refresh the page.');
+      console.error('Error loading NFT data:', err);
+      setError('An error occurred while loading NFT data. Please refresh the page or try again later.');
     } finally {
       setPageLoading(false);
     }
   };
   
-  loadData();
-}, [isAuthenticated, user]);
+  // Add a retry button functionality
+  const handleRetry = () => {
+    setError(null);
+    loadData();
+  };
+  
+  // Use effect to load data on component mount
+  useEffect(() => {
+    loadData();
+  }, [isAuthenticated, user]);
+  
+  // Mark NFTs that are already owned by the user
+  useEffect(() => {
+    if (nfts.length > 0 && publicNfts.length > 0) {
+      // Create a set of owned NFT IDs for faster lookup
+      const ownedNftIds = new Set(nfts.map(nft => nft.nftId));
+      
+      // Mark owned NFTs in the public list without logging to console
+      const updatedPublicNfts = publicNfts.map(nft => ({
+        ...nft,
+        isOwned: ownedNftIds.has(nft.nftId)
+      }));
+      
+      // Only update state if there's an actual change
+      const shouldUpdate = publicNfts.some((nft, i) => 
+        nft.isOwned !== updatedPublicNfts[i].isOwned
+      );
+      
+      if (shouldUpdate) {
+        setPublicNfts(updatedPublicNfts);
+      }
+    }
+  }, [nfts]); // Only depend on nfts, not publicNfts which would cause infinite loops
   
   // Yardımcı fonksiyonlar
   const toggleCategory = (categoryId) => {
@@ -260,6 +633,7 @@ useEffect(() => {
     if (!category) return [];
     
     return allNfts.filter(nft => {
+      if (category.id === 'all') return true;
       if (category.type) return nft.type === category.type;
       if (category.condition) return category.condition(nft);
       return false;
@@ -341,14 +715,41 @@ useEffect(() => {
     }
   };
   
+  // Get color based on rarity
   const getRarityColor = (rarity) => {
-    switch (rarity) {
-      case 'Common': return '#808080';
-      case 'Uncommon': return '#1b8e3d';
-      case 'Rare': return '#0070dd';
-      case 'Epic': return '#a335ee';
-      case 'Legendary': return '#ff8000';
-      default: return '#808080';
+    if (!rarity) return theme.palette.info.main; // Default to common color
+    
+    const rarityLower = rarity.toLowerCase();
+    
+    switch (rarityLower) {
+      case 'common': return theme.palette.info.main;
+      case 'uncommon': return theme.palette.success.main;
+      case 'rare': return theme.palette.secondary.main;
+      case 'epic': return theme.palette.warning.main;
+      case 'legendary': return theme.palette.error.main;
+      default: return theme.palette.info.main; // Default to common color
+    }
+  };
+  
+  
+  // Standardize rarity display format
+  const formatRarity = (rarity) => {
+    if (!rarity) return 'Common';
+    
+    // If it's already a string, standardize it
+    const rarityLower = rarity.toLowerCase();
+    
+    switch (rarityLower) {
+      case 'common': return 'Common';
+      case 'uncommon': return 'Uncommon';
+      case 'rare': return 'Rare';
+      case 'epic': return 'Epic';
+      case 'legendary': return 'Legendary';
+      // Handle potentially different spellings
+      case 'legend': return 'Legendary';
+      case 'leg': return 'Legendary';
+      // Add proper capitalization to any other string
+      default: return rarity.charAt(0).toUpperCase() + rarity.slice(1).toLowerCase();
     }
   };
   
@@ -438,7 +839,7 @@ useEffect(() => {
       // Rastgele transaction hash oluştur (gerçek projelerde blockchain işlemi yapılır)
       const transactionHash = '0x' + Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
       
-      const response = await fetch('/api/normal-user/nfts/mint', {
+      const response = await fetch('/api/nfts/mint', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -478,22 +879,380 @@ useEffect(() => {
     }
   };
   
+  const handleBuySubscription = async (nft, event) => {
+    if (event) event.stopPropagation();
+    if (!isAuthenticated()) {
+      setLoginDialogOpen(true);
+      return;
+    }
+    
+    // Check if user already owns this NFT
+    if (nft.isOwned) {
+      showSnackbar('You already own this NFT', 'info');
+      return;
+    }
+    
+    // Prevent multiple concurrent requests
+    if (mintLoading) {
+      showSnackbar('Please wait, a transaction is already in progress', 'warning');
+      return;
+    }
+    
+    try {
+      // Check if MetaMask is installed
+      if (!window.ethereum) {
+        showSnackbar('Please install MetaMask extension to buy NFTs!', 'error');
+        return;
+      }
+      
+      setMintLoading(true);
+      
+      // Request MetaMask connection if not already connected
+      if (!walletAddress) {
+        try {
+          // Request account access
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          
+          if (!accounts || accounts.length === 0) {
+            showSnackbar('Please connect your MetaMask wallet', 'error');
+            setMintLoading(false);
+            return;
+          }
+          
+          const connectedAddress = accounts[0];
+          console.log('Connected to wallet:', connectedAddress);
+          
+          // Update state with wallet address
+          setWalletAddress(connectedAddress);
+          
+          // Update profile with wallet address (but continue even if it fails)
+          await updateUserWalletAddress(connectedAddress);
+        } catch (walletError) {
+          console.error('Wallet connection error:', walletError);
+          showSnackbar('Failed to connect wallet. Please try again.', 'error');
+          setMintLoading(false);
+          return;
+        }
+      }
+      
+      // Get current wallet address
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      const connectedAddress = accounts[0];
+      
+      if (!connectedAddress) {
+        showSnackbar('No wallet connected. Please connect MetaMask.', 'error');
+        setMintLoading(false);
+        return;
+      }
+      
+      console.log('Using wallet address for purchase:', connectedAddress);
+      
+      // Initiate purchase transaction flow
+      showSnackbar('Preparing transaction...', 'info');
+      
+      // Implement improved retry logic for API rate limiting
+      let retryCount = 0;
+      const maxRetries = 3;
+      let response;
+      
+      // Use exponential backoff for retries
+      const getRetryDelay = (retryCount) => Math.min(1000 * Math.pow(2, retryCount), 10000);
+      
+      while (retryCount <= maxRetries) {
+        try {
+          // First stage: Get transaction data from backend
+          response = await fetch('/api/nfts/buy', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            },
+            body: JSON.stringify({
+              nftId: nft.nftId || nft.id,
+              walletAddress: connectedAddress
+            })
+          });
+          
+          // If successful or not a rate limit error, break the retry loop
+          if (response.ok || response.status !== 429) {
+            break;
+          }
+          
+          // If we hit rate limit, wait and retry
+          retryCount++;
+          if (retryCount <= maxRetries) {
+            const waitTime = getRetryDelay(retryCount);
+            showSnackbar(`Service busy, retrying in ${Math.round(waitTime/1000)} seconds...`, 'warning');
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          } else {
+            showSnackbar('Maximum retry attempts reached. Please try again later.', 'error');
+          }
+        } catch (fetchError) {
+          console.error('Fetch error:', fetchError);
+          // If there's a network error, break and handle it below
+          break;
+        }
+      }
+      
+      // Handle API errors
+      if (!response || !response.ok) {
+        let errorMessage = 'Failed to prepare purchase transaction';
+        let errorCode = null;
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          errorCode = errorData.code || null;
+        } catch (parseError) {
+          // If we can't parse the error, use a default message
+        }
+        
+        // Special handling for specific errors
+        if (errorCode === 'ALREADY_OWNS_NFT') {
+          showSnackbar('You already own this NFT', 'info');
+          
+          // Mark this NFT as owned to update the UI
+          setPublicNfts(prevNfts => 
+            prevNfts.map(item => 
+              item.nftId === nft.nftId ? { ...item, isOwned: true } : item
+            )
+          );
+          
+          setMintLoading(false);
+          return;
+        }
+        
+        // Special handling for rate limit errors
+        if (response && response.status === 429) {
+          errorMessage = 'Service is currently busy. Please try again in a few moments.';
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      console.log('Transaction preparation response:', data);
+      
+      if (!data.transactionData) {
+        throw new Error('No transaction data received from server');
+      }
+      
+      // Second stage: Send transaction to MetaMask
+      showSnackbar('Please confirm the transaction in MetaMask', 'info');
+      
+      // Create a transaction parameter object with NFT-specific fields 
+      const transactionParameters = {
+        to: data.transactionData.to,
+        from: connectedAddress,
+        // Include type to indicate it's an EIP-1559 transaction
+        type: '0x2',
+      };
+      
+      // Add value only if it's a non-zero amount
+      if (data.transactionData.value && data.transactionData.value !== '0x0' && data.transactionData.value !== '0x') {
+        transactionParameters.value = data.transactionData.value;
+      }
+      
+      // Only add specific gas if provided (let MetaMask estimate otherwise)
+      if (data.transactionData.gas && data.transactionData.gas !== '0x0') {
+        transactionParameters.gas = data.transactionData.gas;
+      }
+      
+      // Include data field for NFT transfers - this is required for them to show in MetaMask's NFT tab
+      // For subscription NFTs, we need the data field to contain the ERC-721 transfer data
+      if (data.transactionData.data && 
+          data.transactionData.data !== '0x' && 
+          data.transactionData.data !== '0x0') {
+        transactionParameters.data = data.transactionData.data;
+      }
+      
+      // Always include the type for EIP-1559 transactions if provided by the backend
+      if (data.transactionData.type) {
+        transactionParameters.type = data.transactionData.type;
+      }
+      
+      console.log('Sending transaction with parameters:', transactionParameters);
+      
+      // Send transaction to MetaMask
+      try {
+        const txHash = await window.ethereum.request({
+          method: 'eth_sendTransaction',
+          params: [transactionParameters],
+        });
+        
+        if (txHash) {
+          console.log('Transaction confirmed with hash:', txHash);
+          
+          // Third stage: Confirm transaction to backend
+          await fetch('/api/nfts/buy/confirm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              nftId: nft.nftId || nft.id,
+              walletAddress: connectedAddress,
+              transactionHash: txHash
+            })
+          }).catch(error => {
+            // Log but don't interrupt the flow if confirmation fails
+            console.warn('Confirmation API call failed, but transaction was processed:', error);
+          });
+          
+          showSnackbar('Subscription purchased successfully!', 'success');
+          
+          // First update the UI directly for immediate feedback
+          setPublicNfts(prevNfts => 
+            prevNfts.map(item => 
+              item.nftId === nft.nftId ? { ...item, isOwned: true } : item
+            )
+          );
+          
+          // Then reload all data to ensure everything is in sync
+          await loadData();
+        }
+      } catch (txError) {
+        console.error('Transaction error:', txError);
+        
+        if (txError.code === 4001) {
+          // User rejected transaction
+          showSnackbar('Transaction was rejected. Subscription not purchased.', 'error');
+          
+          // Notify backend that transaction was rejected (don't await to avoid blocking UI)
+          fetch('/api/nfts/buy/cancel', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              nftId: nft.nftId || nft.id,
+              walletAddress: connectedAddress
+            })
+          }).catch(error => {
+            // Log but don't disrupt the flow if cancellation fails
+            console.warn('Cancellation API call failed:', error);
+          });
+        } else {
+          showSnackbar('Transaction failed: ' + (txError.message || 'Unknown error'), 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Subscription purchase error:', error);
+      showSnackbar(error.message || 'Failed to purchase subscription. Please try again.', 'error');
+    } finally {
+      setMintLoading(false);
+    }
+  };
+  
+  const updateUserWalletAddress = async (address) => {
+    try {
+      // Error nedeniyle profil güncelleme API çağrısını kaldırıyoruz
+      // Direkt olarak state'i güncelliyoruz
+      setWalletAddress(address);
+      console.log('Wallet address updated in state:', address);
+      
+      // Başarılı olduğunu belirtiyoruz
+      return true;
+    } catch (error) {
+      console.error('Wallet address update error:', error);
+      return false;
+    }
+};
+  
   const handleConnectWallet = async () => {
     if (!isAuthenticated()) {
       setLoginDialogOpen(true);
       return;
     }
+    
     setWalletConnecting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      const mockAddress = '0x' + Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-      setWalletAddress(mockAddress);
-      showSnackbar('Wallet connected successfully!', 'success');
+      // Check if MetaMask is installed
+      if (!window.ethereum) {
+        showSnackbar('Please install MetaMask extension to connect your wallet!', 'error');
+        setWalletConnecting(false);
+        return;
+      }
+      
+      // Try to connect to MetaMask with better error handling
+      try {
+        // Request account access
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        if (accounts && accounts.length > 0) {
+          const connectedAddress = accounts[0];
+          console.log('Connected to MetaMask wallet:', connectedAddress);
+          
+          // Update profile with wallet address
+          const updated = await updateUserWalletAddress(connectedAddress);
+          
+          if (updated) {
+            showSnackbar('Wallet connected successfully!', 'success');
+            setWalletAddress(connectedAddress);
+          } else {
+            // Store in state even if API update fails
+            setWalletAddress(connectedAddress);
+            showSnackbar('Wallet connected, but profile not updated. Connection will be lost after session ends.', 'warning');
+          }
+            
+          // Reload NFT data
+          await loadData();
+        } else {
+          throw new Error('No accounts available');
+        }
+      } catch (metamaskError) {
+        console.error('MetaMask error:', metamaskError);
+        
+        if (metamaskError.code === 4001) {
+          // User rejected the request
+          showSnackbar('Connection request rejected', 'error');
+        } else {
+          showSnackbar('Failed to connect to MetaMask', 'error');
+        }
+      }
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      showSnackbar('Failed to connect wallet. Please try again.', 'error');
+      console.error('Wallet connection error:', error);
+      showSnackbar('Failed to connect wallet', 'error');
     } finally {
       setWalletConnecting(false);
+    }
+  };
+  
+  const handleChangeWallet = async () => {
+    try {
+      if (!window.ethereum) {
+        showSnackbar('Please install MetaMask extension!', 'error');
+        return;
+      }
+      
+      await window.ethereum.request({
+        method: 'wallet_requestPermissions',
+        params: [{ eth_accounts: {} }],
+      });
+      
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      
+      if (accounts && accounts.length > 0) {
+        const connectedAddress = accounts[0];
+        
+        if (connectedAddress !== walletAddress) {
+          // Update user profile with new wallet address
+          const updated = await updateUserWalletAddress(connectedAddress);
+          
+          if (updated) {
+            showSnackbar('Wallet changed successfully!', 'success');
+            await loadData(); // Reload data
+          } else {
+            showSnackbar('Wallet changed for this session only', 'warning');
+          }
+        } else {
+          showSnackbar('Same wallet selected', 'info');
+        }
+      }
+    } catch (error) {
+      console.error('Change wallet error:', error);
+      showSnackbar('Failed to change wallet', 'error');
     }
   };
   
@@ -512,21 +1271,6 @@ useEffect(() => {
         console.error('Failed to copy to clipboard');
       }
     );
-  };
-  
-  const handleBuySubscription = (nft, event) => {
-    if (event) event.stopPropagation();
-    if (!isAuthenticated()) {
-      setLoginDialogOpen(true);
-      return;
-    }
-    
-    // Eğer bu bir abonelik planı ise planId değerini kullan
-    if (nft.planId) {
-      router.push(`/subscriptions?planId=${nft.planId}`);
-    } else {
-      router.push('/subscriptions');
-    }
   };
   
   const handleClaimFreeNFT = (nft, event) => {
@@ -576,1186 +1320,1153 @@ useEffect(() => {
   };
   
   // NFT Kart bileşeni
-  const NFTCard = ({ nft, isTradeMode = false }) => {
+  const NFTCard = ({ nft, isTradeMode = false, disableHoverEffects = false }) => {
     const isSelected = isTradeMode && selectedForTrade.includes(nft.userNftId || nft.nftId);
     const [gradientBg] = useState(getRandomGammaDopplerGradient());
-    const [isCardHovered, setIsCardHovered] = useState(false);
+    const [imgLoaded, setImgLoaded] = useState(false);
+    const [imgError, setImgError] = useState(false);
+    
+    // Get displayed rarity - ensure consistent formatting
+    const displayedRarity = formatRarity(nft.rarity);
+    const rarityColor = getRarityColor(nft.rarity);
+    
+    // Log the NFT rarity data to verify it's correct
+    useEffect(() => {
+      if (nft.title?.toLowerCase() === 'plan3') {
+        console.log(`Rendering NFT Card - ${nft.title}:`, { 
+          id: nft.nftId,
+          rarity: nft.rarity,
+          displayedRarity,
+          rarityColor
+        });
+      }
+    }, [nft]);
+    
+    // Pre-check image URL to prevent broken images
+    useEffect(() => {
+      if (!nft.imageUri) return;
+      
+      // Reset state when NFT changes
+      setImgLoaded(false);
+      setImgError(false);
+      
+      // Skip check for external URLs (assumed valid)
+      if (nft.imageUri.startsWith('https://via.placeholder.com')) {
+        setImgLoaded(true);
+        return;
+      }
+      
+      // Create a new image object to test loading
+      const img = new Image();
+      
+      img.onload = () => {
+        setImgLoaded(true);
+        setImgError(false);
+      };
+      
+      img.onerror = () => {
+        setImgError(true);
+        setImgLoaded(false);
+      };
+      
+      img.src = nft.imageUri;
+      
+      return () => {
+        // Clean up by removing event listeners
+        img.onload = null;
+        img.onerror = null;
+      };
+    }, [nft.imageUri]);
+    
+    // Determine the correct action button based on NFT type
+    const getActionButton = () => {
+      if (isTradeMode) {
+        return (
+          <Checkbox 
+            checked={isSelected}
+            sx={{ 
+              color: theme.palette.primary.main,
+              '&.Mui-checked': {
+                color: theme.palette.primary.main,
+              },
+            }}
+            inputProps={{ 'aria-label': 'select for trade' }}
+          />
+        );
+      }
+      
+      if (!nft.isPublic) {
+        // For user's owned NFTs
+        return (
+          <Button 
+            variant="text" 
+            size="small" 
+            sx={{ 
+              fontWeight: 'bold',
+              color: theme.palette.primary.main,
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.1),
+              }
+            }}
+          >
+            View Details
+          </Button>
+        );
+      }
+      
+      // For public NFTs based on type
+      if (nft.isOwned) {
+        return (
+          <Button 
+            variant="outlined" 
+            size="small" 
+            color="success"
+            sx={{ 
+              borderRadius: 1.5,
+              textTransform: 'none'
+            }}
+          >
+            Owned
+          </Button>
+        );
+      }
+      
+      switch (nft.type) {
+        case 'subscription':
+          return (
+            <Button 
+              variant="contained" 
+              color="primary"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBuySubscription(nft, e);
+              }}
+              startIcon={<ShoppingCartIcon />}
+              sx={{
+                borderRadius: 1.5,
+                textTransform: 'none'
+              }}
+            >
+              Subscribe
+            </Button>
+          );
+        
+        case 'achievement':
+          return (
+            <Button 
+              variant="outlined" 
+              color="success"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClaimFreeNFT(nft, e);
+              }}
+              startIcon={<EmojiEventsIcon />}
+              sx={{
+                borderRadius: 1.5,
+                textTransform: 'none'
+              }}
+            >
+              Claim
+            </Button>
+          );
+        
+        case 'course_completion':
+          if (nft.price > 0) {
+            return (
+              <Button 
+                variant="contained" 
+                color="secondary"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleBuySubscription(nft, e);
+                }}
+                startIcon={<ShoppingCartIcon />}
+                sx={{
+                  borderRadius: 1.5,
+                  textTransform: 'none'
+                }}
+              >
+                Purchase
+              </Button>
+            );
+          }
+          return (
+            <Button 
+              variant="outlined" 
+              color="info"
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNftClick(nft);
+              }}
+              sx={{
+                borderRadius: 1.5,
+                textTransform: 'none'
+              }}
+            >
+              Details
+            </Button>
+          );
+          
+        default:
+          return (
+            <Button 
+              variant="text" 
+              size="small" 
+              sx={{ 
+                fontWeight: 'bold',
+                color: theme.palette.primary.main,
+                '&:hover': {
+                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                }
+              }}
+            >
+              View Details
+            </Button>
+          );
+      }
+    };
     
     return (
       <Paper 
         sx={{ 
-          height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 3, overflow: 'hidden',
-          transition: 'all 0.3s ease', 
-          boxShadow: (isSelected || isCardHovered) ? theme.shadows[8] : theme.shadows[3],
-          transform: (isSelected || isCardHovered) ? 'translateY(-8px)' : 'none',
-          border: isSelected ? `3px solid ${theme.palette.primary.main}` : 'none',
-          position: 'relative', cursor: 'pointer',
-          '&:hover': { boxShadow: theme.shadows[8], transform: 'translateY(-8px)' }
-        }}
-        onMouseEnter={() => {
-          setIsCardHovered(true);
-        }}
-        onMouseLeave={() => {
-          setIsCardHovered(false);
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          borderRadius: 3, 
+          overflow: 'hidden',
+          transition: disableHoverEffects ? 'none' : 'transform 0.2s ease-in-out', 
+          boxShadow: isSelected ? theme.shadows[8] : theme.shadows[3],
+          transform: isSelected ? 'translateY(-5px)' : 'none',
+          border: isSelected ? `2px solid ${theme.palette.primary.main}` : 'none',
+          position: 'relative', 
+          cursor: 'pointer',
+          '&:hover': disableHoverEffects ? {} : { 
+            boxShadow: theme.shadows[8], 
+            transform: 'translateY(-5px)' 
+          }
         }}
         onClick={() => {
-          if (isTradeMode) toggleNftSelection(nft);
-          else handleNftClick(nft);
+          if (isTradeMode) {
+            toggleNftSelection(nft);
+          } else {
+            handleNftClick(nft);
+          }
         }}
       >
-        {nft.isPublic && nft.type === 'achievement' && (
-          <Box sx={{ 
-            position: 'absolute', top: 10, left: 10, zIndex: 2,
-            bgcolor: '#4caf50', color: '#fff', borderRadius: 5,
-            px: 1.5, py: 0.5, fontSize: '0.75rem', fontWeight: 'bold',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-          }}>
-            FREE
-          </Box>
-        )}
-        
-        <Box sx={{ 
-          position: 'absolute', top: 10, right: 10, zIndex: 2,
-          bgcolor: getRarityColor(nft.rarity), color: '#fff', borderRadius: 5,
-          px: 1.5, py: 0.5, fontSize: '0.75rem', fontWeight: 'bold',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-        }}>
-          {nft.rarity}
-        </Box>
-        
-        <Box sx={{ position: 'relative', overflow: 'hidden', height: 180 }}>
-          {/* Tema Uyumlu Gradient Arka Plan */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: theme.palette.mode === 'dark' 
-                ? gradientBg 
-                : 'linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              transition: 'transform 0.5s ease',
-              transform: isCardHovered ? 'scale(1.1)' : 'scale(1)',
-              '&::before': {
-                content: '""',
+        {/* NFT Image container with fixed aspect ratio */}
+        <Box sx={{ position: 'relative', pt: '100%', overflow: 'hidden' }}>
+          {/* Skeleton loader while image is loading */}
+          {!imgLoaded && !imgError && (
+            <Skeleton 
+              variant="rectangular" 
+              animation="wave"
+              sx={{ 
                 position: 'absolute',
-                width: '150%',
-                height: '150%',
-                top: '-25%',
-                left: '-25%',
-                backgroundImage: theme.palette.mode === 'dark'
-                  ? 'radial-gradient(circle, rgba(127, 255, 212, 0.2) 5%, transparent 15%)'
-                  : 'radial-gradient(circle, rgba(63, 81, 181, 0.1) 5%, transparent 15%)',
-                backgroundSize: '15px 15px',
-                animation: 'sparkle 15s linear infinite',
-              },
-              '&::after': {
-                content: '""',
-                position: 'absolute',
+                top: 0,
+                left: 0,
                 width: '100%',
                 height: '100%',
-                background: theme.palette.mode === 'dark'
-                  ? 'linear-gradient(45deg, rgba(0, 255, 255, 0.05), rgba(127, 255, 212, 0.1))'
-                  : 'linear-gradient(45deg, rgba(63, 81, 181, 0.05), rgba(33, 150, 243, 0.1))',
-                opacity: 0.7,
-                mixBlendMode: 'overlay',
-              },
-              '@keyframes sparkle': {
-                '0%': { backgroundPosition: '0 0' },
-                '100%': { backgroundPosition: '50px 50px' }
-              }
-            }}
-          >
-            {/* Sembolik İkon */}
-            <Box sx={{ 
-              opacity: 0.7, 
-              transform: isCardHovered ? 'scale(1.2) rotate(10deg)' : 'scale(1) rotate(0deg)',
-              transition: 'all 0.5s ease',
-              color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.8)' : theme.palette.text.secondary,
-              textShadow: theme.palette.mode === 'dark' 
-                ? '0 0 10px rgba(127, 255, 212, 0.5)' 
-                : '0 0 10px rgba(63, 81, 181, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}>
-              {nft.type === 'achievement' && <EmojiEventsIcon fontSize="large" />}
-              {nft.type === 'course_completion' && <LocalFireDepartmentIcon fontSize="large" />}
-              {nft.type === 'subscription' && <StarIcon fontSize="large" />}
-              {nft.isMinted && <VerifiedIcon fontSize="large" />}
-            </Box>
-          </Box>
-          
-          <Chip 
-            label={getNftTypeLabel(nft.type)}
-            color={getNftTypeColor(nft.type)}
-            size="small"
-            sx={{ position: 'absolute', bottom: 10, left: 10, fontWeight: 'medium', boxShadow: theme.shadows[3] }}
-          />
-          
-          {nft.isMinted && (
-            <Chip 
-              icon={<VerifiedIcon sx={{ '& path': { fill: '#fff' } }} />}
-              label="Minted"
-              color="success"
-              size="small"
-              sx={{ position: 'absolute', bottom: 10, right: 10, fontWeight: 'medium', boxShadow: theme.shadows[3] }}
+                backgroundColor: theme.palette.mode === 'dark' 
+                  ? alpha('#121212', 0.7) 
+                  : alpha('#f5f5f5', 0.7)
+              }} 
             />
           )}
           
-          {isTradeMode && (
-            <Box sx={{ 
-              position: 'absolute', top: 10, right: 10, width: 28, height: 28, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              bgcolor: isSelected ? theme.palette.primary.main : 'rgba(255,255,255,0.7)',
-              border: isSelected ? 'none' : `2px solid ${theme.palette.divider}`,
-              color: isSelected ? 'white' : theme.palette.text.primary,
-              transition: 'all 0.2s ease', zIndex: 5
-            }}>
-              {isSelected && <CheckIcon fontSize="small" />}
+          {/* Show image only if successfully loaded, or show fallback */}
+          {(nft.imageUri && !imgError) ? (
+            <img 
+              src={nft.imageUri}
+              alt={nft.title}
+              style={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: imgLoaded ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out',
+                willChange: 'opacity' // Optimize for transitions
+              }} 
+              loading="lazy"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => {
+                setImgError(true);
+                setImgLoaded(false);
+              }}
+            />
+          ) : (
+            <Box 
+              sx={{ 
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: gradientBg,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '2.5rem',
+                fontWeight: 'bold',
+                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              }}
+            >
+              {nft.title ? nft.title.charAt(0) : 'W'}
             </Box>
           )}
+          
+          {/* Badges and overlays */}
+          {nft.isPublic && nft.type === 'achievement' && (
+            <Box sx={{ 
+              position: 'absolute', top: 10, left: 10, zIndex: 2,
+              bgcolor: '#4caf50', color: '#fff', borderRadius: 5,
+              px: 1.5, py: 0.5, fontSize: '0.75rem', fontWeight: 'bold',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+            }}>
+              FREE
+            </Box>
+          )}
+          
+          {/* Rarity badge - positioned in top right corner */}
+          <Box sx={{ 
+            position: 'absolute', top: 10, right: 10, zIndex: 2,
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.85)', 
+            borderRadius: 5,
+            px: 1.5, py: 0.5, fontSize: '0.8rem', fontWeight: 'bold',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+            color: rarityColor,
+            border: `1.5px solid ${rarityColor}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5
+          }}>
+            {displayedRarity.toLowerCase() === 'legendary' && <StarIcon fontSize="small" sx={{ color: rarityColor }} />}
+            {displayedRarity.toLowerCase() === 'epic' && <DiamondIcon fontSize="small" sx={{ color: rarityColor }} />}
+            {displayedRarity}
+          </Box>
         </Box>
         
-        <CardContent sx={{ 
-          flexGrow: 1, p: 2,
-          bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.8) : theme.palette.background.paper
-        }}>
-          <Typography 
-            variant="h6" 
-            gutterBottom
-            sx={{ 
-              fontWeight: 'bold', mb: 1,
-              overflow: 'hidden', textOverflow: 'ellipsis',
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-              lineHeight: 1.3, minHeight: '2.6em'
-            }}
-          >
+        {/* Card content section */}
+        <Box sx={{ p: 2, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <Typography variant="h6" component="h3" gutterBottom noWrap title={nft.title}>
             {nft.title}
           </Typography>
           
-          <Typography 
-            variant="body2" 
-            color="text.secondary"
-            sx={{
-              mb: 2, overflow: 'hidden', textOverflow: 'ellipsis',
-              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-              lineHeight: 1.5, minHeight: '3em'
-            }}
-          >
-            {nft.description}
-          </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 'auto', justifyContent: 'space-between' }}>
-            <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              {nft.acquisitionDate ? new Date(nft.acquisitionDate).toLocaleDateString() : 'Not acquired'}
-            </Typography>
-            
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                color: nft.collection ? alpha(theme.palette.primary.main, 0.9) : 'text.secondary',
-                fontWeight: nft.collection ? 'medium' : 'normal'
-              }}
-            >
-              {nft.collection || 'General Collection'}
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, color: 'text.secondary', fontSize: '0.875rem' }}>
+            <Box component="span" sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+              {getNftTypeIcon(nft.type)}
+              <Box component="span" sx={{ ml: 0.5 }}>{getNftTypeLabel(nft.type)}</Box>
+            </Box>
+            {nft.isMinted && (
+              <Tooltip title="Blockchain Verified">
+                <VerifiedIcon fontSize="small" color="success" sx={{ ml: 1 }} />
+              </Tooltip>
+            )}
           </Box>
           
-          {!isTradeMode && (
-            <>
-              <Divider sx={{ my: 2 }} />
-              
-              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                {nft.isPublic && nft.type === 'achievement' ? (
-                  <Button
-                    variant="contained"
-                    color="success"
-                    startIcon={<EmojiEventsIcon />}
-                    size="small"
-                    onClick={(e) => handleClaimFreeNFT(nft, e)}
-                    sx={{ 
-                      borderRadius: 2, px: 2, boxShadow: theme.shadows[4],
-                      background: `linear-gradient(90deg, #4caf50, #2e7d32)`,
-                      '&:hover': { background: `linear-gradient(90deg, #2e7d32, #1b5e20)` }
-                    }}
-                  >
-                    Claim Free
-                  </Button>
-                ) : nft.type === 'subscription' && !nft.acquisitionDate ? (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<ShoppingCartIcon />}
-                    size="small"
-                    onClick={(e) => handleBuySubscription(nft, e)}
-                    sx={{ 
-                      borderRadius: 2, px: 2, boxShadow: theme.shadows[4],
-                      background: `linear-gradient(90deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
-                      '&:hover': { background: `linear-gradient(90deg, ${theme.palette.secondary.dark}, ${theme.palette.secondary.main})` }
-                    }}
-                  >
-                    Buy for ${nft.price}
-                  </Button>
-                ) : nft.isMinted ? (
-                  <Button
-                    variant="outlined"
-                    color="success"
-                    startIcon={<VerifiedIcon />}
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNftClick(nft);
-                    }}
-                    sx={{ borderRadius: 2, px: 2 }}
-                  >
-                    View Details
-                  </Button>
-                ) : nft.acquisitionDate ? (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<AccountBalanceWalletIcon />}
-                    size="small"
-                    onClick={(e) => handleMintClick(nft, e)}
-                    disabled={!isAuthenticated() || !walletAddress}
-                    sx={{ 
-                      borderRadius: 2, px: 2, boxShadow: theme.shadows[4],
-                      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                      '&:hover': { background: `linear-gradient(90deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})` }
-                    }}
-                  >
-                    Mint to Blockchain
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<InfoIcon />}
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNftClick(nft);
-                    }}
-                    sx={{ borderRadius: 2, px: 2 }}
-                  >
-                    View Details
-                  </Button>
-                )}
-              </Box>
-            </>
+          {isTradeMode && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Trade Value: <Box component="span" fontWeight="bold">{nft.price || 0}</Box>
+            </Typography>
           )}
-        </CardContent>
+          
+          {/* Price display for public NFTs */}
+          {nft.isPublic && nft.price > 0 && !isTradeMode && nft.type !== 'achievement' && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Price: <Box component="span" fontWeight="bold">${nft.price}</Box>
+            </Typography>
+          )}
+          
+          <Box sx={{ mt: 'auto', pt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {getActionButton()}
+            
+            {nft.expiryDate && (
+              <Typography variant="caption" color="text.secondary">
+                {isExpiringSoon(nft.expiryDate) ? (
+                  <Box component="span" sx={{ color: 'error.main', display: 'flex', alignItems: 'center' }}>
+                    <AccessTimeIcon fontSize="inherit" sx={{ mr: 0.5 }} />
+                    Expires soon
+                  </Box>
+                ) : (
+                  formatDate(nft.expiryDate)
+                )}
+              </Typography>
+            )}
+          </Box>
+        </Box>
       </Paper>
     );
   };
   
-  // Yükleniyor gösterimi
+  // Only show a single optimized loading indicator
   if (pageLoading) {
     return (
       <Box sx={{ 
-        display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column',
-        background: theme.palette.mode === 'dark' 
-          ? 'linear-gradient(135deg, #0a192f 0%, #144272 50%, #205295 100%)'
-          : 'linear-gradient(135deg, #f8f9fa 0%, #e8eaf6 100%)',
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        backgroundColor: theme.palette.background.default
       }}>
-        <Box sx={{ position: 'relative', mb: 3 }}>
-          <CircularProgress size={60} sx={{ color: theme.palette.mode === 'dark' ? '#64ffda' : theme.palette.primary.main }} />
-          <Box sx={{
-            position: 'absolute', top: -10, left: -10, right: -10, bottom: -10,
-            borderRadius: '50%', border: `2px solid ${theme.palette.mode === 'dark' ? 'rgba(100, 255, 218, 0.3)' : alpha(theme.palette.primary.main, 0.3)}`,
-            borderTopColor: theme.palette.mode === 'dark' ? '#64ffda' : theme.palette.primary.main, 
-            animation: 'spin 1.5s linear infinite',
-            '@keyframes spin': {
-              '0%': { transform: 'rotate(0deg)' },
-              '100%': { transform: 'rotate(360deg)' },
-            }
-          }} />
-        </Box>
-        <Typography variant="h6" color={theme.palette.text.primary}>Loading Your NFT Collection...</Typography>
+        <CircularProgress 
+          size={60} 
+          thickness={4}
+          sx={{ 
+            color: theme.palette.primary.main,
+            animationDuration: '0.8s' // Faster animation
+          }} 
+        />
+        <Typography 
+          variant="body1" 
+          color="text.secondary"
+          sx={{ mt: 2 }}
+        >
+          Loading NFTs...
+        </Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* Tema uyumlu arka plan */}
-      <Box
-        sx={{
-          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1,
-          background: theme.palette.mode === 'dark' 
-            ? 'linear-gradient(135deg, #0a192f 0%, #144272 50%, #205295 100%)'
-            : 'linear-gradient(135deg, #f8f9fa 0%, #e8eaf6 100%)',
-          overflow: 'hidden'
-        }}
-      >
-        {/* Yanıp sönen yıldız efekti - tema uyumlu */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: theme.palette.mode === 'dark'
-              ? 'radial-gradient(circle at 15% 20%, rgba(100, 255, 218, 0.10) 0%, transparent 20%), radial-gradient(circle at 85% 70%, rgba(100, 255, 218, 0.10) 0%, transparent 20%)'
-              : 'radial-gradient(circle at 15% 20%, rgba(63, 81, 181, 0.08) 0%, transparent 20%), radial-gradient(circle at 85% 70%, rgba(63, 81, 181, 0.08) 0%, transparent 20%)',
-            opacity: 0.7,
-          }}
-        />
-        
-        {/* Yıldız/parıltı efekti - tema uyumlu */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage: theme.palette.mode === 'dark'
-              ? 'radial-gradient(circle, rgba(100, 255, 218, 0.3) 1px, transparent 2px)'
-              : 'radial-gradient(circle, rgba(63, 81, 181, 0.2) 1px, transparent 2px)',
-            backgroundSize: '50px 50px',
-            animation: 'twinkle 15s linear infinite',
-            '@keyframes twinkle': {
-              '0%': { opacity: 0.2 },
-              '50%': { opacity: 0.4 },
-              '100%': { opacity: 0.2 }
-            }
-          }}
-        />
-        
-        {/* İkinci yıldız katmanı - farklı boyut ve faz - tema uyumlu */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage: theme.palette.mode === 'dark'
-              ? 'radial-gradient(circle, rgba(127, 180, 255, 0.2) 1px, transparent 2px)'
-              : 'radial-gradient(circle, rgba(33, 150, 243, 0.15) 1px, transparent 2px)',
-            backgroundSize: '70px 70px',
-            backgroundPosition: '25px 25px',
-            animation: 'twinkle2 12s linear infinite',
-            '@keyframes twinkle2': {
-              '0%': { opacity: 0.1 },
-              '50%': { opacity: 0.3 },
-              '100%': { opacity: 0.1 }
-            }
-          }}
-        />
-        
-        {/* Büyük vurgu alanları - tema uyumlu */}
-        <Box
-          sx={{
-            position: 'absolute',
-            width: '30%',
-            height: '30%',
-            borderRadius: '50%',
-            background: theme.palette.mode === 'dark'
-              ? 'radial-gradient(circle, rgba(100, 255, 218, 0.08) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(63, 81, 181, 0.05) 0%, transparent 70%)',
-            top: '10%',
-            left: '10%',
-            animation: 'float 25s ease-in-out infinite',
-            '@keyframes float': {
-              '0%': { transform: 'translate(0, 0)' },
-              '50%': { transform: 'translate(3%, 3%)' },
-              '100%': { transform: 'translate(0, 0)' },
-            }
-          }}
-        />
-        
-        <Box
-          sx={{
-            position: 'absolute',
-            width: '25%',
-            height: '25%',
-            borderRadius: '50%',
-            background: theme.palette.mode === 'dark'
-              ? 'radial-gradient(circle, rgba(127, 180, 255, 0.08) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(33, 150, 243, 0.05) 0%, transparent 70%)',
-            bottom: '20%',
-            right: '10%',
-            animation: 'float2 20s ease-in-out infinite',
-            '@keyframes float2': {
-              '0%': { transform: 'translate(0, 0)' },
-              '50%': { transform: 'translate(-3%, -3%)' },
-              '100%': { transform: 'translate(0, 0)' },
-            }
-          }}
-        />
-      </Box>
-      
-      {/* Page Header */}
-      <Box 
-        sx={{ 
-          position: 'sticky', top: 0, left: 0, right: 0, zIndex: 10,
-          backdropFilter: 'blur(10px)',
-          bgcolor: alpha(theme.palette.background.default, scrolled ? 0.85 : 0.4),
-          transition: 'background-color 0.3s ease',
-          borderBottom: scrolled ? `1px solid ${alpha(theme.palette.divider, 0.1)}` : 'none',
-          boxShadow: scrolled ? `0 2px 20px ${alpha(theme.palette.common.black, 0.08)}` : 'none',
-        }}
-      >
-        <Container>
-          <Box sx={{ py: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            {/* Sol: Başlık */}
-            <Box>
-              <Typography
-                variant="h4"
-                component="h1"
-                sx={{
-                  fontWeight: 700,
-                  background: theme.palette.mode === 'dark'
-                    ? 'linear-gradient(90deg, #64ffda, #88ccff)'
-                    : `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  display: 'inline-block',
-                  mb: 0.5
-                }}
-              >
-                NFT Collection
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  fontSize: '0.875rem',
-                  maxWidth: { xs: '100%', sm: 500, md: 600 },
-                  display: { xs: scrolled ? 'none' : 'block', sm: 'block' },
-                }}
-              >
-                Discover, collect, and trade unique digital assets that represent your achievements
-              </Typography>
-            </Box>
-            
-            {/* Sağ: Arama/Wallet */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                component="form"
-                sx={{
-                  display: { xs: 'none', md: 'block' },
-                  position: 'relative',
-                  mr: 1
-                }}
-              >
-                <TextField
+    <>
+      <Box sx={{minHeight: '100vh'}}>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          {error ? (
+            <Alert 
+              severity="error" 
+              sx={{ mb: 4 }}
+              action={
+                <Button 
+                  color="inherit" 
                   size="small"
-                  placeholder="Search NFTs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon fontSize="small" color="action" />
-                      </InputAdornment>
-                    ),
-                    sx: {
-                      borderRadius: 2,
-                      bgcolor: alpha('#0a192f', 0.4),
-                      border: `1px solid ${alpha('#64ffda', 0.2)}`,
-                      color: '#ccd6f6',
-                      '& .MuiInputBase-input': {
-                        color: '#ccd6f6',
-                      },
-                      '& .MuiInputAdornment-root .MuiSvgIcon-root': {
-                        color: alpha('#64ffda', 0.7),
-                      },
-                      '&:hover': {
-                        bgcolor: alpha('#0a192f', 0.6),
-                        border: `1px solid ${alpha('#64ffda', 0.4)}`,
-                      }
-                    }
-                  }}
-                  sx={{ width: 220 }}
-                />
+                  onClick={handleRetry}
+                >
+                  RETRY
+                </Button>
+              }
+            >
+              {error}
+            </Alert>
+          ) : (
+            <>
+              <Box sx={{ position: 'sticky', top: 0, zIndex: 10, pt: 1, pb: 2, 
+                bgcolor: theme.palette.background.default,
+                borderBottom: scrolled ? `1px solid ${theme.palette.divider}` : 'none',
+                boxShadow: scrolled ? '0 4px 20px rgba(0, 0, 0, 0.1)' : 'none',
+                transition: 'all 0.3s ease'
+              }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                  <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: { xs: 1, md: 0 } }}>
+                      NFT Marketplace
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ width: { xs: '100%', md: '50%' } }}>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <TextField
+                        placeholder="Search NFTs..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                        sx={{ flexGrow: 1 }}
+                      />
+                      
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<SwapHorizIcon />}
+                        onClick={handleTradeDialogOpen}
+                        disabled={!isAuthenticated() || nfts.length === 0}
+                        sx={{ minWidth: 120 }}
+                      >
+                        Trade
+                      </Button>
+                      
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        startIcon={walletConnecting ? <CircularProgress size={20} color="inherit" /> : <AccountBalanceWalletIcon />}
+                        onClick={walletConnecting ? null : walletAddress ? handleChangeWallet : handleConnectWallet}
+                        disabled={walletConnecting}
+                        sx={{ minWidth: 120 }}
+                      >
+                        {walletAddress 
+                          ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}` 
+                          : 'Connect Wallet'}
+                      </Button>
+                    </Box>
+                  </Box>
+                </Box>
               </Box>
               
-              {/* Filtreleme */}
-              <Button
-                size="small"
-                startIcon={<FilterListIcon />}
-                onClick={(e) => setFilterMenuAnchor(e.currentTarget)}
-                sx={{
-                  ml: 1, borderRadius: 2,
-                  bgcolor: selectedFilters.rarity.length > 0 || selectedFilters.type.length > 0 || selectedFilters.collection.length > 0 
-                    ? alpha('#64ffda', 0.1) 
-                    : alpha('#0a192f', 0.5),
-                  border: `1px solid ${alpha('#64ffda', selectedFilters.rarity.length > 0 || selectedFilters.type.length > 0 || selectedFilters.collection.length > 0 ? 0.4 : 0.1)}`,
-                  color: selectedFilters.rarity.length > 0 || selectedFilters.type.length > 0 || selectedFilters.collection.length > 0
-                    ? '#64ffda'
-                    : '#ccd6f6',
-                  '&:hover': {
-                    bgcolor: selectedFilters.rarity.length > 0 || selectedFilters.type.length > 0 || selectedFilters.collection.length > 0
-                      ? alpha('#64ffda', 0.2)
-                      : alpha('#0a192f', 0.7),
-                  },
-                  display: { xs: 'none', sm: 'flex' }
-                }}
-              >
-                Filters
-                {(selectedFilters.rarity.length > 0 || selectedFilters.type.length > 0 || selectedFilters.collection.length > 0) && (
-                  <Box 
-                    component="span" 
-                    sx={{ 
-                      ml: 0.5, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      width: 20, height: 20, borderRadius: '50%',
-                      bgcolor: '#64ffda', color: '#0a192f',
-                      fontSize: '0.75rem', fontWeight: 'bold'
-                    }}
-                  >
-                    {selectedFilters.rarity.length + selectedFilters.type.length + selectedFilters.collection.length}
+              {/* Filtreleme ve sıralama araçları */}
+              <Paper sx={{ p: 2, mb: 4, borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', gap: 2 }}>
+                  <Box sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' } }}>
+                    <Typography variant="subtitle1">
+                      Showing: {getAllNfts().length} NFTs
+                    </Typography>
                   </Box>
-                )}
-              </Button>
+                  
+                  <Box sx={{ width: { xs: '100%', sm: '50%', md: '66.67%' }, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                      {/* Sort button */}
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        endIcon={<KeyboardArrowDownIcon />}
+                        onClick={handleSortMenuOpen}
+                        sx={{ minWidth: 120 }}
+                      >
+                        {sortOption === 'newest' ? 'Newest' : 
+                         sortOption === 'oldest' ? 'Oldest' : 
+                         sortOption === 'price-low' ? 'Price: Low to High' : 
+                         'Price: High to Low'}
+                      </Button>
+                      
+                      {/* Filter button (future implementation) */}
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        endIcon={<FilterListIcon />}
+                      >
+                        Filter
+                      </Button>
+                    </Box>
+                  </Box>
+                </Box>
+              </Paper>
               
-              {/* Sıralama */}
-              <Button
-                size="small"
-                startIcon={<SortIcon />}
-                endIcon={<KeyboardArrowDownIcon />}
-                onClick={handleSortMenuOpen}
-                sx={{
-                  ml: 1, borderRadius: 2, 
-                  bgcolor: alpha('#0a192f', 0.5),
-                  border: `1px solid ${alpha('#64ffda', 0.1)}`,
-                  color: '#ccd6f6',
-                  '&:hover': { 
-                    bgcolor: alpha('#0a192f', 0.7),
-                    border: `1px solid ${alpha('#64ffda', 0.3)}`,
-                  },
-                  display: { xs: 'none', sm: 'flex' }
-                }}
-              >
-                Sort
-              </Button>
+              {/* Kategoriler */}
+              <Box sx={{ mb: 6 }}>
+                {NFT_CATEGORIES.map(category => {
+                  const nftsInCategory = getNftsByCategory(category.id, getAllNfts());
+                  const isExpanded = expandedCategories[category.id] !== false; // Default to expanded
+                  const hasNfts = nftsInCategory.length > 0;
+                  
+                  if (!hasNfts) return null;
+                  
+                  return (
+                    <div key={category.id} ref={el => categoryRefs.current[category.id] = el}>
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between',
+                          mb: 2, 
+                          mt: 4,
+                          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                          pb: 1
+                        }}
+                        onClick={() => toggleCategory(category.id)}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar 
+                            sx={{ 
+                              bgcolor: `${category.color}.main`, 
+                              color: 'white',
+                              mr: 2,
+                              boxShadow: 2
+                            }}
+                          >
+                            {category.icon}
+                          </Avatar>
+                          <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
+                            {category.label}
+                          </Typography>
+                          <Chip 
+                            label={nftsInCategory.length} 
+                            size="small" 
+                            sx={{ ml: 2, bgcolor: alpha(theme.palette.primary.main, 0.1) }}
+                          />
+                        </Box>
+                        
+                        <IconButton onClick={(e) => { e.stopPropagation(); toggleCategory(category.id); }}>
+                          {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                        </IconButton>
+                      </Box>
+                      
+                      {isExpanded && (
+                        <Box sx={{ position: 'relative' }}>
+                          {scrollStates[category.id]?.canScrollLeft && (
+                            <IconButton 
+                              sx={{ 
+                                position: 'absolute', 
+                                left: -20, 
+                                top: '50%', 
+                                transform: 'translateY(-50%)', 
+                                zIndex: 1,
+                                bgcolor: alpha(theme.palette.background.paper, 0.8),
+                                boxShadow: theme.shadows[2],
+                                '&:hover': {
+                                  bgcolor: alpha(theme.palette.background.paper, 0.9),
+                                }
+                              }}
+                              onClick={() => handleCategoryScroll(category.id, 'left')}
+                            >
+                              <NavigateBeforeIcon />
+                            </IconButton>
+                          )}
+                          
+                          {scrollStates[category.id]?.canScrollRight && (
+                            <IconButton 
+                              sx={{ 
+                                position: 'absolute', 
+                                right: -20, 
+                                top: '50%', 
+                                transform: 'translateY(-50%)', 
+                                zIndex: 1,
+                                bgcolor: alpha(theme.palette.background.paper, 0.8),
+                                boxShadow: theme.shadows[2],
+                                '&:hover': {
+                                  bgcolor: alpha(theme.palette.background.paper, 0.9),
+                                }
+                              }}
+                              onClick={() => handleCategoryScroll(category.id, 'right')}
+                            >
+                              <NavigateNextIcon />
+                            </IconButton>
+                          )}
+                          
+                          <Box 
+                            sx={{ 
+                              display: 'flex', 
+                              overflowX: 'auto', 
+                              gap: 2, 
+                              pb: 2,
+                              scrollbarWidth: 'thin',
+                              scrollBehavior: 'smooth',
+                              scrollSnapType: 'x mandatory',
+                              WebkitOverflowScrolling: 'touch', /* Smooth scroll on iOS */
+                              msOverflowStyle: '-ms-autohiding-scrollbar', /* Hide scrollbar in Edge until hover */
+                              '&::-webkit-scrollbar': {
+                                height: 6,
+                              },
+                              '&::-webkit-scrollbar-track': {
+                                bgcolor: alpha(theme.palette.divider, 0.1),
+                                borderRadius: 3,
+                              },
+                              '&::-webkit-scrollbar-thumb': {
+                                bgcolor: alpha(theme.palette.primary.main, 0.2),
+                                borderRadius: 3,
+                                '&:hover': {
+                                  bgcolor: alpha(theme.palette.primary.main, 0.3),
+                                }
+                              },
+                              '& > div': {
+                                scrollSnapAlign: 'start',
+                                transition: 'none', /* Prevent transitions during scroll */
+                              },
+                              '&:hover .MuiPaper-root': {
+                                transform: 'none', /* Disable lift effect during scroll */
+                              }
+                            }}
+                            ref={el => scrollContainerRefs.current[category.id] = el}
+                            onScroll={(e) => {
+                              // Disable hover effects during scroll
+                              if (!e.currentTarget.dataset.isScrolling) {
+                                e.currentTarget.dataset.isScrolling = true;
+                                setTimeout(() => {
+                                  if (e.currentTarget) {
+                                    e.currentTarget.dataset.isScrolling = false;
+                                  }
+                                }, 150);
+                              }
+                            }}
+                          >
+                            {nftsInCategory.map(nft => (
+                              <div key={nft.nftId || nft.userNftId} style={{ minWidth: 240, width: 240 }}>
+                                <NFTCard nft={nft} disableHoverEffects={true} />
+                              </div>
+                            ))}
+                          </Box>
+                        </Box>
+                      )}
+                    </div>
+                  );
+                })}
+              </Box>
               
-              {/* Cüzdan Butonu */}
-              {isAuthenticated() ? (
-                walletAddress ? (
+              {/* No NFTs Message */}
+              {getAllNfts().length === 0 && (
+                <Paper 
+                  sx={{ 
+                    p: 4, 
+                    borderRadius: 2, 
+                    textAlign: 'center',
+                    bgcolor: alpha(theme.palette.background.paper, 0.6),
+                    backdropFilter: 'blur(8px)'
+                  }}
+                >
+                  <AutoAwesomeIcon sx={{ fontSize: 60, color: alpha(theme.palette.primary.main, 0.6), mb: 2 }} />
+                  <Typography variant="h5" sx={{ mb: 2, fontWeight: 'medium' }}>
+                    No NFTs Found
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                    {isAuthenticated() ? 
+                      "You don't have any NFTs yet and there are no NFTs available to purchase." : 
+                      "Please log in to view your NFTs or connect your wallet."}
+                  </Typography>
+                  
+                  {!isAuthenticated() && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={handleLoginRedirect}
+                      sx={{ mr: 2 }}
+                    >
+                      Log In
+                    </Button>
+                  )}
+                  
                   <Button
                     variant="outlined"
-                    size="small"
-                    startIcon={<AccountBalanceWalletIcon />}
-                    sx={{
-                      borderRadius: 2, 
-                      borderColor: alpha('#64ffda', 0.5),
-                      color: '#64ffda',
-                      '&:hover': {
-                        borderColor: '#64ffda',
-                        bgcolor: alpha('#64ffda', 0.1),
-                      }
-                    }}
-                  >
-                    {walletAddress.substring(0, 4)}...{walletAddress.substring(walletAddress.length - 4)}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<AccountBalanceWalletIcon />}
-                    sx={{
-                      borderRadius: 2,
-                      background: 'linear-gradient(90deg, #64ffda, #88ccff)',
-                      color: '#0a192f',
-                      fontWeight: 'bold',
-                      '&:hover': {
-                        background: 'linear-gradient(90deg, #88ccff, #64ffda)',
-                      }
-                    }}
+                    color="secondary"
                     onClick={handleConnectWallet}
                     disabled={walletConnecting}
                   >
                     {walletConnecting ? 'Connecting...' : 'Connect Wallet'}
                   </Button>
-                )
-              ) : (
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<LoginIcon />}
-                  sx={{
-                    borderRadius: 2,
-                    background: 'linear-gradient(90deg, #64ffda, #88ccff)',
-                    color: '#0a192f',
-                    fontWeight: 'bold',
-                    '&:hover': {
-                      background: 'linear-gradient(90deg, #88ccff, #64ffda)',
-                    }
-                  }}
-                  onClick={handleLoginRedirect}
-                >
-                  Log In
-                </Button>
+                </Paper>
               )}
-            </Box>
-          </Box>
+            </>
+          )}
         </Container>
       </Box>
       
-      {/* Runner - Açıklama Alanı */}
-      <Box
-        sx={{
-          py: 8,
-          mb: 6,
-          position: 'relative',
-          overflow: 'hidden',
-          background: theme.palette.mode === 'dark'
-            ? 'linear-gradient(to bottom, rgba(10, 25, 47, 0.9), rgba(20, 66, 114, 0.8))'
-            : 'linear-gradient(to bottom, rgba(248, 249, 250, 0.9), rgba(232, 234, 246, 0.8))',
-          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+      {/* NFT Detail Dialog */}
+      <Dialog 
+        open={detailDialogOpen} 
+        onClose={handleDetailClose} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: alpha('#0a192f', 0.9),
+            color: '#e6f1ff',
+            borderRadius: 3,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            border: `1px solid ${alpha('#64ffda', 0.2)}`
+          }
         }}
       >
-        {/* Arka plan efekti */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: '50%',
-            background: theme.palette.mode === 'dark'
-              ? 'radial-gradient(circle at bottom right, rgba(100, 255, 218, 0.1), transparent 60%)'
-              : 'radial-gradient(circle at bottom right, rgba(63, 81, 181, 0.06), transparent 60%)',
-          }}
-        />
-        
-        <Container>
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={7}>
-              <Typography
-                variant="h4"
-                gutterBottom
-                sx={{
-                  fontWeight: 700,
-                  color: theme.palette.text.primary,
-                  mb: 2,
-                  textShadow: theme.palette.mode === 'dark' 
-                    ? '0 2px 10px rgba(0, 0, 0, 0.3)' 
-                    : '0 2px 10px rgba(0, 0, 0, 0.1)'
+        {selectedDetailNft && (
+          <>
+            <DialogTitle sx={{ color: '#e6f1ff' }}>
+              NFT Details
+              <IconButton 
+                onClick={handleDetailClose} 
+                sx={{ 
+                  position: 'absolute', 
+                  right: 8, 
+                  top: 8,
+                  color: '#ccd6f6',
+                  '&:hover': { color: '#64ffda' }
                 }}
               >
-                Earn, Collect, and Trade Digital Assets
-              </Typography>
-              <Typography
-                variant="body1"
-                paragraph
-                sx={{
-                  color: theme.palette.text.secondary,
-                  mb: 3,
-                  maxWidth: 600,
-                  fontSize: '1.1rem',
-                  lineHeight: 1.6,
-                }}
-              >
-                Wisentia's NFT collection represents your learning achievements and provides exclusive benefits. 
-                Mint your NFTs to make them uniquely yours on the blockchain, or trade them for premium subscriptions.
-              </Typography>
-              
-              <Box sx={{ display: 'flex', gap: 2, mt: 3, flexWrap: 'wrap' }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<TokenIcon />}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.2,
-                    px: 3,
-                    boxShadow: theme.shadows[4],
-                  }}
-                  onClick={() => scrollToCategory('achievements')}
-                >
-                  Explore NFTs
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={<SwapHorizIcon />}
-                  sx={{
-                    borderRadius: 2,
-                    py: 1.2,
-                    px: 3,
-                  }}
-                  onClick={handleTradeDialogOpen}
-                >
-                  Trade for Subscription
-                </Button>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={5} sx={{ display: { xs: 'none', md: 'block' } }}>
-              <Box
-                sx={{
-                  position: 'relative',
-                  height: 300,
-                  perspective: '1000px',
-                }}
-              >
-                {getAllNfts().slice(0, 3).map((nft, index) => {
-                  const isItemHovered = hoveredNftId === nft.nftId;
-                  return (
-                    <Box
-                      key={nft.nftId}
-                      sx={{
-                        position: 'absolute',
-                        width: 180,
-                        height: 220,
-                        borderRadius: 3,
-                        boxShadow: isItemHovered ? '0 15px 40px rgba(0, 0, 0, 0.6)' : '0 10px 30px rgba(0, 0, 0, 0.3)',
-                        overflow: 'hidden',
-                        transformStyle: 'preserve-3d',
-                        transition: 'all 0.8s ease',
-                        animation: 'none',
-                        transform: isItemHovered 
-                          ? `translateZ(${30 + index * 10}px) translateX(${5 - index * 5}px) translateY(${-10 + index * 5}px) rotate(${2 - index * 1}deg)` 
-                          : 'translateZ(0) translateX(0) translateY(0) rotate(0deg)',
-                        zIndex: isItemHovered ? 10 : 4 - index,
-                        left: `${index * 25 + 20}%`,
-                        top: `${index * 10 + 10}%`,
-                        background: theme.palette.mode === 'dark' 
-                          ? gammaDopplerGradients[index % gammaDopplerGradients.length]
-                          : 'linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)',
-                        border: theme.palette.mode === 'dark' 
-                          ? `3px solid ${alpha('#64ffda', 0.3)}` 
-                          : `3px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                      }}
-                      onMouseEnter={() => setHoveredNftId(nft.nftId)}
-                      onMouseLeave={() => setHoveredNftId(null)}
-                    >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent dividers sx={{ borderColor: alpha('#64ffda', 0.1) }}>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+                <Box sx={{ width: { xs: '100%', sm: '41.66%' } }}>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      borderRadius: 3,
+                      position: 'relative',
+                      overflow: 'hidden',
+                      boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
+                      border: `2px solid ${alpha('#64ffda', 0.3)}`,
+                      aspectRatio: '1/1',
+                    }}
+                  >
+                    {/* Add image display with proper fallback */}
+                    {selectedDetailNft.imageUri ? (
                       <Box
+                        component="img"
+                        src={selectedDetailNft.imageUri}
+                        alt={selectedDetailNft.title}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://via.placeholder.com/300/0a192f/64ffda?text=${encodeURIComponent(selectedDetailNft.title?.charAt(0) || 'W')}`;
+                        }}
                         sx={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          backgroundImage: theme.palette.mode === 'dark'
-                            ? 'radial-gradient(circle, rgba(100, 255, 218, 0.3) 5%, transparent 15%)'
-                            : 'radial-gradient(circle, rgba(63, 81, 181, 0.15) 5%, transparent 15%)',
-                          backgroundSize: '15px 15px',
-                          opacity: 0.7,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
                         }}
                       />
-                      <Box sx={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        p: 1,
-                        backgroundColor: alpha(theme.palette.background.paper, 0.7),
-                        backdropFilter: 'blur(4px)',
-                      }}>
-                        <Typography variant="caption" sx={{ color: theme.palette.text.primary, fontWeight: 'bold' }}>
-                          {nft.title}
-                        </Typography>
-                      </Box>
-                      <Box sx={{
-                        position: 'absolute',
-                        top: 5,
-                        right: 5,
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.65rem',
-                        fontWeight: 'bold',
-                        backgroundColor: getRarityColor(nft.rarity),
-                        color: '#fff',
-                      }}>
-                        {nft.rarity}
-                      </Box>
-                      
-                      {/* Sembolik İkon */}
+                    ) : (
                       <Box sx={{ 
                         position: 'absolute',
                         top: '50%',
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
-                        color: theme.palette.mode === 'dark' ? '#e6f1ff' : theme.palette.text.primary,
-                        opacity: 0.6
+                        color: '#e6f1ff',
+                        opacity: 0.8
                       }}>
-                        {nft.type === 'achievement' && <EmojiEventsIcon fontSize="large" />}
-                        {nft.type === 'course_completion' && <LocalFireDepartmentIcon fontSize="large" />}
-                        {nft.type === 'subscription' && <StarIcon fontSize="large" />}
+                        {/* NFT Type Icon */}
+                        {selectedDetailNft.type === 'achievement' && <EmojiEventsIcon sx={{ fontSize: 50 }} />}
+                        {selectedDetailNft.type === 'course_completion' && <LocalFireDepartmentIcon sx={{ fontSize: 50 }} />}
+                        {selectedDetailNft.type === 'subscription' && <StarIcon sx={{ fontSize: 50 }} />}
                       </Box>
-                    </Box>
-                  );
-                })}
-              </Box>
-            </Grid>
-          </Grid>
-        </Container>
-      </Box>
-      
-      <Container sx={{ mb: 8 }}>
-        {/* Login bilgilendirme (giriş yapmamış kullanıcılar için) */}
-        {!isAuthenticated() && (
-          <Alert 
-            severity="info" 
-            sx={{ 
-              mb: 4, 
-              borderRadius: 2, 
-              boxShadow: theme.shadows[2],
-              backgroundColor: alpha('#0a192f', 0.8),
-              color: '#ccd6f6',
-              border: `1px solid ${alpha('#64ffda', 0.3)}`,
-              '& .MuiAlert-icon': {
-                color: '#64ffda'
-              }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <Typography variant="body1" sx={{ mr: 2 }}>
-                Log in to view your personal NFT collection, mint tokens, or trade for subscriptions.
-              </Typography>
-              <Button 
-                variant="contained" 
-                startIcon={<LoginIcon />}
-                onClick={handleLoginRedirect}
-                sx={{ 
-                  borderRadius: 2, 
-                  px: 2, 
-                  py: 1, 
-                  whiteSpace: 'nowrap',
-                  background: 'linear-gradient(90deg, #64ffda, #88ccff)',
-                  color: '#0a192f',
-                  fontWeight: 'bold',
-                  '&:hover': {
-                    background: 'linear-gradient(90deg, #88ccff, #64ffda)',
-                  }
-                }}
-              >
-                Log In
-              </Button>
-            </Box>
-          </Alert>
-        )}
-        
-        {/* Cüzdan bağlantı uyarısı */}
-        {isAuthenticated() && !walletAddress && (
-          <Alert 
-            severity="warning" 
-            sx={{ 
-              mb: 4, 
-              borderRadius: 2, 
-              boxShadow: theme.shadows[3],
-              backgroundColor: alpha('#0a192f', 0.8),
-              color: '#ccd6f6',
-              border: `1px solid ${alpha('#ffc107', 0.3)}`,
-              '& .MuiAlert-icon': {
-                color: '#ffc107'
-              }
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <Typography variant="body1" sx={{ mr: 2 }}>
-                You haven't connected a wallet yet. Connect a wallet to mint NFTs to the blockchain.
-              </Typography>
-              <Button 
-                variant="outlined" 
-                color="warning" 
-                size="small"
-                onClick={handleConnectWallet}
-                startIcon={<AccountBalanceWalletIcon />}
-                sx={{ 
-                  borderRadius: 2, 
-                  whiteSpace: 'nowrap', 
-                  px: 2, 
-                  py: 1,
-                  borderColor: '#ffc107',
-                  color: '#ffc107',
-                  '&:hover': {
-                    borderColor: '#ffc107',
-                    backgroundColor: alpha('#ffc107', 0.1),
-                  }
-                }}
-              >
-                Connect Wallet
-              </Button>
-            </Box>
-          </Alert>
-        )}
-        
-        {/* Hata mesajı */}
-        {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 4, 
-              borderRadius: 2, 
-              boxShadow: theme.shadows[3],
-              backgroundColor: alpha('#0a192f', 0.8),
-              color: '#ccd6f6',
-              border: `1px solid ${alpha('#f44336', 0.3)}`,
-              '& .MuiAlert-icon': {
-                color: '#f44336'
-              }
-            }}
-          >
-            {error}
-          </Alert>
-        )}
-        
-        {/* Arayüz Kontrolleri */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-          <Box>
-            <Typography 
-              variant="h5" 
-              component="h2" 
-              sx={{ 
-                fontWeight: 'bold', 
-                mb: 1, 
-                color: '#e6f1ff'
-              }}
-            >
-              Your NFT Collection
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#ccd6f6', opacity: 0.8 }}>
-              {searchQuery 
-                ? `Search results for "${searchQuery}"`
-                : isAuthenticated() 
-                  ? `You have ${nfts.length} NFTs in your collection`
-                  : 'Explore available NFTs'
-              }
-            </Typography>
-          </Box>
-          
-          <Box sx={{ display: 'flex', gap: 1, mt: { xs: 2, sm: 0 } }}>
-            <Button
-              variant="outlined"
-              startIcon={<SwapHorizIcon />}
-              size="small"
-              onClick={handleTradeDialogOpen}
-              sx={{ 
-                borderRadius: 2, 
-                px: 2, 
-                borderColor: '#64ffda',
-                color: '#64ffda',
-                '&:hover': {
-                  borderColor: '#64ffda',
-                  backgroundColor: alpha('#64ffda', 0.1),
-                }
-              }}
-            >
-              Trade for Subscription
-            </Button>
-          </Box>
-        </Box>
-        
-        {/* Kategoriler */}
-        <Box sx={{ mb: 6 }}>
-          {NFT_CATEGORIES.map((category) => {
-            const filteredNfts = getNftsByCategory(category.id, getAllNfts());
-            
-            // Arama ve filtre uygula
-            const searchFilteredNfts = getSearchFilteredNFTs(filteredNfts);
-            const customFilteredNfts = getCustomFilteredNFTs(searchFilteredNfts);
-            const sortedAndFilteredNfts = getSortedNFTs(customFilteredNfts);
-            
-            // Kategori boşsa gösterme
-            if (sortedAndFilteredNfts.length === 0) return null;
-            
-            // Scroll durumu alma
-            const canScrollLeft = scrollStates[category.id]?.canScrollLeft;
-            const canScrollRight = scrollStates[category.id]?.canScrollRight;
-            
-            return (
-              <Box 
-                key={category.id}
-                ref={(el) => categoryRefs.current[category.id] = el}
-                sx={{ mb: 6, scrollMarginTop: '80px' }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar sx={{ mr: 1.5, bgcolor: alpha('#64ffda', 0.1), color: '#64ffda' }}>
-                      {category.icon}
-                    </Avatar>
-                    <Typography variant="h6" component="h3" sx={{ fontWeight: 'bold', color: '#e6f1ff' }}>
-                      {category.title}
-                    </Typography>
-                  </Box>
-                  
-                  <Button
-                    size="small"
-                    endIcon={expandedCategories[category.id] ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                    onClick={() => toggleCategory(category.id)}
-                    sx={{ 
-                      borderRadius: 2, 
-                      px: 2, 
-                      borderColor: alpha('#64ffda', 0.3),
-                      color: '#64ffda',
-                      '&:hover': {
-                        borderColor: '#64ffda',
-                        backgroundColor: alpha('#64ffda', 0.1),
-                      }
-                    }}
-                  >
-                    {expandedCategories[category.id] ? 'Show Less' : 'View All'}
-                  </Button>
-                </Box>
-                
-                {/* Yatay Kaydırmalı NFT Listesi */}
-                <Box sx={{ position: 'relative' }}>
-                  {/* Scroll okları */}
-                  <IconButton
-                    size="small"
-                    sx={{
-                      position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)',
-                      bgcolor: alpha('#0a192f', 0.8), boxShadow: '0 2px 10px rgba(0,0,0,0.3)', zIndex: 2,
-                      color: '#64ffda',
-                      border: `1px solid ${alpha('#64ffda', 0.2)}`,
-                      opacity: canScrollLeft ? 1 : 0, transition: 'all 0.3s ease',
-                      pointerEvents: canScrollLeft ? 'auto' : 'none',
-                      '&:hover': { 
-                        bgcolor: alpha('#0a192f', 0.9),
-                        border: `1px solid ${alpha('#64ffda', 0.5)}`,
-                      }
-                    }}
-                    onClick={() => handleCategoryScroll(category.id, 'left')}
-                  >
-                    <ArrowBackIcon />
-                  </IconButton>
-                  
-                  <IconButton
-                    size="small"
-                    sx={{
-                      position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)',
-                      bgcolor: alpha('#0a192f', 0.8), boxShadow: '0 2px 10px rgba(0,0,0,0.3)', zIndex: 2,
-                      color: '#64ffda',
-                      border: `1px solid ${alpha('#64ffda', 0.2)}`,
-                      opacity: canScrollRight ? 1 : 0, transition: 'all 0.3s ease',
-                      pointerEvents: canScrollRight ? 'auto' : 'none',
-                      '&:hover': { 
-                        bgcolor: alpha('#0a192f', 0.9),
-                        border: `1px solid ${alpha('#64ffda', 0.5)}`,
-                      }
-                    }}
-                    onClick={() => handleCategoryScroll(category.id, 'right')}
-                  >
-                    <ArrowForwardIcon />
-                  </IconButton>
-                  
-                  <Box
-                    ref={el => scrollContainerRefs.current[category.id] = el}
-                    sx={{
-                      display: 'flex', 
-                      overflowX: 'auto', 
-                      gap: 2, 
-                      pb: 2, 
-                      px: 1,
-                      msOverflowStyle: 'none',  /* IE and Edge */
-                      scrollbarWidth: 'none',  /* Firefox */
-                      '&::-webkit-scrollbar': {
-                        display: 'none'  /* Chrome, Safari, Opera */
-                      }
-                    }}
-                  >
-                    {sortedAndFilteredNfts.slice(0, 4).map(nft => (
-                      <Box key={nft.userNftId || nft.nftId} sx={{ minWidth: 280, maxWidth: 280 }}>
-                        <NFTCard nft={nft} />
-                      </Box>
-                    ))}
+                    )}
                     
-                    {/* Daha Fazla Göster Butonu */}
-                    {sortedAndFilteredNfts.length > 4 && !expandedCategories[category.id] && (
-                      <Box 
-                        sx={{ 
-                          minWidth: 280, 
-                          maxWidth: 280, 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center',
-                          border: `1px dashed ${alpha('#64ffda', 0.3)}`, 
-                          borderRadius: 3, 
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          backgroundColor: alpha('#0a192f', 0.3),
-                          '&:hover': { 
-                            backgroundColor: alpha('#0a192f', 0.5),
-                            border: `1px dashed ${alpha('#64ffda', 0.5)}`,
-                          }
-                        }}
-                        onClick={() => toggleCategory(category.id)}
-                      >
-                        <Box sx={{ textAlign: 'center' }}>
-                          <IconButton 
-                            sx={{ 
-                              mb: 1, 
-                              bgcolor: alpha('#64ffda', 0.1),
-                              color: '#64ffda',
-                              '&:hover': { bgcolor: alpha('#64ffda', 0.2) }
-                            }}
-                          >
-                            <KeyboardArrowDownIcon />
-                          </IconButton>
-                          <Typography variant="body2" sx={{ color: '#ccd6f6' }}>
-                            Show {sortedAndFilteredNfts.length - 4} More
-                          </Typography>
-                        </Box>
+                    {/* Type Chip */}
+                    <Chip
+                      label={getNftTypeLabel(selectedDetailNft.type)}
+                      color={getNftTypeColor(selectedDetailNft.type)}
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 10,
+                        left: 10,
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                      }}
+                    />
+                    
+                    {/* Rarity Badge */}
+                    <Box sx={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 5,
+                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.8)', 
+                      color: getRarityColor(selectedDetailNft.rarity),
+                      fontWeight: 'bold',
+                      fontSize: '0.75rem',
+                      zIndex: 2,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      border: `1px solid ${getRarityColor(selectedDetailNft.rarity)}`,
+                    }}>
+                      {formatRarity(selectedDetailNft.rarity)}
+                    </Box>
+                    
+                    {/* Minted Badge */}
+                    {selectedDetailNft.isMinted && (
+                      <Box sx={{
+                        position: 'absolute',
+                        bottom: 10,
+                        right: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        bgcolor: 'rgba(0,0,0,0.7)',
+                        color: theme.palette.success.main,
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 5,
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                      }}>
+                        <VerifiedIcon sx={{ fontSize: '1rem', mr: 0.5 }} />
+                        Minted
                       </Box>
                     )}
                   </Box>
+                  
+                  <Paper sx={{ 
+                    mt: 2, 
+                    p: 2, 
+                    borderRadius: 2, 
+                    bgcolor: alpha('#0a192f', 0.7),
+                    border: `1px solid ${alpha('#64ffda', 0.2)}`
+                  }}>
+                    <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 1 }}>
+                      Collection
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#64ffda', fontWeight: 'medium' }}>
+                      {selectedDetailNft.collection || selectedDetailNft.title || 'General Collection'}
+                    </Typography>
+                    
+                    <Divider sx={{ my: 1.5, borderColor: alpha('#64ffda', 0.1) }} />
+                    
+                    <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 1 }}>
+                      Acquisition Date
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: '#e6f1ff' }}>
+                      {selectedDetailNft.acquisitionDate ? new Date(selectedDetailNft.acquisitionDate).toLocaleDateString() : 'Not acquired'}
+                    </Typography>
+                  </Paper>
                 </Box>
                 
-                {/* Genişletilmiş Grid Görünümü */}
-                <Collapse in={expandedCategories[category.id]}>
-                  <Grid container spacing={3} sx={{ mt: 1 }}>
-                    {sortedAndFilteredNfts.slice(4).map(nft => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={nft.userNftId || nft.nftId}>
-                        <NFTCard nft={nft} />
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Collapse>
+                <Box sx={{ width: { xs: '100%', sm: '58.34%' } }}>
+                  <Box>
+                    <Typography variant="h4" sx={{ color: '#e6f1ff', mb: 2, fontWeight: 'bold' }}>
+                      {selectedDetailNft.title}
+                    </Typography>
+                    
+                    <Typography variant="body1" sx={{ color: '#ccd6f6', mb: 3 }}>
+                      {selectedDetailNft.description}
+                    </Typography>
+                    
+                    {selectedDetailNft.isMinted && (
+                      <Paper sx={{ 
+                        p: 2, 
+                        mb: 3, 
+                        borderRadius: 2, 
+                        bgcolor: alpha('#0a192f', 0.7),
+                        border: `1px solid ${alpha('#64ffda', 0.2)}`
+                      }}>
+                        <Typography variant="h6" sx={{ color: '#e6f1ff', mb: 2 }}>
+                          Blockchain Information
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <Box>
+                            <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 0.5 }}>
+                              Transaction Hash
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Box
+                                sx={{
+                                  p: 1,
+                                  borderRadius: 1,
+                                  bgcolor: alpha('#0a192f', 0.5),
+                                  fontFamily: 'monospace',
+                                  fontSize: '0.85rem',
+                                  color: '#88ccff',
+                                  mr: 1,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  flexGrow: 1
+                                }}
+                              >
+                                {selectedDetailNft.transactionHash || '0x0000000000000000000000000000000000000000'}
+                              </Box>
+                              <IconButton 
+                                size="small" 
+                                onClick={() => copyToClipboard(selectedDetailNft.transactionHash || '0x0000000000000000000000000000000000000000')}
+                                sx={{ color: '#ccd6f6', '&:hover': { color: '#64ffda' } }}
+                              >
+                                <ContentCopyIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          </Box>
+                          
+                          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                            <Box sx={{ width: { xs: '100%', sm: '50%' } }}>
+                              <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 0.5 }}>
+                                Network
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: '#e6f1ff' }}>
+                                Ethereum
+                              </Typography>
+                            </Box>
+                            
+                            <Box sx={{ width: { xs: '100%', sm: '50%' } }}>
+                              <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 0.5 }}>
+                                Minted On
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: '#e6f1ff' }}>
+                                {selectedDetailNft.mintDate ? new Date(selectedDetailNft.mintDate).toLocaleDateString() : new Date().toLocaleDateString()}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Paper>
+                    )}
+                    
+                    <Paper sx={{ 
+                      p: 2, 
+                      borderRadius: 2, 
+                      bgcolor: alpha('#0a192f', 0.7),
+                      border: `1px solid ${alpha('#64ffda', 0.2)}`
+                    }}>
+                      <Typography variant="h6" sx={{ color: '#e6f1ff', mb: 2 }}>
+                        Properties
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                        <Box sx={{ width: { xs: '45%', sm: '30%' } }}>
+                          <Box sx={{ 
+                            p: 1.5, 
+                            textAlign: 'center', 
+                            borderRadius: 2,
+                            bgcolor: alpha('#64ffda', 0.05),
+                            border: `1px solid ${alpha('#64ffda', 0.1)}`
+                          }}>
+                            <Typography variant="caption" sx={{ color: '#ccd6f6', display: 'block', mb: 0.5 }}>
+                              Type
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#e6f1ff', fontWeight: 'medium' }}>
+                              {getNftTypeLabel(selectedDetailNft.type)}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ width: { xs: '45%', sm: '30%' } }}>
+                          <Box sx={{ 
+                            p: 1.5, 
+                            textAlign: 'center', 
+                            borderRadius: 2,
+                            bgcolor: alpha('#64ffda', 0.05),
+                            border: `1px solid ${alpha('#64ffda', 0.1)}`
+                          }}>
+                            <Typography variant="caption" sx={{ color: '#ccd6f6', display: 'block', mb: 0.5 }}>
+                              Rarity
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              fontWeight: 'medium',
+                              color: getRarityColor(selectedDetailNft.rarity)
+                            }}>
+                              {formatRarity(selectedDetailNft.rarity)}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ width: { xs: '45%', sm: '30%' } }}>
+                          <Box sx={{ 
+                            p: 1.5, 
+                            textAlign: 'center', 
+                            borderRadius: 2,
+                            bgcolor: alpha('#64ffda', 0.05),
+                            border: `1px solid ${alpha('#64ffda', 0.1)}`
+                          }}>
+                            <Typography variant="caption" sx={{ color: '#ccd6f6', display: 'block', mb: 0.5 }}>
+                              Status
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                              color: selectedDetailNft.isMinted ? '#64ffda' : '#ccd6f6',
+                              fontWeight: 'medium' 
+                            }}>
+                              {selectedDetailNft.isMinted ? 'Minted' : 'Not Minted'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </Box>
+                </Box>
               </Box>
-            );
-          })}
-          
-          {/* Arama sonuçları boşsa */}
-          {searchQuery && getSearchFilteredNFTs(getAllNfts()).length === 0 && (
-            <Box sx={{ 
-              textAlign: 'center', 
-              py: 8, 
-              borderRadius: 4, 
-              background: alpha('#0a192f', 0.5),
-              border: `1px dashed ${alpha('#64ffda', 0.2)}`,
-            }}>
-              <SearchIcon sx={{ fontSize: 60, color: alpha('#64ffda', 0.5), mb: 2 }} />
-              <Typography variant="h6" paragraph sx={{ color: '#ccd6f6' }}>
-                No NFTs found matching "{searchQuery}"
-              </Typography>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
               <Button
-                variant="outlined"
-                onClick={() => setSearchQuery('')}
-                sx={{ 
-                  borderRadius: 2, 
-                  px: 3, 
-                  py: 1,
-                  borderColor: '#64ffda',
-                  color: '#64ffda',
-                  '&:hover': {
-                    borderColor: '#64ffda',
-                    backgroundColor: alpha('#64ffda', 0.1),
-                  }
-                }}
+                onClick={handleDetailClose} 
+                sx={{ color: '#ccd6f6' }}
               >
-                Clear Search
+                Close
               </Button>
-            </Box>
-          )}
-        </Box>
-      </Container>
+              
+              {!selectedDetailNft.isMinted && selectedDetailNft.acquisitionDate && (
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    handleDetailClose();
+                    handleMintClick(selectedDetailNft);
+                  }}
+                  startIcon={<AccountBalanceWalletIcon />}
+                  disabled={!walletAddress}
+                  sx={{
+                    borderRadius: 2, px: 3,
+                    background: 'linear-gradient(90deg, #64ffda, #88ccff)',
+                    color: '#0a192f',
+                    fontWeight: 'bold',
+                    '&:hover': {
+                      background: 'linear-gradient(90deg, #88ccff, #64ffda)',
+                    },
+                    '&.Mui-disabled': {
+                      background: alpha('#64ffda', 0.2),
+                      color: alpha('#ccd6f6', 0.5)
+                    }
+                  }}
+                >
+                  Mint to Blockchain
+                </Button>
+              )}
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
       
-      {/* Dialog bileşenleri */}
-      {/* NFT Mint Dialog */}
+      {/* Login Dialog */}
+      <Dialog 
+        open={loginDialogOpen} 
+        onClose={handleLoginClose}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: alpha('#0a192f', 0.9),
+            color: '#e6f1ff',
+            borderRadius: 3,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+            border: `1px solid ${alpha('#64ffda', 0.2)}`
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: '#e6f1ff', textAlign: 'center' }}>
+          Login Required
+          <IconButton 
+            onClick={handleLoginClose} 
+            sx={{ 
+              position: 'absolute', 
+              right: 8, 
+              top: 8,
+              color: '#ccd6f6',
+              '&:hover': { color: '#64ffda' }
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: 'center', p: 3 }}>
+          <Box sx={{ mb: 2 }}>
+            <LoginIcon sx={{ fontSize: 60, color: '#64ffda', mb: 2 }} />
+          </Box>
+          <Typography variant="body1" sx={{ color: '#ccd6f6', mb: 2 }}>
+            You need to be logged in to access this feature. Would you like to log in now?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', p: 3 }}>
+          <Button 
+            onClick={handleLoginClose}
+            sx={{ 
+              color: '#ccd6f6',
+              borderRadius: 2,
+              px: 3
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleLoginRedirect}
+            sx={{
+              borderRadius: 2, px: 3,
+              background: 'linear-gradient(90deg, #64ffda, #88ccff)',
+              color: '#0a192f',
+              fontWeight: 'bold',
+              '&:hover': {
+                background: 'linear-gradient(90deg, #88ccff, #64ffda)',
+              }
+            }}
+          >
+            Log In
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Mint Dialog */}
       <Dialog 
         open={mintDialogOpen} 
         onClose={handleMintClose} 
@@ -1763,8 +2474,7 @@ useEffect(() => {
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: '#0a192f',
-            backgroundImage: 'linear-gradient(rgba(100, 255, 218, 0.05), rgba(10, 25, 47, 0.9))',
+            bgcolor: alpha('#0a192f', 0.9),
             color: '#e6f1ff',
             borderRadius: 3,
             boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
@@ -1789,46 +2499,51 @@ useEffect(() => {
         </DialogTitle>
         <DialogContent dividers sx={{ borderColor: alpha('#64ffda', 0.1) }}>
           {selectedNft && (
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={5}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3 }}>
+              <Box sx={{ width: { xs: '100%', sm: '41.66%' } }}>
                 <Box
                   sx={{
                     width: '100%',
                     height: 200,
                     borderRadius: 2,
-                    background: gammaDopplerGradients[2],
+                    background: getRandomGammaDopplerGradient(),
                     position: 'relative',
                     overflow: 'hidden',
                     boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
                     border: `2px solid ${alpha('#64ffda', 0.3)}`,
                   }}
                 >
-                  <Box
-                    sx={{
+                  {selectedNft.imageUri ? (
+                    <img 
+                      src={selectedNft.imageUri}
+                      alt={selectedNft.title}
+                      style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }} 
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://via.placeholder.com/300/0a192f/64ffda?text=${encodeURIComponent(selectedNft.title?.charAt(0) || 'W')}`;
+                      }}
+                    />
+                  ) : (
+                    <Box sx={{ 
                       position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      backgroundImage: 'radial-gradient(circle, rgba(100, 255, 218, 0.3) 5%, transparent 15%)',
-                      backgroundSize: '15px 15px',
-                      opacity: 0.7,
-                    }}
-                  />
-                  
-                  {/* Sembolik İkon */}
-                  <Box sx={{ 
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    color: '#e6f1ff',
-                    opacity: 0.8
-                  }}>
-                    {selectedNft.type === 'achievement' && <EmojiEventsIcon sx={{ fontSize: 50 }} />}
-                    {selectedNft.type === 'course_completion' && <LocalFireDepartmentIcon sx={{ fontSize: 50 }} />}
-                    {selectedNft.type === 'subscription' && <StarIcon sx={{ fontSize: 50 }} />}
-                  </Box>
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      color: '#e6f1ff',
+                      opacity: 0.8
+                    }}>
+                      {selectedNft.type === 'achievement' && <EmojiEventsIcon sx={{ fontSize: 50 }} />}
+                      {selectedNft.type === 'course_completion' && <LocalFireDepartmentIcon sx={{ fontSize: 50 }} />}
+                      {selectedNft.type === 'subscription' && <StarIcon sx={{ fontSize: 50 }} />}
+                    </Box>
+                  )}
                   
                   <Box sx={{
                     position: 'absolute',
@@ -1843,8 +2558,8 @@ useEffect(() => {
                     </Typography>
                   </Box>
                 </Box>
-              </Grid>
-              <Grid item xs={12} sm={7}>
+              </Box>
+              <Box sx={{ width: { xs: '100%', sm: '58.34%' } }}>
                 <Typography variant="h6" sx={{ color: '#e6f1ff' }}>{selectedNft.title}</Typography>
                 <Typography variant="body2" sx={{ color: '#ccd6f6', mt: 1 }}>
                   {selectedNft.description}
@@ -1857,7 +2572,7 @@ useEffect(() => {
                     sx={{ mr: 1 }}
                   />
                   <Chip 
-                    label={selectedNft.rarity}
+                    label={formatRarity(selectedNft.rarity)}
                     sx={{ bgcolor: getRarityColor(selectedNft.rarity), color: 'white' }}
                     size="small"
                   />
@@ -1865,11 +2580,11 @@ useEffect(() => {
                 
                 <Box sx={{ mt: 3 }}>
                   <Typography variant="body2" sx={{ color: '#ccd6f6' }} gutterBottom>
-                    Minting this NFT will permanently record it on the EduChain blockchain, making it a verifiable digital asset that you own.
+                    Minting this NFT will permanently record it on the blockchain, making it a verifiable digital asset that you own.
                   </Typography>
                 </Box>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           )}
           
           {mintSuccess && (
@@ -1946,814 +2661,6 @@ useEffect(() => {
         </DialogActions>
       </Dialog>
       
-      {/* NFT Trade Dialog */}
-      <Dialog 
-        open={tradeDialogOpen} 
-        onClose={handleTradeDialogClose} 
-        maxWidth="md" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: '#0a192f',
-            backgroundImage: 'linear-gradient(rgba(100, 255, 218, 0.05), rgba(10, 25, 47, 0.9))',
-            color: '#e6f1ff',
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-            border: `1px solid ${alpha('#64ffda', 0.2)}`
-          }
-        }}
-      >
-        <DialogTitle sx={{ color: '#e6f1ff' }}>
-          Trade NFTs for Subscription
-          <IconButton 
-            onClick={handleTradeDialogClose} 
-            sx={{ 
-              position: 'absolute', 
-              right: 8, 
-              top: 8,
-              color: '#ccd6f6',
-              '&:hover': { color: '#64ffda' }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ borderColor: alpha('#64ffda', 0.1) }}>
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom sx={{ color: '#e6f1ff' }}>
-              How Trading Works
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#ccd6f6' }}>
-              Trade your eligible NFTs for premium subscription access. Select the NFTs you want to offer, 
-              then choose a subscription NFT you want to receive. The total value of your offered NFTs must meet 
-              or exceed the value of the subscription NFT.
-            </Typography>
-          </Box>
-          
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight="medium" gutterBottom sx={{ color: '#e6f1ff' }}>
-                Choose NFTs to Offer
-              </Typography>
-              
-              <Paper 
-                variant="outlined" 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2, 
-                  height: 320, 
-                  overflow: 'auto',
-                  bgcolor: alpha('#0a192f', 0.7),
-                  borderColor: alpha('#64ffda', 0.2),
-                  msOverflowStyle: 'none',  /* IE and Edge */
-                  scrollbarWidth: 'none',  /* Firefox */
-                  '&::-webkit-scrollbar': {
-                    display: 'none'  /* Chrome, Safari, Opera */
-                  }
-                }}
-              >
-                {isAuthenticated() && nfts.filter(nft => !nft.isMinted).length > 0 ? (
-                  <Grid container spacing={2}>
-                    {nfts.filter(nft => !nft.isMinted).map(nft => (
-                      <Grid item xs={12} sm={6} key={nft.userNftId}>
-                        <NFTCard nft={nft} isTradeMode={true} />
-                      </Grid>
-                    ))}
-                  </Grid>
-                ) : (
-                  <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                    <Typography variant="body1" sx={{ color: '#ccd6f6', opacity: 0.8 }} align="center">
-                      You don't have any eligible NFTs to trade
-                    </Typography>
-                    <Button 
-                      variant="outlined" 
-                      size="small" 
-                      sx={{ 
-                        mt: 2,
-                        borderColor: '#64ffda',
-                        color: '#64ffda',
-                        '&:hover': {
-                          borderColor: '#64ffda',
-                          backgroundColor: alpha('#64ffda', 0.1),
-                        }
-                      }} 
-                      onClick={() => router.push('/quests')}
-                    >
-                      Complete Quests to Earn NFTs
-                    </Button>
-                  </Box>
-                )}
-              </Paper>
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" fontWeight="medium" gutterBottom sx={{ color: '#e6f1ff' }}>
-                Select a Subscription
-              </Typography>
-              
-              <Paper 
-                variant="outlined" 
-                sx={{ 
-                  p: 2, 
-                  borderRadius: 2, 
-                  height: 320, 
-                  overflow: 'auto',
-                  bgcolor: alpha('#0a192f', 0.7),
-                  borderColor: alpha('#64ffda', 0.2),
-                  msOverflowStyle: 'none',
-                  scrollbarWidth: 'none',
-                  '&::-webkit-scrollbar': {
-                    display: 'none'
-                  }
-                }}
-              >
-                {publicNfts.filter(nft => nft.type === 'subscription').length > 0 ? (
-                  <Grid container spacing={2}>
-                    {publicNfts.filter(nft => nft.type === 'subscription').map(nft => (
-                      <Grid item xs={12} key={nft.nftId}>
-                        <Paper 
-                          elevation={0}
-                          sx={{ 
-                            p: 2, 
-                            border: targetSubscriptionNft?.nftId === nft.nftId 
-                              ? `2px solid ${alpha('#64ffda', 0.8)}`
-                              : `1px solid ${alpha('#64ffda', 0.2)}`,
-                            borderRadius: 2, 
-                            cursor: 'pointer', 
-                            transition: 'all 0.2s',
-                            bgcolor: targetSubscriptionNft?.nftId === nft.nftId 
-                              ? alpha('#64ffda', 0.1)
-                              : 'transparent',
-                            '&:hover': {
-                              borderColor: alpha('#64ffda', 0.8),
-                              bgcolor: alpha('#64ffda', 0.05)
-                            },
-                          }}
-                          onClick={() => selectSubscriptionNft(nft)}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Box 
-                              sx={{ 
-                                width: 80, 
-                                height: 80, 
-                                borderRadius: 2, 
-                                mr: 2,
-                                background: gammaDopplerGradients[3],
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                border: `1px solid ${alpha('#64ffda', 0.3)}`,
-                              }}
-                            >
-                              <StarIcon sx={{ fontSize: 30, color: '#e6f1ff', opacity: 0.8 }} />
-                            </Box>
-                            <Box>
-                              <Typography variant="h6" sx={{ color: '#e6f1ff' }}>{nft.title}</Typography>
-                              <Typography variant="body2" sx={{ color: '#ccd6f6' }}>{nft.description}</Typography>
-                              <Box sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
-                                <Chip 
-                                  label={`Value: ${nft.price}` || "Trade Value"}
-                                  size="small"
-                                  color="secondary"
-                                  sx={{ mr: 1 }}
-                                />
-                                <Chip 
-                                  label={nft.rarity}
-                                  size="small"
-                                  sx={{ bgcolor: getRarityColor(nft.rarity), color: 'white' }}
-                                />
-                              </Box>
-                            </Box>
-                          </Box>
-                        </Paper>
-                      </Grid>
-                    ))}
-                  </Grid>
-                ) : (
-                  <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography variant="body1" sx={{ color: '#ccd6f6', opacity: 0.8 }} align="center">
-                      No subscription NFTs available
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
-            </Grid>
-          </Grid>
-          
-          <Box sx={{ 
-            mt: 3, 
-            p: 2, 
-            borderRadius: 2, 
-            border: `1px solid ${alpha('#64ffda', 0.2)}`,
-            bgcolor: alpha('#0a192f', 0.5),
-          }}>
-            <Typography variant="subtitle1" fontWeight="medium" gutterBottom sx={{ color: '#e6f1ff' }}>
-              Trade Summary
-            </Typography>
-            
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2" sx={{ color: '#ccd6f6', opacity: 0.8 }} gutterBottom>
-                  You are offering:
-                </Typography>
-                {selectedForTrade.length === 0 ? (
-                  <Typography variant="body2" sx={{ color: '#ccd6f6' }}>No NFTs selected</Typography>
-                ) : (
-                  <Box>
-                    {selectedForTrade.map(nftId => {
-                      const nft = nfts.find(n => (n.userNftId || n.nftId) === nftId);
-                      return nft ? (
-                        <Box key={nftId} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2" sx={{ color: '#e6f1ff' }}>{nft.title}</Typography>
-                        </Box>
-                      ) : null;
-                    })}
-                    
-                    <Divider sx={{ my: 1, borderColor: alpha('#64ffda', 0.2) }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" fontWeight="medium" sx={{ color: '#e6f1ff' }}>Total Items:</Typography>
-                      <Typography variant="body2" fontWeight="medium" sx={{ color: '#64ffda' }}>{selectedForTrade.length}</Typography>
-                    </Box>
-                  </Box>
-                )}
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <Typography variant="body2" sx={{ color: '#ccd6f6', opacity: 0.8 }} gutterBottom>
-                  You will receive:
-                </Typography>
-                {!targetSubscriptionNft ? (
-                  <Typography variant="body2" sx={{ color: '#ccd6f6' }}>No subscription selected</Typography>
-                ) : (
-                  <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" sx={{ color: '#e6f1ff' }}>{targetSubscriptionNft.title}</Typography>
-                    </Box>
-                    
-                    <Divider sx={{ my: 1, borderColor: alpha('#64ffda', 0.2) }} />
-                    <Box sx={{ 
-                      display: 'flex', justifyContent: 'space-between',
-                      color: selectedForTrade.length >= 2 ? '#64ffda' : '#f44336',
-                      fontWeight: 'medium'
-                    }}>
-                      <Typography variant="body2" fontWeight="medium">Status:</Typography>
-                      <Typography variant="body2" fontWeight="medium">
-                        {selectedForTrade.length >= 2 ? 'Valid Trade ✓' : 'Insufficient NFTs ✗'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-              </Grid>
-            </Grid>
-          </Box>
-          
-          {tradeSuccess && (
-            <Alert 
-              severity="success" 
-              sx={{ 
-                mt: 3,
-                backgroundColor: alpha('#172d32', 0.7),
-                color: '#e6f1ff',
-                border: `1px solid ${alpha('#64ffda', 0.5)}`,
-                '& .MuiAlert-icon': {
-                  color: '#64ffda'
-                }
-              }}
-            >
-              Trade completed successfully! You now have access to premium subscription features.
-            </Alert>
-          )}
-          
-          {tradeError && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mt: 3,
-                backgroundColor: alpha('#2d1a24', 0.7),
-                color: '#e6f1ff',
-                border: `1px solid ${alpha('#f44336', 0.5)}`,
-                '& .MuiAlert-icon': {
-                  color: '#f44336'
-                }
-              }}
-            >{tradeError}</Alert>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button 
-            onClick={handleTradeDialogClose} 
-            disabled={tradeProcessing}
-            sx={{ color: '#ccd6f6' }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleTradeConfirm}
-            disabled={tradeProcessing || !targetSubscriptionNft || selectedForTrade.length < 2 || tradeSuccess}
-            startIcon={tradeProcessing ? <CircularProgress size={20} /> : <SwapHorizIcon />}
-            sx={{
-              borderRadius: 2, px: 3,
-              background: 'linear-gradient(90deg, #64ffda, #88ccff)',
-              color: '#0a192f',
-              fontWeight: 'bold',
-              '&:hover': {
-                background: 'linear-gradient(90deg, #88ccff, #64ffda)',
-              },
-              '&.Mui-disabled': {
-                background: alpha('#64ffda', 0.2),
-                color: alpha('#ccd6f6', 0.5)
-              }
-            }}
-          >
-            {tradeProcessing ? 'Processing...' : 'Confirm Trade'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Login Dialog */}
-      <Dialog 
-        open={loginDialogOpen} 
-        onClose={handleLoginClose}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: '#0a192f',
-            backgroundImage: 'linear-gradient(rgba(100, 255, 218, 0.05), rgba(10, 25, 47, 0.9))',
-            color: '#e6f1ff',
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-            border: `1px solid ${alpha('#64ffda', 0.2)}`
-          }
-        }}
-      >
-        <DialogTitle sx={{ color: '#e6f1ff', textAlign: 'center' }}>
-          Login Required
-          <IconButton 
-            onClick={handleLoginClose} 
-            sx={{ 
-              position: 'absolute', 
-              right: 8, 
-              top: 8,
-              color: '#ccd6f6',
-              '&:hover': { color: '#64ffda' }
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: 'center', p: 3 }}>
-          <Box sx={{ mb: 2 }}>
-            <LoginIcon sx={{ fontSize: 60, color: '#64ffda', mb: 2 }} />
-          </Box>
-          <Typography variant="body1" sx={{ color: '#ccd6f6', mb: 2 }}>
-            You need to be logged in to access this feature. Would you like to log in now?
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', p: 3 }}>
-          <Button 
-            onClick={handleLoginClose}
-            sx={{ 
-              color: '#ccd6f6',
-              borderRadius: 2,
-              px: 3
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleLoginRedirect}
-            sx={{
-              borderRadius: 2, px: 3,
-              background: 'linear-gradient(90deg, #64ffda, #88ccff)',
-              color: '#0a192f',
-              fontWeight: 'bold',
-              '&:hover': {
-                background: 'linear-gradient(90deg, #88ccff, #64ffda)',
-              }
-            }}
-          >
-            Log In
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* NFT Detail Dialog */}
-      <Dialog 
-        open={detailDialogOpen} 
-        onClose={handleDetailClose} 
-        maxWidth="md" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: '#0a192f',
-            backgroundImage: 'linear-gradient(rgba(100, 255, 218, 0.05), rgba(10, 25, 47, 0.9))',
-            color: '#e6f1ff',
-            borderRadius: 3,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-            border: `1px solid ${alpha('#64ffda', 0.2)}`
-          }
-        }}
-      >
-        {selectedDetailNft && (
-          <>
-            <DialogTitle sx={{ color: '#e6f1ff' }}>
-              NFT Details
-              <IconButton 
-                onClick={handleDetailClose} 
-                sx={{ 
-                  position: 'absolute', 
-                  right: 8, 
-                  top: 8,
-                  color: '#ccd6f6',
-                  '&:hover': { color: '#64ffda' }
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-            <DialogContent dividers sx={{ borderColor: alpha('#64ffda', 0.1) }}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={5}>
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: 300,
-                      borderRadius: 3,
-                      background: gammaDopplerGradients[1],
-                      position: 'relative',
-                      overflow: 'hidden',
-                      boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
-                      border: `2px solid ${alpha('#64ffda', 0.3)}`,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundImage: 'radial-gradient(circle, rgba(100, 255, 218, 0.3) 5%, transparent 15%)',
-                        backgroundSize: '15px 15px',
-                        opacity: 0.7,
-                      }}
-                    />
-                    
-                    {/* Sembolik İkon */}
-                    <Box sx={{ 
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      color: '#e6f1ff',
-                      opacity: 0.8,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 2
-                    }}>
-                      {selectedDetailNft.type === 'achievement' && <EmojiEventsIcon sx={{ fontSize: 80 }} />}
-                      {selectedDetailNft.type === 'course_completion' && <LocalFireDepartmentIcon sx={{ fontSize: 80 }} />}
-                      {selectedDetailNft.type === 'subscription' && <StarIcon sx={{ fontSize: 80 }} />}
-                      
-                      {selectedDetailNft.isMinted && <VerifiedIcon color="success" sx={{ fontSize: 30 }} />}
-                    </Box>
-                    
-                    <Box sx={{
-                      position: 'absolute',
-                      top: 10,
-                      right: 10,
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 5,
-                      backgroundColor: getRarityColor(selectedDetailNft.rarity),
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      fontSize: '0.75rem',
-                      zIndex: 2
-                    }}>
-                      {selectedDetailNft.rarity}
-                    </Box>
-                  </Box>
-                  
-                  <Paper sx={{ 
-                    mt: 2, 
-                    p: 2, 
-                    borderRadius: 2, 
-                    bgcolor: alpha('#0a192f', 0.7),
-                    border: `1px solid ${alpha('#64ffda', 0.2)}`
-                  }}>
-                    <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 1 }}>
-                      Collection
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: '#64ffda', fontWeight: 'medium' }}>
-                      {selectedDetailNft.collection || 'General Collection'}
-                    </Typography>
-                    
-                    <Divider sx={{ my: 1.5, borderColor: alpha('#64ffda', 0.1) }} />
-                    
-                    <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 1 }}>
-                      Acquisition Date
-                    </Typography>
-                    <Typography variant="body1" sx={{ color: '#e6f1ff' }}>
-                      {selectedDetailNft.acquisitionDate ? new Date(selectedDetailNft.acquisitionDate).toLocaleDateString() : 'Not acquired'}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={7}>
-                  <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Chip 
-                        label={getNftTypeLabel(selectedDetailNft.type)}
-                        color={getNftTypeColor(selectedDetailNft.type)}
-                        size="small"
-                        sx={{ mr: 1 }}
-                      />
-                      {selectedDetailNft.isMinted && (
-                        <Chip 
-                          icon={<VerifiedIcon />}
-                          label="Blockchain Verified"
-                          color="success"
-                          size="small"
-                        />
-                      )}
-                    </Box>
-                    
-                    <Typography variant="h4" sx={{ color: '#e6f1ff', mb: 2, fontWeight: 'bold' }}>
-                      {selectedDetailNft.title}
-                    </Typography>
-                    
-                    <Typography variant="body1" sx={{ color: '#ccd6f6', mb: 3 }}>
-                      {selectedDetailNft.description}
-                    </Typography>
-                    
-                    {selectedDetailNft.isMinted && (
-                      <Paper sx={{ 
-                        p: 2, 
-                        mb: 3, 
-                        borderRadius: 2, 
-                        bgcolor: alpha('#0a192f', 0.7),
-                        border: `1px solid ${alpha('#64ffda', 0.2)}`
-                      }}>
-                        <Typography variant="h6" sx={{ color: '#e6f1ff', mb: 2 }}>
-                          Blockchain Information
-                        </Typography>
-                        
-                        <Grid container spacing={2}>
-                          <Grid item xs={12}>
-                            <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 0.5 }}>
-                              Transaction Hash
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Box
-                                sx={{
-                                  p: 1,
-                                  borderRadius: 1,
-                                  bgcolor: alpha('#0a192f', 0.5),
-                                  fontFamily: 'monospace',
-                                  fontSize: '0.85rem',
-                                  color: '#88ccff',
-                                  mr: 1,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  flexGrow: 1
-                                }}
-                              >
-                                {selectedDetailNft.transactionHash}
-                              </Box>
-                              <IconButton 
-                                size="small" 
-                                onClick={() => copyToClipboard(selectedDetailNft.transactionHash)}
-                                sx={{ color: '#ccd6f6', '&:hover': { color: '#64ffda' } }}
-                              >
-                                <ContentCopyIcon fontSize="small" />
-                              </IconButton>
-                            </Box>
-                          </Grid>
-                          
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 0.5 }}>
-                              Network
-                            </Typography>
-                            <Typography variant="body1" sx={{ color: '#e6f1ff' }}>
-                              EduChain
-                            </Typography>
-                          </Grid>
-                          
-                          <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" sx={{ color: '#ccd6f6', mb: 0.5 }}>
-                              Minted On
-                            </Typography>
-                            <Typography variant="body1" sx={{ color: '#e6f1ff' }}>
-                              {new Date().toLocaleDateString()}
-                            </Typography>
-                          </Grid>
-                        </Grid>
-                      </Paper>
-                    )}
-                    
-                    <Paper sx={{ 
-                      p: 2, 
-                      borderRadius: 2, 
-                      bgcolor: alpha('#0a192f', 0.7),
-                      border: `1px solid ${alpha('#64ffda', 0.2)}`
-                    }}>
-                      <Typography variant="h6" sx={{ color: '#e6f1ff', mb: 2 }}>
-                        Properties
-                      </Typography>
-                      
-                      <Grid container spacing={2}>
-                        <Grid item xs={6} sm={4}>
-                          <Box sx={{ 
-                            p: 1.5, 
-                            textAlign: 'center', 
-                            borderRadius: 2,
-                            bgcolor: alpha('#64ffda', 0.05),
-                            border: `1px solid ${alpha('#64ffda', 0.1)}`
-                          }}>
-                            <Typography variant="caption" sx={{ color: '#ccd6f6', display: 'block', mb: 0.5 }}>
-                              Type
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#e6f1ff', fontWeight: 'medium' }}>
-                              {getNftTypeLabel(selectedDetailNft.type)}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                        
-                        <Grid item xs={6} sm={4}>
-                          <Box sx={{ 
-                            p: 1.5, 
-                            textAlign: 'center', 
-                            borderRadius: 2,
-                            bgcolor: alpha('#64ffda', 0.05),
-                            border: `1px solid ${alpha('#64ffda', 0.1)}`
-                          }}>
-                            <Typography variant="caption" sx={{ color: '#ccd6f6', display: 'block', mb: 0.5 }}>
-                              Rarity
-                            </Typography>
-                            <Typography variant="body2" sx={{ 
-                              fontWeight: 'medium',
-                              color: getRarityColor(selectedDetailNft.rarity)
-                            }}>
-                              {selectedDetailNft.rarity}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                        
-                        <Grid item xs={6} sm={4}>
-                          <Box sx={{ 
-                            p: 1.5, 
-                            textAlign: 'center', 
-                            borderRadius: 2,
-                            bgcolor: alpha('#64ffda', 0.05),
-                            border: `1px solid ${alpha('#64ffda', 0.1)}`
-                          }}>
-                            <Typography variant="caption" sx={{ color: '#ccd6f6', display: 'block', mb: 0.5 }}>
-                              Status
-                            </Typography>
-                            <Typography variant="body2" sx={{ 
-                              color: selectedDetailNft.isMinted ? '#64ffda' : '#ccd6f6',
-                              fontWeight: 'medium' 
-                            }}>
-                              {selectedDetailNft.isMinted ? 'Minted' : 'Not Minted'}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                    </Paper>
-                  </Box>
-                </Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
-              <Button 
-                onClick={handleDetailClose} 
-                sx={{ color: '#ccd6f6' }}
-              >
-                Close
-              </Button>
-              
-              {!selectedDetailNft.isMinted && selectedDetailNft.acquisitionDate && (
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    handleDetailClose();
-                    handleMintClick(selectedDetailNft);
-                  }}
-                  startIcon={<AccountBalanceWalletIcon />}
-                  disabled={!walletAddress}
-                  sx={{
-                    borderRadius: 2, px: 3,
-                    background: 'linear-gradient(90deg, #64ffda, #88ccff)',
-                    color: '#0a192f',
-                    fontWeight: 'bold',
-                    '&:hover': {
-                      background: 'linear-gradient(90deg, #88ccff, #64ffda)',
-                    },
-                    '&.Mui-disabled': {
-                      background: alpha('#64ffda', 0.2),
-                      color: alpha('#ccd6f6', 0.5)
-                    }
-                  }}
-                >
-                  Mint to Blockchain
-                </Button>
-              )}
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
-      
-      {/* Sort Menu */}
-      <Menu
-        anchorEl={sortMenuAnchor}
-        open={Boolean(sortMenuAnchor)}
-        onClose={handleSortMenuClose}
-        PaperProps={{
-          sx: {
-            bgcolor: '#0a192f',
-            backgroundImage: 'linear-gradient(rgba(100, 255, 218, 0.05), rgba(10, 25, 47, 0.9))',
-            color: '#e6f1ff',
-            borderRadius: 2,
-            boxShadow: '0 5px 20px rgba(0,0,0,0.3)',
-            border: `1px solid ${alpha('#64ffda', 0.2)}`
-          }
-        }}
-      >
-        <MenuItem 
-          onClick={() => handleSortChange('newest')}
-          sx={{ 
-            color: sortOption === 'newest' ? '#64ffda' : '#ccd6f6',
-            '&:hover': { bgcolor: alpha('#64ffda', 0.1) }
-          }}
-        >
-          <Box sx={{ 
-            width: 16, 
-            height: 16, 
-            borderRadius: '50%', 
-            mr: 1, 
-            bgcolor: sortOption === 'newest' ? '#64ffda' : 'transparent',
-            border: `1px solid ${sortOption === 'newest' ? '#64ffda' : alpha('#ccd6f6', 0.5)}` 
-          }} />
-          Newest First
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSortChange('oldest')}
-          sx={{ 
-            color: sortOption === 'oldest' ? '#64ffda' : '#ccd6f6',
-            '&:hover': { bgcolor: alpha('#64ffda', 0.1) }
-          }}
-        >
-          <Box sx={{ 
-            width: 16, 
-            height: 16, 
-            borderRadius: '50%', 
-            mr: 1, 
-            bgcolor: sortOption === 'oldest' ? '#64ffda' : 'transparent',
-            border: `1px solid ${sortOption === 'oldest' ? '#64ffda' : alpha('#ccd6f6', 0.5)}` 
-          }} />
-          Oldest First
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSortChange('rarity')}
-          sx={{ 
-            color: sortOption === 'rarity' ? '#64ffda' : '#ccd6f6',
-            '&:hover': { bgcolor: alpha('#64ffda', 0.1) }
-          }}
-        >
-          <Box sx={{ 
-            width: 16, 
-            height: 16, 
-            borderRadius: '50%', 
-            mr: 1, 
-            bgcolor: sortOption === 'rarity' ? '#64ffda' : 'transparent',
-            border: `1px solid ${sortOption === 'rarity' ? '#64ffda' : alpha('#ccd6f6', 0.5)}` 
-          }} />
-          Rarity (High to Low)
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleSortChange('alphabetical')}
-          sx={{ 
-            color: sortOption === 'alphabetical' ? '#64ffda' : '#ccd6f6',
-            '&:hover': { bgcolor: alpha('#64ffda', 0.1) }
-          }}
-        >
-          <Box sx={{ 
-            width: 16, 
-            height: 16, 
-            borderRadius: '50%', 
-            mr: 1, 
-            bgcolor: sortOption === 'alphabetical' ? '#64ffda' : 'transparent',
-            border: `1px solid ${sortOption === 'alphabetical' ? '#64ffda' : alpha('#ccd6f6', 0.5)}` 
-          }} />
-          Alphabetical (A-Z)
-        </MenuItem>
-      </Menu>
-      
       {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
@@ -2765,26 +2672,55 @@ useEffect(() => {
           onClose={handleSnackbarClose} 
           severity={snackbarSeverity} 
           variant="filled"
-          sx={{ 
-            width: '100%', 
-            borderRadius: 2,
-            bgcolor: snackbarSeverity === 'success' ? '#172d32' : 
-                      snackbarSeverity === 'error' ? '#2d1a24' :
-                      snackbarSeverity === 'warning' ? '#2a2310' : '#0d2e3b',
-            border: `1px solid ${snackbarSeverity === 'success' ? '#64ffda' : 
-                      snackbarSeverity === 'error' ? '#f44336' :
-                      snackbarSeverity === 'warning' ? '#ffc107' : '#2196f3'}`,
-            color: '#e6f1ff',
-            '& .MuiAlert-icon': {
-              color: snackbarSeverity === 'success' ? '#64ffda' : 
-                     snackbarSeverity === 'error' ? '#f44336' :
-                     snackbarSeverity === 'warning' ? '#ffc107' : '#2196f3'
-            }
-          }}
+          sx={{ width: '100%' }}
         >
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </Box>
+    </>
   );
 }
+
+// Add the getNftTypeIcon function below existing helper functions
+// Get icon for NFT type
+const getNftTypeIcon = (type) => {
+  if (!type) return <CollectionsIcon fontSize="small" />;
+  
+  switch(type.toLowerCase()) {
+    case 'subscription':
+      return <DiamondIcon fontSize="small" color="primary" />;
+    case 'achievement':
+      return <EmojiEventsIcon fontSize="small" sx={{ color: '#FFD700' }} />;
+    case 'course_completion':
+      return <SchoolIcon fontSize="small" color="info" />;
+    case 'ranking':
+      return <StarIcon fontSize="small" sx={{ color: '#FFA726' }} />;
+    case 'limited_edition':
+      return <WhatshotIcon fontSize="small" color="error" />;
+    default:
+      return <CollectionsIcon fontSize="small" />;
+  }
+};
+
+// Add the isExpiringSoon function below the other helper functions
+const isExpiringSoon = (expiryDate) => {
+  if (!expiryDate) return false;
+  
+  const expiry = new Date(expiryDate);
+  const now = new Date();
+  const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+  
+  return daysLeft <= 7 && daysLeft > 0;
+};
+
+// Add a date formatter
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  }).format(date);
+};

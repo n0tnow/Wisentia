@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 // MUI components
 import {
@@ -35,9 +36,10 @@ import {
   FormControl,
   InputLabel,
   useMediaQuery,
-  Grid,
   Stack,
-  Divider
+  Divider,
+  Container,
+  Grid
 } from '@mui/material';
 
 // MUI icons
@@ -50,8 +52,17 @@ import {
   Refresh as RefreshIcon,
   Search as SearchIcon,
   FilterList as FilterIcon,
-  SmartToy as AIIcon
+  SmartToy as AIIcon,
+  Close as CloseIcon,
+  FilterAltOff as FilterAltOffIcon
 } from '@mui/icons-material';
+import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 export default function QuestsManagementPage() {
   const theme = useTheme();
@@ -64,6 +75,7 @@ export default function QuestsManagementPage() {
   const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,27 +94,66 @@ export default function QuestsManagementPage() {
     }
 
     const fetchQuests = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
-        setLoading(true);
+        // Filtreler ve arama için query parametreleri
         const queryParams = new URLSearchParams({
-          page: page + 1,
-          pageSize,
-          search: searchTerm,
-          difficulty: difficultyFilter,
-          aiGenerated: aiGeneratedFilter,
-          status: statusFilter
+          page: page + 1, // API is 1-indexed
+          pageSize: pageSize,
+          include_inactive: 'true' // Always include inactive quests in admin panel
         });
-
-        const response = await fetch(`/api/admin/quests?${queryParams.toString()}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch quests');
+        
+        if (searchTerm) {
+          queryParams.append('search', searchTerm);
         }
-
+        
+        if (difficultyFilter) {
+          queryParams.append('difficulty', difficultyFilter);
+        }
+        
+        if (statusFilter === 'active') {
+          queryParams.append('active', 'true');
+        } else if (statusFilter === 'inactive') {
+          queryParams.append('active', 'false');
+        }
+        
+        if (aiGeneratedFilter === 'true') {
+          queryParams.append('aiGenerated', 'true');
+        } else if (aiGeneratedFilter === 'false') {
+          queryParams.append('aiGenerated', 'false');
+        }
+        
+        console.log(`Fetching quests with params: ${queryParams.toString()}`);
+        
+        // Use the regular quests API directly since we know it works
+        const response = await fetch(`/api/quests?${queryParams.toString()}`, {
+          cache: 'no-store'
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+        
         const data = await response.json();
-        setQuests(data.quests || []);
-        setTotalCount(data.totalCount || 0);
-      } catch (err) {
-        setError(err.message);
+        console.log('Quests API response:', data);
+        
+        // Process the response 
+        const processedData = processFetchedQuests(data);
+        setQuests(processedData);
+        
+        // Set total count for pagination
+        setTotalCount(
+          data.totalCount || 
+          (data.quests && data.quests.length) || 
+          (Array.isArray(data) ? data.length : 0)
+        );
+      } catch (error) {
+        console.error('Error loading quests:', error);
+        setError('Failed to load quests. Please try again.');
+        toast.error('Failed to load quests');
+        setQuests([]);
       } finally {
         setLoading(false);
       }
@@ -111,40 +162,104 @@ export default function QuestsManagementPage() {
     if (user && user.role === 'admin') {
       fetchQuests();
     }
-  }, [user, router, page, pageSize, searchTerm, difficultyFilter, aiGeneratedFilter, statusFilter]);
+  }, [user, router, page, pageSize, searchTerm, difficultyFilter, aiGeneratedFilter, statusFilter, refreshTrigger]);
+
+  // Process quests to handle both camelCase and PascalCase property names (backend inconsistency)
+  const processFetchedQuests = (data) => {
+    // Extract the actual quests array from the response
+    let questsData;
+    
+    if (data.quests && Array.isArray(data.quests)) {
+      questsData = data.quests;
+    } else if (Array.isArray(data)) {
+      questsData = data;
+    } else if (data.items && Array.isArray(data.items)) {
+      questsData = data.items;
+    } else {
+      console.warn('Unexpected API response format', data);
+      questsData = [];
+    }
+    
+    // Normalize the data
+    return questsData.map(quest => {
+      // Normalize ID fields
+      const id = quest.QuestID || quest.questId || quest.id;
+      
+      // Normalize boolean values - convert from number (0/1) to boolean if needed
+      const isActive = typeof quest.IsActive === 'number' 
+        ? Boolean(quest.IsActive) 
+        : (typeof quest.isActive === 'number' ? Boolean(quest.isActive) : Boolean(quest.IsActive || quest.isActive || true));
+      
+      const isAIGenerated = typeof quest.IsAIGenerated === 'number'
+        ? Boolean(quest.IsAIGenerated)
+        : (typeof quest.isAIGenerated === 'number' ? Boolean(quest.isAIGenerated) : Boolean(quest.IsAIGenerated || quest.isAIGenerated || false));
+      
+      console.log(`Quest ${id}: Raw active status:`, quest.IsActive, quest.isActive, "Normalized:", isActive);
+      
+      // Return a normalized quest object with consistent property names
+      return {
+        id,
+        QuestID: id,
+        Title: quest.Title || quest.title || '',
+        Description: quest.Description || quest.description || '',
+        DifficultyLevel: quest.DifficultyLevel || quest.difficultyLevel || quest.difficulty || 'intermediate',
+        Category: quest.Category || quest.category || 'General',
+        IsActive: isActive,
+        isActive: isActive,
+        IsAIGenerated: isAIGenerated,
+        isAIGenerated: isAIGenerated,
+        RequiredPoints: quest.RequiredPoints || quest.requiredPoints || 0,
+        RewardPoints: quest.RewardPoints || quest.rewardPoints || 0,
+        CreationDate: quest.CreationDate || quest.creationDate || new Date().toISOString(),
+        ...quest // Include original properties just in case
+      };
+    });
+  };
 
   const handleCreateQuest = () => {
-    router.push('/admin/quest/create');
+    router.push('/admin/content/quests/create');
   };
   
   const handleGenerateQuest = () => {
-    router.push('/admin/generate-quest');
+    router.push('/admin/quests/ai-generator');
   };
 
-  const handleToggleActive = async (id, isActive) => {
+  const handleToggleActive = async (questId) => {
+    // İlgili görevi bul
+    const questToUpdate = quests.find(q => q.QuestID === questId || q.id === questId);
+    
+    if (!questToUpdate) {
+      toast.error('Güncellenmek istenen görev bulunamadı');
+      return;
+    }
+    
+    // API'ye gönderilecek güncellenmiş veri
+    const updatedData = {
+      ...questToUpdate,
+      IsActive: !questToUpdate.IsActive,
+      isActive: !questToUpdate.IsActive
+    };
+    
     try {
-      const response = await fetch(`/api/quests/${id}`, {
+      const response = await fetch(`/api/quests/${questId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          isActive: !isActive,
-        }),
+        body: JSON.stringify(updatedData),
       });
-
+      
       if (!response.ok) {
-        throw new Error('Failed to update quest');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Görev durumu güncellenemedi');
       }
-
-      // Update quest in list
-      setQuests(quests.map(quest => 
-        quest.QuestID === id 
-          ? { ...quest, IsActive: !isActive } 
-          : quest
-      ));
-    } catch (err) {
-      alert(`Error: ${err.message}`);
+      
+      // Refresh data instead of manual state update
+      setRefreshTrigger(prev => prev + 1);
+      toast.success('Görev durumu başarıyla güncellendi');
+    } catch (error) {
+      console.error('Görev durumu güncellenirken hata:', error);
+      toast.error(error.message || 'Görev durumu güncellenirken bir hata oluştu');
     }
   };
 
@@ -163,6 +278,7 @@ export default function QuestsManagementPage() {
   
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
+    setPage(0); // Reset to first page when search changes
   };
   
   const handleClearFilters = () => {
@@ -171,6 +287,29 @@ export default function QuestsManagementPage() {
     setAiGeneratedFilter('');
     setStatusFilter('');
     setPage(0);
+  };
+
+  const handleDeleteQuest = async (questId) => {
+    try {
+      const response = await fetch(`/api/quests/${questId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Görev silinemedi');
+      }
+      
+      // Refresh data instead of manual state update
+      setRefreshTrigger(prev => prev + 1);
+      toast.success('Görev başarıyla silindi');
+    } catch (error) {
+      console.error('Görev silinirken hata:', error);
+      toast.error(error.message || 'Görev silinirken bir hata oluştu');
+    }
   };
 
   // Render loading state
@@ -204,494 +343,503 @@ export default function QuestsManagementPage() {
         p: 2,
         mb: 2,
         borderRadius: 2,
-        borderLeft: quest.IsActive ? '4px solid #4caf50' : '4px solid #f44336',
+        border: '1px solid',
+        borderColor: 'divider',
+        position: 'relative'
       }}
     >
-      <Grid container spacing={1}>
-        <Grid item xs={12} sx={{ mb: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar 
-              sx={{ 
-                width: 40, 
-                height: 40, 
-                mr: 2,
-                bgcolor: quest.IsAIGenerated ? theme.palette.info.light : theme.palette.secondary.main
-              }}
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6" component="div">
+          {quest.Title || quest.title}
+        </Typography>
+        
+        <Chip 
+          size="small" 
+          label={quest.IsActive || quest.isActive ? "Active" : "Inactive"}
+          color={quest.IsActive || quest.isActive ? "success" : "default"}
+          sx={{ fontWeight: 500 }}
+        />
+      </Box>
+      
+      <Typography 
+        variant="body2" 
+        color="text.secondary" 
+        sx={{ 
+          mb: 2, 
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical'
+        }}
+      >
+        {quest.Description || quest.description}
+      </Typography>
+      
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+        <Chip 
+          size="small" 
+          label={quest.DifficultyLevel || quest.difficultyLevel || 'Unknown'} 
+          color={
+            (quest.DifficultyLevel === 'easy' || quest.difficultyLevel === 'easy') ? 'success' :
+            (quest.DifficultyLevel === 'medium' || quest.difficultyLevel === 'medium') ? 'warning' :
+            (quest.DifficultyLevel === 'hard' || quest.difficultyLevel === 'hard') ? 'error' : 'default'
+          }
+          variant="outlined"
+        />
+        
+        {(quest.IsAIGenerated || quest.isAIGenerated) && (
+          <Chip 
+            size="small" 
+            label="AI Generated"
+            color="info"
+            variant="outlined"
+          />
+        )}
+        
+        <Chip 
+          size="small" 
+          icon={<EmojiEventsIcon />}
+          label={`${quest.RewardPoints || quest.rewardPoints || 0} XP`}
+          variant="outlined"
+        />
+      </Box>
+      
+      <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Button 
+          size="small"
+          startIcon={<ViewIcon />}
+          onClick={() => handleViewQuest(quest.QuestID || quest.questId || quest.id)}
+        >
+          View
+        </Button>
+        
+        <Button 
+          size="small"
+          startIcon={quest.IsActive || quest.isActive ? <DeactivateIcon /> : <ActivateIcon />}
+          color={quest.IsActive || quest.isActive ? "error" : "success"}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleToggleActive(quest.QuestID || quest.questId || quest.id);
+          }}
+        >
+          {quest.IsActive || quest.isActive ? "Deactivate" : "Activate"}
+        </Button>
+        
+        <Button
+          size="small"
+          color="error"
+          startIcon={<DeleteIcon />}
+          onClick={(e) => {
+            e.stopPropagation();
+            setQuestToDelete(quest.QuestID || quest.questId || quest.id);
+            setDeleteDialogOpen(true);
+          }}
+        >
+          Delete
+        </Button>
+      </Stack>
+    </Paper>
+  );
+
+  // Filters section to display above content area
+  const FiltersSection = () => (
+    <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={6} md={3}>
+          <TextField
+            fullWidth
+            label="Search"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            variant="outlined"
+            size="small"
+            InputProps={{
+              endAdornment: searchTerm && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchTerm('')}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Difficulty</InputLabel>
+            <Select
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
+              label="Difficulty"
             >
-              {quest.IsAIGenerated ? <AIIcon fontSize="small" /> : <QuestIcon fontSize="small" />}
-            </Avatar>
-            <Typography 
-              variant="subtitle1" 
-              fontWeight="medium"
-              sx={{ '&:hover': { color: theme.palette.secondary.main }, cursor: 'pointer' }}
-              onClick={() => handleViewQuest(quest.QuestID)}
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="easy">Easy</MenuItem>
+              <MenuItem value="medium">Medium</MenuItem>
+              <MenuItem value="hard">Hard</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              label="Status"
             >
-              {quest.Title}
-            </Typography>
-          </Box>
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="active">Active</MenuItem>
+              <MenuItem value="inactive">Inactive</MenuItem>
+            </Select>
+          </FormControl>
         </Grid>
-        
-        <Grid item xs={6}>
-          <Typography variant="caption" color="text.secondary">Difficulty</Typography>
-          <Box>
-            <Chip 
-              label={quest.DifficultyLevel} 
-              size="small"
-              color={
-                quest.DifficultyLevel === 'beginner' ? 'success' :
-                quest.DifficultyLevel === 'intermediate' ? 'warning' :
-                'error'
-              }
-              variant="outlined"
-            />
-          </Box>
+        <Grid item xs={12} sm={6} md={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Source</InputLabel>
+            <Select
+              value={aiGeneratedFilter}
+              onChange={(e) => setAiGeneratedFilter(e.target.value)}
+              label="Source"
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="true">AI Generated</MenuItem>
+              <MenuItem value="false">Manual</MenuItem>
+            </Select>
+          </FormControl>
         </Grid>
-        
-        <Grid item xs={6}>
-          <Typography variant="caption" color="text.secondary">Created</Typography>
-          <Typography variant="body2">
-            {new Date(quest.CreationDate).toLocaleDateString()}
-          </Typography>
-        </Grid>
-        
-        <Grid item xs={12} sx={{ mt: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="caption" color="text.secondary">Points</Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', mt: 0.5, gap: 1 }}>
-                <Chip 
-                  label={`Required: ${quest.RequiredPoints}`} 
-                  size="small" 
-                  variant="outlined" 
-                  color="primary"
-                  sx={{ height: 24 }}
-                />
-                <Chip 
-                  label={`Reward: ${quest.RewardPoints}`}
-                  size="small" 
-                  color="primary"
-                  sx={{ height: 24 }}
-                />
-              </Box>
-            </Box>
-            <Chip 
-              label={quest.IsAIGenerated ? 'AI Generated' : 'Manual'}
-              color={quest.IsAIGenerated ? 'info' : 'default'}
-              size="small"
-              variant={quest.IsAIGenerated ? 'filled' : 'outlined'}
-            />
-          </Box>
+        <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button 
+            startIcon={<FilterAltOffIcon />} 
+            onClick={handleClearFilters}
+            disabled={!searchTerm && !difficultyFilter && !aiGeneratedFilter && !statusFilter}
+            variant="outlined"
+            color="secondary"
+          >
+            Clear Filters
+          </Button>
         </Grid>
       </Grid>
-      
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid', borderColor: 'divider', pt: 2 }}>
-        <Tooltip title="View Details">
-          <IconButton 
-            size="small" 
-            color="secondary"
-            onClick={() => handleViewQuest(quest.QuestID)}
-            sx={{ mr: 1 }}
-          >
-            <ViewIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={quest.IsActive ? "Deactivate" : "Activate"}>
-          <IconButton 
-            size="small"
-            color={quest.IsActive ? "error" : "success"}
-            onClick={() => handleToggleActive(quest.QuestID, quest.IsActive)}
-          >
-            {quest.IsActive ? <DeactivateIcon /> : <ActivateIcon />}
-          </IconButton>
-        </Tooltip>
-      </Box>
     </Paper>
   );
 
   return (
     <MainLayout>
-      <Box sx={{ width: '100%', px: { xs: 1, sm: 2, md: 3 } }}>
-        <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-          {/* Page Header */}
-          <Box sx={{ 
-            mb: 4,
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            justifyContent: 'space-between',
-            alignItems: { xs: 'flex-start', sm: 'center' },
-            gap: 2
-          }}>
-            <Fade in={true} timeout={800}>
-              <Box>
-                <Typography 
-                  variant="h4" 
-                  component="h1"
-                  fontWeight="700"
-                  sx={{ 
-                    fontSize: { xs: '1.7rem', sm: '2rem', md: '2.125rem' },
-                    mb: 1,
-                    background: `linear-gradient(45deg, ${theme.palette.secondary.main} 30%, ${theme.palette.secondary.dark} 90%)`,
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                  }}
-                >
-                  Quest Management
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary">
-                  Manage challenges and missions for platform users
-                </Typography>
-              </Box>
-            </Fade>
-            <Stack 
-              direction={{ xs: 'column', sm: 'row' }} 
-              spacing={2}
-              sx={{ width: { xs: '100%', sm: 'auto' } }}
-            >
-              <Zoom in={true} style={{ transitionDelay: '200ms' }}>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  startIcon={<AIIcon />}
-                  onClick={handleGenerateQuest}
-                  sx={{ 
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 'medium',
-                    width: { xs: '100%', sm: 'auto' }
-                  }}
-                >
-                  Generate with AI
-                </Button>
-              </Zoom>
-              <Zoom in={true} style={{ transitionDelay: '300ms' }}>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  startIcon={<AddIcon />}
-                  onClick={handleCreateQuest}
-                  sx={{ 
-                    px: { xs: 2, md: 3 },
-                    py: { xs: 1, md: 1.2 },
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    background: `linear-gradient(45deg, ${theme.palette.secondary.main} 30%, ${theme.palette.secondary.dark} 90%)`,
-                    textTransform: 'none',
-                    fontWeight: 'bold',
-                    width: { xs: '100%', sm: 'auto' }
-                  }}
-                >
-                  Create Quest
-                </Button>
-              </Zoom>
-            </Stack>
-          </Box>
-
-          {/* Error Alert */}
-          {error && (
-            <Alert 
-              severity="error" 
-              variant="filled"
-              action={
-                <Button 
-                  color="inherit" 
-                  size="small" 
-                  onClick={() => {
-                    setError(null);
-                    setPage(0);
-                    setLoading(true);
-                  }}
-                  startIcon={<RefreshIcon />}
-                >
-                  Retry
-                </Button>
-              }
-              sx={{ mb: 3 }}
-            >
-              {error}
-            </Alert>
-          )}
-
-          {/* Filters */}
-          <Paper 
-            elevation={2} 
-            sx={{ 
-              p: { xs: 1.5, md: 2 }, 
-              mb: 3, 
-              borderRadius: 2
-            }}
-          >
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  placeholder="Search quests..."
-                  variant="outlined"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  size="small"
-                  fullWidth
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-              
-              <Grid item xs={6} sm={4} md={2}>
-                <FormControl variant="outlined" size="small" fullWidth>
-                  <InputLabel id="difficulty-filter-label">Difficulty</InputLabel>
-                  <Select
-                    labelId="difficulty-filter-label"
-                    id="difficulty-filter"
-                    value={difficultyFilter}
-                    onChange={(e) => setDifficultyFilter(e.target.value)}
-                    label="Difficulty"
-                  >
-                    <MenuItem value="">All Levels</MenuItem>
-                    <MenuItem value="beginner">Beginner</MenuItem>
-                    <MenuItem value="intermediate">Intermediate</MenuItem>
-                    <MenuItem value="advanced">Advanced</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={6} sm={4} md={2}>
-                <FormControl variant="outlined" size="small" fullWidth>
-                  <InputLabel id="ai-filter-label">AI Generated</InputLabel>
-                  <Select
-                    labelId="ai-filter-label"
-                    id="ai-filter"
-                    value={aiGeneratedFilter}
-                    onChange={(e) => setAiGeneratedFilter(e.target.value)}
-                    label="AI Generated"
-                  >
-                    <MenuItem value="">All</MenuItem>
-                    <MenuItem value="true">AI Generated</MenuItem>
-                    <MenuItem value="false">Manually Created</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={6} sm={4} md={2}>
-                <FormControl variant="outlined" size="small" fullWidth>
-                  <InputLabel id="status-filter-label">Status</InputLabel>
-                  <Select
-                    labelId="status-filter-label"
-                    id="status-filter"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    label="Status"
-                  >
-                    <MenuItem value="">All Status</MenuItem>
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="inactive">Inactive</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={6} sm={12} md={2}>
-                <Button 
-                  variant="outlined" 
-                  color="secondary"
-                  startIcon={<FilterIcon />}
-                  onClick={handleClearFilters}
-                  size="medium"
-                  fullWidth
-                  sx={{ height: '100%', maxHeight: 40 }}
-                >
-                  Clear Filters
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Quests Table or Mobile Cards */}
-          {!isMobile ? (
-            <Paper 
-              elevation={3} 
-              sx={{ 
-                borderRadius: 2, 
-                overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-              }}
-            >
-              <TableContainer 
+      <Container maxWidth="xl" sx={{ mt: 6, mb: 6, px: { xs: 2, sm: 3, md: 4 } }}>
+        {/* Page Header */}
+        <Box sx={{ 
+          mb: 4,
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          gap: 2
+        }}>
+          <Fade in={true} timeout={800}>
+            <Box>
+              <Typography 
+                variant="h4" 
+                component="h1"
+                fontWeight="700"
                 sx={{ 
-                  width: '100%', 
-                  overflowX: 'auto',
-                  '&::-webkit-scrollbar': {
-                    height: '8px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    backgroundColor: alpha(theme.palette.secondary.main, 0.05),
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundColor: alpha(theme.palette.secondary.main, 0.2),
-                    borderRadius: '4px',
-                    '&:hover': {
-                      backgroundColor: alpha(theme.palette.secondary.main, 0.3),
-                    }
+                  fontSize: { xs: '1.7rem', sm: '2rem', md: '2.125rem' },
+                  mb: 1,
+                  position: 'relative',
+                  '&:after': {
+                    content: '""',
+                    position: 'absolute',
+                    width: '40%',
+                    height: '4px',
+                    bottom: '-8px',
+                    left: 0,
+                    backgroundColor: theme.palette.secondary.main,
+                    borderRadius: '2px'
                   }
                 }}
               >
-                <Table>
-                  <TableHead sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Title</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Difficulty</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Points</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Created</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>AI Generated</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {quests.length > 0 ? (
-                      quests.map((quest) => (
-                        <TableRow 
-                          key={quest.QuestID}
-                          hover
-                          sx={{ '&:hover': { bgcolor: alpha(theme.palette.secondary.main, 0.05) } }}
-                        >
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Avatar 
-                                sx={{ 
-                                  width: 40, 
-                                  height: 40, 
-                                  mr: 2,
-                                  bgcolor: quest.IsAIGenerated ? theme.palette.info.light : theme.palette.secondary.main
-                                }}
-                              >
-                                {quest.IsAIGenerated ? <AIIcon fontSize="small" /> : <QuestIcon fontSize="small" />}
-                              </Avatar>
-                              <Typography 
-                                variant="body1" 
-                                fontWeight="medium"
-                                sx={{ '&:hover': { color: theme.palette.secondary.main }, cursor: 'pointer' }}
-                                onClick={() => handleViewQuest(quest.QuestID)}
-                              >
-                                {quest.Title}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={quest.DifficultyLevel} 
-                              size="small"
-                              color={
-                                quest.DifficultyLevel === 'beginner' ? 'success' :
-                                quest.DifficultyLevel === 'intermediate' ? 'warning' :
-                                'error'
-                              }
-                              variant="outlined"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Box display="flex" alignItems="center" flexWrap="wrap" gap={1}>
-                              <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
-                                Req:
-                              </Typography>
-                              <Chip 
-                                label={quest.RequiredPoints} 
-                                size="small" 
-                                variant="outlined" 
-                                color="primary"
-                              />
-                              <Typography variant="body2" color="text.secondary" sx={{ mx: 0.5 }}>
-                                Reward:
-                              </Typography>
-                              <Chip 
-                                label={quest.RewardPoints} 
-                                size="small" 
-                                color="primary"
-                              />
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(quest.CreationDate).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={quest.IsActive ? 'Active' : 'Inactive'} 
-                              color={quest.IsActive ? 'success' : 'error'}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={quest.IsAIGenerated ? 'AI' : 'Manual'} 
-                              color={quest.IsAIGenerated ? 'info' : 'default'}
-                              size="small"
-                              variant={quest.IsAIGenerated ? 'filled' : 'outlined'}
-                            />
-                          </TableCell>
-                          <TableCell>
+                Quest Management
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 2 }}>
+                Manage challenges and missions for platform users
+              </Typography>
+            </Box>
+          </Fade>
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            spacing={2}
+            sx={{ width: { xs: '100%', sm: 'auto' } }}
+          >
+            <Zoom in={true} style={{ transitionDelay: '200ms' }}>
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<AIIcon />}
+                onClick={handleGenerateQuest}
+                sx={{ 
+                  px: 2,
+                  py: 1,
+                  borderRadius: '30px',
+                  fontWeight: 'medium',
+                  width: { xs: '100%', sm: 'auto' },
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                  }
+                }}
+              >
+                Generate with AI
+              </Button>
+            </Zoom>
+            <Zoom in={true} style={{ transitionDelay: '300ms' }}>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<AddIcon />}
+                onClick={handleCreateQuest}
+                sx={{ 
+                  px: { xs: 2, md: 3 },
+                  py: { xs: 1, md: 1.2 },
+                  borderRadius: '30px',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.15)',
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  width: { xs: '100%', sm: 'auto' },
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 12px rgba(0,0,0,0.15)',
+                  }
+                }}
+              >
+                Create Quest
+              </Button>
+            </Zoom>
+          </Stack>
+        </Box>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert 
+            severity="error" 
+            variant="filled"
+            action={
+              <Button 
+                color="inherit" 
+                size="small" 
+                onClick={() => {
+                  setError(null);
+                  setPage(0);
+                  setLoading(true);
+                }}
+                startIcon={<RefreshIcon />}
+              >
+                Retry
+              </Button>
+            }
+            sx={{ mb: 3, borderRadius: '8px' }}
+          >
+            {error}
+          </Alert>
+        )}
+
+        {/* Filters Section */}
+        <FiltersSection />
+
+        {/* Quests Table or Mobile Cards */}
+        {!isMobile ? (
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              borderRadius: '12px', 
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }}
+          >
+            <TableContainer 
+              sx={{ 
+                width: '100%', 
+                overflowX: 'auto',
+                '&::-webkit-scrollbar': {
+                  height: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: alpha(theme.palette.secondary.main, 0.05),
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: alpha(theme.palette.secondary.main, 0.2),
+                  borderRadius: '4px',
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.secondary.main, 0.3),
+                  }
+                }
+              }}
+            >
+              <Table>
+                <TableHead sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Title</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Difficulty</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Points</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Created</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>AI Generated</TableCell>
+                    <TableCell sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {quests.length > 0 ? (
+                    quests.map((quest) => (
+                      <TableRow 
+                        key={quest.QuestID || quest.id} 
+                        hover
+                        sx={{ 
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.05)
+                          } 
+                        }}
+                        onClick={() => handleViewQuest(quest.QuestID || quest.id)}
+                      >
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="medium">
+                            {quest.Title || quest.title || 'Untitled Quest'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            size="small" 
+                            label={quest.DifficultyLevel || quest.difficultyLevel || 'Unknown'} 
+                            color={
+                              (quest.DifficultyLevel === 'easy' || quest.difficultyLevel === 'easy') ? 'success' :
+                              (quest.DifficultyLevel === 'medium' || quest.difficultyLevel === 'medium') ? 'warning' :
+                              (quest.DifficultyLevel === 'hard' || quest.difficultyLevel === 'hard') ? 'error' : 'default'
+                            }
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={quest.IsAIGenerated || quest.isAIGenerated ? 'AI Generated' : 'Manual'}
+                            color={quest.IsAIGenerated || quest.isAIGenerated ? 'info' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>{quest.RequiredPoints || quest.requiredPoints || 0}</TableCell>
+                        <TableCell>{quest.RewardPoints || quest.rewardPoints || 0}</TableCell>
+                        <TableCell>
+                          <Chip 
+                            size="small" 
+                            label={quest.IsActive || quest.isActive ? "Active" : "Inactive"}
+                            color={quest.IsActive || quest.isActive ? "success" : "default"}
+                          />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                             <Tooltip title="View Details">
                               <IconButton 
-                                size="small" 
-                                color="secondary"
-                                onClick={() => handleViewQuest(quest.QuestID)}
+                                size="small"
+                                color="primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewQuest(quest.QuestID || quest.id);
+                                }}
                                 sx={{ mr: 1 }}
                               >
-                                <ViewIcon />
+                                <ViewIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title={quest.IsActive ? "Deactivate" : "Activate"}>
+                            <Tooltip title={quest.IsActive || quest.isActive ? "Deactivate" : "Activate"}>
                               <IconButton 
                                 size="small"
-                                color={quest.IsActive ? "error" : "success"}
-                                onClick={() => handleToggleActive(quest.QuestID, quest.IsActive)}
+                                color={quest.IsActive || quest.isActive ? "error" : "success"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleActive(quest.QuestID || quest.id);
+                                }}
                               >
-                                {quest.IsActive ? <DeactivateIcon /> : <ActivateIcon />}
+                                {quest.IsActive || quest.isActive ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
                               </IconButton>
                             </Tooltip>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                          <Typography variant="h6" color="text.secondary">
-                            No quests found
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
-                            {searchTerm || difficultyFilter || aiGeneratedFilter || statusFilter 
-                              ? 'Try clearing filters or creating a new quest'
-                              : 'Start by creating a new quest manually or generate with AI'}
-                          </Typography>
-                          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                            <Button
-                              variant="outlined"
-                              color="secondary"
-                              startIcon={<AIIcon />}
-                              onClick={handleGenerateQuest}
-                            >
-                              Generate with AI
-                            </Button>
-                            <Button
-                              variant="contained"
-                              color="secondary"
-                              startIcon={<AddIcon />}
-                              onClick={handleCreateQuest}
-                            >
-                              Create Quest
-                            </Button>
+                            <Tooltip title="Delete">
+                              <IconButton 
+                                size="small"
+                                color="error"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setQuestToDelete(quest.QuestID || quest.id);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                sx={{ ml: 1 }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
                           </Box>
                         </TableCell>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              
-              {/* Pagination */}
-              {quests.length > 0 && (
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                        <Typography variant="h6" color="text.secondary">
+                          No quests found
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
+                          {searchTerm || difficultyFilter || aiGeneratedFilter || statusFilter 
+                            ? 'Try clearing filters or creating a new quest'
+                            : 'Start by creating a new quest manually or generate with AI'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                          <Button
+                            variant="outlined"
+                            color="secondary"
+                            startIcon={<AIIcon />}
+                            onClick={handleGenerateQuest}
+                            sx={{ borderRadius: '30px' }}
+                          >
+                            Generate with AI
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            startIcon={<AddIcon />}
+                            onClick={handleCreateQuest}
+                            sx={{ borderRadius: '30px' }}
+                          >
+                            Create Quest
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            
+            {/* Pagination */}
+            {quests.length > 0 && (
+              <TablePagination
+                component="div"
+                count={totalCount}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={pageSize}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[5, 10, 20, 50]}
+              />
+            )}
+          </Paper>
+        ) : (
+          /* Mobile view */
+          <Box>
+            {quests.length > 0 ? (
+              <>
+                {quests.map((quest) => (
+                  <MobileQuestCard key={quest.QuestID} quest={quest} />
+                ))}
+                
+                {/* Pagination for mobile */}
                 <TablePagination
                   component="div"
                   count={totalCount}
@@ -699,82 +847,62 @@ export default function QuestsManagementPage() {
                   onPageChange={handleChangePage}
                   rowsPerPage={pageSize}
                   onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={[5, 10, 20, 50]}
-                />
-              )}
-            </Paper>
-          ) : (
-            /* Mobile view */
-            <Box>
-              {quests.length > 0 ? (
-                <>
-                  {quests.map((quest) => (
-                    <MobileQuestCard key={quest.QuestID} quest={quest} />
-                  ))}
-                  
-                  {/* Pagination for mobile */}
-                  <TablePagination
-                    component="div"
-                    count={totalCount}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    rowsPerPage={pageSize}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                    rowsPerPageOptions={[5, 10, 20]}
-                    sx={{ 
-                      mt: 2,
-                      '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-                        display: { xs: 'none', sm: 'block' }
-                      }
-                    }}
-                  />
-                </>
-              ) : (
-                <Paper
-                  elevation={2}
+                  rowsPerPageOptions={[5, 10, 20]}
                   sx={{ 
-                    p: 3, 
-                    borderRadius: 2, 
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
+                    mt: 2,
+                    '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                      display: { xs: 'none', sm: 'block' }
+                    }
                   }}
-                >
-                  <Typography variant="h6" color="text.secondary">
-                    No quests found
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
-                    {searchTerm || difficultyFilter || aiGeneratedFilter || statusFilter 
-                      ? 'Try clearing filters or creating a new quest'
-                      : 'Start by creating a new quest manually or generate with AI'}
-                  </Typography>
-                  <Stack spacing={2} sx={{ width: '100%' }}>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      startIcon={<AddIcon />}
-                      onClick={handleCreateQuest}
-                      fullWidth
-                    >
-                      Create Quest
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      startIcon={<AIIcon />}
-                      onClick={handleGenerateQuest}
-                      fullWidth
-                    >
-                      Generate with AI
-                    </Button>
-                  </Stack>
-                </Paper>
-              )}
-            </Box>
-          )}
-        </Box>
-      </Box>
+                />
+              </>
+            ) : (
+              <Paper
+                elevation={2}
+                sx={{ 
+                  p: 3, 
+                  borderRadius: '12px', 
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center'
+                }}
+              >
+                <Typography variant="h6" color="text.secondary">
+                  No quests found
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 3 }}>
+                  {searchTerm || difficultyFilter || aiGeneratedFilter || statusFilter 
+                    ? 'Try clearing filters or creating a new quest'
+                    : 'Start by creating a new quest manually or generate with AI'}
+                </Typography>
+                <Stack spacing={2} sx={{ width: '100%' }}>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<AddIcon />}
+                    onClick={handleCreateQuest}
+                    fullWidth
+                    sx={{ borderRadius: '30px' }}
+                  >
+                    Create Quest
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<AIIcon />}
+                    onClick={handleGenerateQuest}
+                    fullWidth
+                    sx={{ borderRadius: '30px' }}
+                  >
+                    Generate with AI
+                  </Button>
+                </Stack>
+              </Paper>
+            )}
+          </Box>
+        )}
+      </Container>
     </MainLayout>
   );
 }

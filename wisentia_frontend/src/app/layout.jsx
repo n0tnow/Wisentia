@@ -3,6 +3,8 @@
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ToastProvider } from '@/contexts/ToastContext';
+import { Toaster } from 'react-hot-toast';
 import MainLayout from '@/components/layout/MainLayout';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
@@ -57,15 +59,18 @@ export default function RootLayout({ children }) {
       <body className={inter.className}>
         <ThemeProvider>
           <AuthProvider>
-            {isAdminPage ? (
-              // Admin sayfaları için MainLayout kullanma
-              children
-            ) : (
-              // Normal sayfalar için MainLayout kullan
-              <MainLayout>
-                {children}
-              </MainLayout>
-            )}
+            <ToastProvider>
+              <Toaster position="top-center" />
+              {isAdminPage ? (
+                // Admin sayfaları için MainLayout kullanma
+                children
+              ) : (
+                // Normal sayfalar için MainLayout kullan
+                <MainLayout>
+                  {children}
+                </MainLayout>
+              )}
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

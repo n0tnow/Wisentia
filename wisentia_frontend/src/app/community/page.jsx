@@ -39,7 +39,8 @@ import {
   alpha,
   Tooltip,
   Fade,
-  Zoom
+  Zoom,
+  FormHelperText
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -143,7 +144,7 @@ export default function CommunityPage() {
   const [postError, setPostError] = useState('');
   
   // Kategoriler
-  const categories = [
+  const [categories, setCategories] = useState([
     'General Discussion',
     'Q&A',
     'Blockchain',
@@ -152,7 +153,7 @@ export default function CommunityPage() {
     'Web3',
     'Tutorials',
     'Projects'
-  ];
+  ]);
   
   // Menu
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
@@ -164,153 +165,66 @@ export default function CommunityPage() {
     { label: 'Trending', value: 'trending', icon: <TrendingUpIcon /> }
   ];
   
-  // Fetch posts from API
+  // Fetch posts from API - replaced mock data with real API calls
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
+      setError('');
+      
       try {
-        // In a real application, fetch from API:
-        // const response = await fetch(`/api/community/posts/?page=${page}&category=${category}&search=${searchQuery}`);
-        // const data = await response.json();
+        // Build the API URL with query parameters
+        let apiUrl = `/api/community/posts?page=${page}`;
+        if (category) apiUrl += `&category=${encodeURIComponent(category)}`;
+        if (searchQuery) apiUrl += `&search=${encodeURIComponent(searchQuery)}`;
         
-        // Mock data for now
-        const mockPosts = [
-          {
-            postId: 1,
-            title: 'How to get started with blockchain development?',
-            content: 'I\'m new to blockchain development and looking for resources to get started. What are some good tutorials or courses for beginners?',
-            creationDate: '2023-08-20T10:30:00Z',
-            category: 'Blockchain',
-            likes: 15,
-            views: 120,
-            commentCount: 8,
-            user: {
-              userId: 2,
-              username: 'blockchain_enthusiast',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 1250,
-              isVerified: true
-            },
-            isLiked: true,
-            tags: ['blockchain', 'beginner', 'tutorials']
-          },
-          {
-            postId: 2,
-            title: 'Understanding Gas Fees in Ethereum',
-            content: 'Can someone explain how gas fees work in Ethereum? I\'m confused about why they vary so much and how to optimize my transactions.',
-            creationDate: '2023-08-18T14:15:00Z',
-            category: 'Ethereum',
-            likes: 23,
-            views: 200,
-            commentCount: 12,
-            user: {
-              userId: 3,
-              username: 'eth_developer',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 3420,
-              isVerified: true
-            },
-            isLiked: false,
-            tags: ['ethereum', 'gas', 'fees', 'optimization']
-          },
-          {
-            postId: 3,
-            title: 'Share your NFT project ideas!',
-            content: 'I\'m curious what kind of NFT projects everyone is working on. Share your ideas and let\'s discuss!',
-            creationDate: '2023-08-15T09:45:00Z',
-            category: 'NFTs',
-            likes: 8,
-            views: 95,
-            commentCount: 5,
-            user: {
-              userId: 1,
-              username: 'nft_creator',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 750,
-              isVerified: false
-            },
-            isLiked: false,
-            tags: ['nft', 'ideas', 'projects', 'discussion']
-          },
-          {
-            postId: 4,
-            title: 'Best practices for securing smart contracts',
-            content: 'After studying some recent hacks, I wanted to share some best practices for securing your smart contracts...',
-            creationDate: '2023-08-12T16:20:00Z',
-            category: 'Smart Contracts',
-            likes: 41,
-            views: 310,
-            commentCount: 16,
-            user: {
-              userId: 5,
-              username: 'security_expert',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 5280,
-              isVerified: true
-            },
-            isLiked: true,
-            tags: ['security', 'smart contracts', 'best practices', 'hacks']
-          },
-          {
-            postId: 5,
-            title: 'Web3 Authentication Methods Comparison',
-            content: 'I\'ve been researching different authentication methods for Web3 applications. Here\'s a comparison of the most popular ones...',
-            creationDate: '2023-08-10T11:30:00Z',
-            category: 'Web3',
-            likes: 28,
-            views: 245,
-            commentCount: 9,
-            user: {
-              userId: 6,
-              username: 'web3_dev',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 2180,
-              isVerified: false
-            },
-            isLiked: false,
-            tags: ['web3', 'authentication', 'security', 'comparison']
-          }
-        ];
+        // Map sort tab to sort parameter
+        const sortMapping = ['newest', 'popular', 'trending'];
+        apiUrl += `&sort=${sortMapping[sortTab]}`;
         
-        // Filter based on search and category
-        let filteredPosts = [...mockPosts];
+        console.log('Fetching posts from:', apiUrl);
         
-        if (searchQuery) {
-          const query = searchQuery.toLowerCase();
-          filteredPosts = filteredPosts.filter(post => 
-            post.title.toLowerCase().includes(query) || 
-            post.content.toLowerCase().includes(query) ||
-            post.tags.some(tag => tag.toLowerCase().includes(query))
-          );
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch posts');
         }
         
-        if (category) {
-          filteredPosts = filteredPosts.filter(post => post.category === category);
-        }
+        console.log('Received posts data:', data);
         
-        // Sort based on selected tab
-        if (sortTab === 0) { // Newest
-          filteredPosts.sort((a, b) => new Date(b.creationDate) - new Date(a.creationDate));
-        } else if (sortTab === 1) { // Popular
-          filteredPosts.sort((a, b) => b.likes - a.likes);
-        } else if (sortTab === 2) { // Trending
-          filteredPosts.sort((a, b) => b.views - a.views);
-        }
-        
-        setTimeout(() => {
-          setPosts(filteredPosts);
-          setTotalPages(Math.ceil(filteredPosts.length / 10) || 1);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
-        setError('Failed to load community posts. Please try again.');
+        // Update state with the real data
+        setPosts(data.posts || []);
+        setTotalPages(data.total_pages || 1);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+        setError(err.message || 'Failed to load posts');
+        setPosts([]);
+      } finally {
         setLoading(false);
       }
     };
     
     fetchPosts();
-  }, [page, searchQuery, category, sortTab]);
+  }, [page, category, searchQuery, sortTab]);
+
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/community/categories');
+        const data = await response.json();
+        
+        if (response.ok && data.categories) {
+          setCategories(data.categories);
+        }
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        // Fall back to default categories if API fails
+      }
+    };
+    
+    fetchCategories();
+  }, []);
   
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -354,50 +268,43 @@ export default function CommunityPage() {
   };
   
   const handleSubmitPost = async () => {
-    if (!newPostData.title || !newPostData.content || !newPostData.category) {
-      setPostError('Please fill in all required fields.');
-      return;
-    }
-    
     setPostSubmitting(true);
     setPostError('');
     
     try {
-      // In a real app, call API to create post
-      // const response = await fetch('/api/community/posts/create/', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(newPostData),
-      // });
-      // const data = await response.json();
+      if (!newPostData.title.trim() || !newPostData.content.trim() || !newPostData.category) {
+        setPostError('Please fill in all required fields');
+        return;
+      }
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Submitting post:', {
+        title: newPostData.title.trim(),
+        category: newPostData.category
+      });
       
-      // Add new post to the list
-      const newPost = {
-        postId: Date.now(),
-        title: newPostData.title,
-        content: newPostData.content,
-        creationDate: new Date().toISOString(),
-        category: newPostData.category,
-        likes: 0,
-        views: 0,
-        commentCount: 0,
-        user: {
-          userId: user?.id || 1,
-          username: user?.username || 'current_user',
-          profileImage: user?.profileImage || '/avatar-placeholder.jpg',
-          reputation: user?.reputation || 100,
-          isVerified: false
+      const response = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         },
-        isLiked: false,
-        tags: newPostData.category.toLowerCase().split(' ')
-      };
+        body: JSON.stringify({
+          title: newPostData.title.trim(),
+          content: newPostData.content.trim(),
+          category: newPostData.category,
+          pointsCost: newPostData.pointsCost || 0
+        })
+      });
       
-      setPosts([newPost, ...posts]);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Post creation failed:', data);
+        throw new Error(data.error || 'Failed to create post');
+      }
+      
+      console.log('Post created successfully:', data);
+      
+      // Success - close dialog and refresh posts
       setNewPostOpen(false);
       setNewPostData({
         title: '',
@@ -405,9 +312,23 @@ export default function CommunityPage() {
         category: '',
         pointsCost: 0
       });
-    } catch (error) {
-      console.error('Failed to create post:', error);
-      setPostError('Failed to create post. Please try again.');
+      
+      // Refresh posts with the latest data
+      setPage(1);
+      setLoading(true);
+      
+      const refreshResponse = await fetch(`/api/community/posts?page=1&sort=${sortOptions[sortTab].value}`);
+      const refreshData = await refreshResponse.json();
+      
+      if (refreshResponse.ok) {
+        setPosts(refreshData.posts || []);
+        setTotalPages(refreshData.total_pages || 1);
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error creating post:', err);
+      setPostError(err.message || 'Failed to create post');
     } finally {
       setPostSubmitting(false);
     }
@@ -418,36 +339,49 @@ export default function CommunityPage() {
   };
   
   const handleLikePost = async (postId, event) => {
-    event.stopPropagation();
+    if (event) {
+      event.stopPropagation();
+    }
     
-    if (!isAuthenticated()) {
+    if (!isAuthenticated) {
       router.push('/login');
       return;
     }
     
     try {
-      // In a real app, call API to like/unlike post
-      // const response = await fetch(`/api/community/posts/${postId}/like/`, {
-      //   method: 'POST',
-      // });
-      // const data = await response.json();
+      // Optimistic update
+      const updatedPosts = posts.map(post => {
+        if (post.PostID === postId) {
+          const isCurrentlyLiked = post.isLiked;
+          return {
+            ...post,
+            Likes: isCurrentlyLiked ? post.Likes - 1 : post.Likes + 1,
+            isLiked: !isCurrentlyLiked
+          };
+        }
+        return post;
+      });
       
-      // Update post like status in the UI
-      setPosts(prevPosts => 
-        prevPosts.map(post => {
-          if (post.postId === postId) {
-            const newIsLiked = !post.isLiked;
-            return {
-              ...post,
-              isLiked: newIsLiked,
-              likes: newIsLiked ? post.likes + 1 : post.likes - 1
-            };
-          }
-          return post;
-        })
-      );
-    } catch (error) {
-      console.error('Failed to like post:', error);
+      setPosts(updatedPosts);
+      
+      // Send API request
+      const response = await fetch(`/api/community/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        // If request fails, revert the optimistic update
+        setPosts(posts);
+        const data = await response.json();
+        console.error('Like failed:', data.error);
+      }
+    } catch (err) {
+      // If request fails, revert the optimistic update
+      setPosts(posts);
+      console.error('Error liking post:', err);
     }
   };
   
@@ -471,700 +405,284 @@ export default function CommunityPage() {
   };
   
   return (
-    <>
-      <StarBackground />
-      <Container maxWidth="xl">
-        <Box sx={{ my: 4 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              mb: 2,
-              position: 'relative',
-              overflow: 'hidden',
-              borderRadius: 2,
-              p: 3,
-              background: theme => `linear-gradient(135deg, 
-                ${alpha(theme.palette.primary.main, isDark ? 0.2 : 0.1)}, 
-                ${alpha(theme.palette.secondary.main, isDark ? 0.2 : 0.05)})`,
-              boxShadow: theme => `0 4px 20px ${alpha(theme.palette.primary.main, 0.1)}`,
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundImage: theme => `radial-gradient(circle at 20% 30%, 
-                  ${alpha(theme.palette.primary.main, 0.15)} 0%, 
-                  transparent 50%)`,
-                zIndex: 0,
-              }
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Box sx={{
+        minHeight: '100vh',
+        py: 4,
+        position: 'relative'
+      }}>
+        <StarBackground />
+        
+        <Container maxWidth="lg">
+          {/* Header and search section */}
+          <Box mb={4}>
+            <Typography variant="h3" component="h1" gutterBottom sx={{
+              fontWeight: 'bold',
+              background: isDark ? 'linear-gradient(45deg, #5C6BC0, #7986CB)' : 'inherit',
+              backgroundClip: isDark ? 'text' : 'inherit',
+              WebkitBackgroundClip: isDark ? 'text' : 'inherit',
+              WebkitTextFillColor: isDark ? 'transparent' : 'inherit',
+              textShadow: isDark ? '0 0 20px rgba(121, 134, 203, 0.4)' : 'none',
             }}>
-              <Box sx={{ position: 'relative', zIndex: 1 }}>
-                <Typography variant="h3" component="h1" fontWeight="bold" gutterBottom>
-                  <Box 
-                    component="span" 
-                    sx={{ 
-                      background: theme => `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      fontWeight: 800
-                    }}
-                  >
-                    Community Hub
-                  </Box>
-                </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600 }}>
-                  Join discussions, ask questions, and share your blockchain knowledge with the Wisentia community.
-                </Typography>
-              </Box>
-              <Box sx={{ position: 'relative', zIndex: 1 }}>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    startIcon={<AddIcon />}
-                    onClick={handleCreatePost}
-                    sx={{
-                      px: 3,
-                      py: 1.5,
-                      borderRadius: 2,
-                      fontWeight: 'bold',
-                      background: theme => `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      boxShadow: theme => `0 4px 14px ${alpha(theme.palette.primary.main, 0.4)}`,
-                      position: 'relative',
-                      overflow: 'hidden',
-                      '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        transform: 'translateX(-100%)',
-                        transition: 'transform 0.6s ease',
-                      },
-                      '&:hover::after': {
-                        transform: 'translateX(100%)',
-                      }
-                    }}
-                  >
-                    Create Post
-                  </Button>
-                </motion.div>
-              </Box>
+              Community
+            </Typography>
+            
+            <Typography variant="subtitle1" color="textSecondary" paragraph>
+              Join discussions, ask questions, and connect with other members of the Wisentia community.
+            </Typography>
+            
+            <Box sx={{ display: 'flex', gap: 2, mt: 3, flexWrap: 'wrap' }}>
+              <TextField
+                placeholder="Search discussions..."
+                variant="outlined"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                sx={{ flexGrow: 1 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              
+              <FormControl sx={{ minWidth: 180 }}>
+                <InputLabel id="category-select-label">Category</InputLabel>
+                <Select
+                  labelId="category-select-label"
+                  value={category}
+                  onChange={handleCategoryChange}
+                  label="Category"
+                  startAdornment={<FilterListIcon sx={{ mr: 1 }} />}
+                >
+                  <MenuItem value="">All Categories</MenuItem>
+                  {categories.map((cat) => (
+                    <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={handleCreatePost}
+                disabled={!isAuthenticated}
+              >
+                New Post
+              </Button>
             </Box>
-          </motion.div>
+          </Box>
           
-          {/* Search and filters */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 2, 
-                mb: 4, 
-                borderRadius: 2,
-                background: theme => alpha(theme.palette.background.paper, isDark ? 0.7 : 0.9),
-                backdropFilter: 'blur(10px)',
-                border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                boxShadow: theme => `0 4px 20px ${alpha(theme.palette.primary.main, 0.1)}`,
-              }}
+          {/* Sorting tabs */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={sortTab} 
+              onChange={handleSortChange}
+              variant="scrollable"
+              scrollButtons="auto"
             >
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={5}>
-                  <TextField
-                    fullWidth
-                    placeholder="Search posts, tags, or topics..."
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    variant="outlined"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon color="action" />
-                        </InputAdornment>
-                      ),
-                      sx: {
-                        borderRadius: 2,
-                        background: theme => alpha(theme.palette.background.paper, 0.6),
-                        backdropFilter: 'blur(5px)',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: theme => alpha(theme.palette.primary.main, 0.2),
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: theme => theme.palette.primary.main,
-                        }
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel id="category-label">Filter by Category</InputLabel>
-                    <Select
-                      labelId="category-label"
-                      value={category}
-                      label="Filter by Category"
-                      onChange={handleCategoryChange}
-                      sx={{
-                        borderRadius: 2,
-                        background: theme => alpha(theme.palette.background.paper, 0.6),
-                        backdropFilter: 'blur(5px)',
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: theme => alpha(theme.palette.primary.main, 0.2),
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                          borderColor: theme => theme.palette.primary.main,
-                        }
-                      }}
-                      startAdornment={
-                        <InputAdornment position="start">
-                          <LocalOfferIcon color="action" />
-                        </InputAdornment>
-                      }
-                    >
-                      <MenuItem value="">All Categories</MenuItem>
-                      {categories.map((cat) => (
-                        <MenuItem key={cat} value={cat}>{cat}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      borderRadius: 2,
-                      height: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: theme => alpha(theme.palette.background.paper, 0.6),
-                      backdropFilter: 'blur(5px)',
-                      border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                    }}
-                  >
-                    <Tabs 
-                      value={sortTab} 
-                      onChange={handleSortChange}
-                      variant="fullWidth"
-                      sx={{ 
-                        width: '100%',
-                        minHeight: '56px',
-                        '& .MuiTabs-indicator': {
-                          height: 3,
-                          borderRadius: '3px 3px 0 0',
-                          background: theme => `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                        }
-                      }}
-                    >
-                      {sortOptions.map((option, index) => (
-                        <Tab 
-                          key={option.value} 
-                          icon={option.icon} 
-                          label={option.label} 
-                          iconPosition="start" 
-                          sx={{ 
-                            minHeight: '56px',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            transition: 'all 0.3s ease',
-                          }}
-                        />
-                      ))}
-                    </Tabs>
-                  </Paper>
-                </Grid>
-              </Grid>
-            </Paper>
-          </motion.div>
+              {sortOptions.map((option, index) => (
+                <Tab 
+                  key={option.value}
+                  icon={option.icon} 
+                  label={option.label} 
+                  iconPosition="start"
+                />
+              ))}
+            </Tabs>
+          </Box>
           
+          {/* Error message */}
           {error && (
-            <Alert severity="error" sx={{ mb: 4 }}>
+            <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
           
-          {/* Posts list */}
+          {/* Loading state */}
           {loading ? (
-            <Box>
-              {[1, 2, 3].map((item) => (
-                <Card 
-                  key={item} 
-                  sx={{ 
-                    mb: 3, 
-                    borderRadius: 2,
-                    background: theme => alpha(theme.palette.background.paper, isDark ? 0.7 : 0.9),
-                    backdropFilter: 'blur(10px)',
-                    boxShadow: theme => `0 4px 20px ${alpha(theme.palette.primary.main, 0.1)}`,
-                    border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                  }}
-                >
+            <Box sx={{ mb: 4 }}>
+              {[1, 2, 3].map((n) => (
+                <Card key={n} sx={{ mb: 3, overflow: 'hidden' }}>
                   <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                      <Skeleton variant="circular" width={40} height={40} />
-                      <Box sx={{ ml: 1 }}>
-                        <Skeleton variant="text" width={120} height={24} />
-                        <Skeleton variant="text" width={80} height={18} />
-                      </Box>
-                    </Box>
-                    <Skeleton variant="text" width="80%" height={30} />
-                    <Skeleton variant="text" width="90%" height={60} />
+                    <Skeleton variant="text" width="70%" height={40} />
+                    <Skeleton variant="text" width="40%" />
                     <Box sx={{ mt: 2 }}>
-                      <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: 1, display: 'inline-block', mr: 1 }} />
-                      <Skeleton variant="rectangular" width={60} height={24} sx={{ borderRadius: 1, display: 'inline-block', mr: 1 }} />
-                      <Skeleton variant="rectangular" width={70} height={24} sx={{ borderRadius: 1, display: 'inline-block' }} />
+                      <Skeleton variant="text" />
+                      <Skeleton variant="text" />
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                      <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: 1 }} />
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Skeleton variant="rectangular" width={40} height={24} sx={{ borderRadius: 1 }} />
-                        <Skeleton variant="rectangular" width={40} height={24} sx={{ borderRadius: 1 }} />
-                        <Skeleton variant="rectangular" width={40} height={24} sx={{ borderRadius: 1 }} />
-                      </Box>
+                    <Box sx={{ display: 'flex', mt: 2, gap: 1 }}>
+                      <Skeleton variant="rectangular" width={60} height={24} />
+                      <Skeleton variant="rectangular" width={60} height={24} />
                     </Box>
                   </CardContent>
                 </Card>
               ))}
             </Box>
-          ) : posts.length > 0 ? (
-            <Box>
-              {posts.map((post, index) => (
-                <motion.div
-                  key={post.postId}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                >
-                  <Card 
-                    sx={{ 
-                      mb: 3, 
-                      cursor: 'pointer',
-                      borderRadius: 2,
-                      background: theme => alpha(theme.palette.background.paper, isDark ? 0.7 : 0.9),
-                      backdropFilter: 'blur(10px)',
-                      border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-3px) scale(1.01)',
-                        boxShadow: theme => `0 8px 25px ${alpha(theme.palette.primary.main, 0.15)}`,
-                        borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                      }
-                    }}
-                    onClick={() => handlePostClick(post.postId)}
+          ) : (
+            <>
+              {/* No posts message */}
+              {posts.length === 0 && !loading && (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                    No posts found
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Be the first to start a discussion!
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddIcon />}
+                    onClick={handleCreatePost}
+                    sx={{ mt: 2 }}
+                    disabled={!isAuthenticated}
                   >
-                    <CardContent>
-                      {/* Post Header */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar 
-                            src={post.user.profileImage} 
-                            alt={post.user.username}
-                            sx={{
-                              width: 48,
-                              height: 48,
-                              border: theme => post.user.isVerified 
-                                ? `2px solid ${theme.palette.primary.main}`
-                                : `2px solid ${alpha(theme.palette.divider, 0.1)}`,
-                              boxShadow: theme => post.user.isVerified 
-                                ? `0 0 10px ${alpha(theme.palette.primary.main, 0.3)}`
-                                : 'none',
-                            }}
-                          />
-                          <Box sx={{ ml: 1.5 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography variant="subtitle1" fontWeight="bold">
-                                {post.user.username}
-                              </Typography>
-                              {post.user.isVerified && (
-                                <Tooltip title="Verified Member" arrow>
-                                  <VerifiedIcon 
-                                    sx={{ 
-                                      ml: 0.5, 
-                                      fontSize: 16, 
-                                      color: 'primary.main',
-                                    }} 
-                                  />
-                                </Tooltip>
-                              )}
-                            </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography variant="caption" color="text.secondary">
-                                {formatDate(post.creationDate)}
-                              </Typography>
-                              <Tooltip title="User Reputation" arrow>
-                                <Box 
-                                  sx={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    ml: 1.5,
-                                    background: theme => `linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.1)}, ${alpha(theme.palette.secondary.main, 0.1)})`,
-                                    padding: '2px 8px',
-                                    borderRadius: 10,
-                                  }}
-                                >
-                                  <StarIcon sx={{ fontSize: 14, color: 'primary.main', mr: 0.5 }} />
-                                  <Typography variant="caption" fontWeight="bold" color="primary">
-                                    {post.user.reputation}
-                                  </Typography>
-                                </Box>
-                              </Tooltip>
-                            </Box>
-                          </Box>
+                    Create Post
+                  </Button>
+                </Box>
+              )}
+              
+              {/* Posts list */}
+              <Grid container spacing={3}>
+                {posts.map((post) => (
+                  <Grid item xs={12} key={post.PostID}>
+                    <Card 
+                      sx={{ 
+                        cursor: 'pointer',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-4px)',
+                          boxShadow: (theme) => `0 8px 24px ${alpha(theme.palette.primary.main, 0.2)}`
+                        }
+                      }}
+                      onClick={() => handlePostClick(post.PostID)}
+                    >
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold' }}>
+                            {post.Title}
+                          </Typography>
+                          
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleMenuOpen(post, e)}
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
                         </Box>
-                        <IconButton 
-                          size="small" 
-                          onClick={(e) => handleMenuOpen(post, e)}
-                          sx={{
-                            color: 'text.secondary',
-                            '&:hover': {
-                              backgroundColor: theme => alpha(theme.palette.primary.main, 0.1),
-                            }
-                          }}
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
-                      </Box>
-                      
-                      {/* Post Content */}
-                      <Typography 
-                        variant="h5" 
-                        gutterBottom
-                        sx={{ 
-                          fontWeight: 700,
-                          mb: 1.5,
-                          color: theme => isDark ? theme.palette.primary.light : theme.palette.primary.dark
-                        }}
-                      >
-                        {post.title}
-                      </Typography>
-                      <Typography 
-                        variant="body1" 
-                        color="text.secondary" 
-                        sx={{ 
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Avatar
+                            src={post.ProfileImage || '/avatar-placeholder.jpg'}
+                            alt={post.Username}
+                            sx={{ width: 28, height: 28, mr: 1 }}
+                          />
+                          <Typography variant="body2" color="textSecondary">
+                            {post.Username}
+                            {post.isVerified && (
+                              <VerifiedIcon
+                                sx={{ ml: 0.5, width: 16, height: 16, color: 'primary.main' }}
+                              />
+                            )}
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary" sx={{ mx: 1 }}>
+                            •
+                          </Typography>
+                          <Typography variant="body2" color="textSecondary">
+                            {formatDate(post.CreationDate)}
+                          </Typography>
+                        </Box>
+                        
+                        <Typography variant="body1" sx={{ mb: 2, 
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical',
-                          mb: 2,
-                          lineHeight: 1.6
-                        }}
-                      >
-                        {post.content}
-                      </Typography>
-                      
-                      {/* Tags */}
-                      <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {post.tags && post.tags.map(tag => (
-                          <Chip
-                            key={tag}
-                            label={tag}
-                            size="small"
-                            sx={{
-                              background: theme => alpha(theme.palette.primary.main, 0.1),
-                              color: theme => isDark ? theme.palette.primary.light : theme.palette.primary.dark,
-                              fontWeight: 500,
-                              borderRadius: 1,
-                              '&:hover': {
-                                background: theme => alpha(theme.palette.primary.main, 0.2),
-                              }
-                            }}
-                          />
-                        ))}
-                      </Box>
-                      
-                      {/* Post Footer */}
-                      <Divider sx={{ my: 2 }} />
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Chip 
-                          label={post.category}
-                          size="small"
-                          sx={{
-                            background: theme => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.2)}, ${alpha(theme.palette.secondary.main, 0.2)})`,
-                            color: theme => isDark ? '#fff' : theme.palette.primary.dark,
-                            fontWeight: 600,
-                            '& .MuiChip-label': { px: 1.5 },
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              background: theme => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.3)}, ${alpha(theme.palette.secondary.main, 0.3)})`,
-                            }
-                          }}
-                        />
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}>
+                          {post.Content}
+                        </Typography>
                         
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}>
-                            <Box 
-                              sx={{ 
-                                display: 'flex', 
-                                alignItems: 'center',
-                                color: post.isLiked ? 'primary.main' : 'text.secondary',
-                                px: 1.5,
-                                py: 0.5,
-                                borderRadius: 1,
-                                transition: 'all 0.2s ease',
-                                '&:hover': {
-                                  backgroundColor: theme => alpha(theme.palette.primary.main, 0.1),
-                                  color: 'primary.main'
-                                }
-                              }}
-                              onClick={(e) => handleLikePost(post.postId, e)}
-                            >
-                              {post.isLiked ? 
-                                <ThumbUpIcon fontSize="small" /> : 
-                                <ThumbUpOutlinedIcon fontSize="small" />
-                              }
-                              <Typography variant="body2" fontWeight="medium" sx={{ ml: 0.75 }}>
-                                {post.likes}
-                              </Typography>
-                            </Box>
-                          </motion.div>
-                          
-                          <motion.div whileHover={{ y: -2 }}>
-                            <Box sx={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              color: 'text.secondary',
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: 1,
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: theme => alpha(theme.palette.primary.main, 0.1),
-                              }
-                            }}>
-                              <CommentIcon fontSize="small" />
-                              <Typography variant="body2" fontWeight="medium" sx={{ ml: 0.75 }}>
-                                {post.commentCount}
-                              </Typography>
-                            </Box>
-                          </motion.div>
-                          
-                          <motion.div whileHover={{ y: -2 }}>
-                            <Box sx={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              color: 'text.secondary',
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: 1,
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                backgroundColor: theme => alpha(theme.palette.primary.main, 0.1),
-                              }
-                            }}>
-                              <VisibilityIcon fontSize="small" />
-                              <Typography variant="body2" fontWeight="medium" sx={{ ml: 0.75 }}>
-                                {post.views}
-                              </Typography>
-                            </Box>
-                          </motion.div>
+                        <Box sx={{ display: 'flex', mb: 1 }}>
+                          <Chip 
+                            icon={<LocalOfferIcon />} 
+                            label={post.Category}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                          />
                         </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                        
+                        <Divider sx={{ my: 1.5 }} />
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                              size="small"
+                              startIcon={post.isLiked ? <ThumbUpIcon /> : <ThumbUpOutlinedIcon />}
+                              onClick={(e) => handleLikePost(post.PostID, e)}
+                              color={post.isLiked ? 'primary' : 'inherit'}
+                            >
+                              {post.Likes || 0}
+                            </Button>
+                            
+                            <Button
+                              size="small"
+                              startIcon={<CommentIcon />}
+                              color="inherit"
+                            >
+                              {post.CommentCount || 0}
+                            </Button>
+                            
+                            <Button
+                              size="small"
+                              startIcon={<VisibilityIcon />}
+                              color="inherit"
+                            >
+                              {post.Views || 0}
+                            </Button>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
               
               {/* Pagination */}
-              {totalPages > 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 }}
-                >
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    mt: 4, 
-                    mb: 2,
-                    py: 2,
-                    borderRadius: 2,
-                  }}>
-                    <Pagination
-                      count={totalPages}
-                      page={page}
-                      onChange={handlePageChange}
-                      color="primary"
-                      size="large"
-                      showFirstButton
-                      showLastButton
-                      sx={{
-                        '& .MuiPaginationItem-root': {
-                          fontSize: 16,
-                          fontWeight: 500,
-                          transition: 'all 0.2s ease',
-                        },
-                        '& .MuiPaginationItem-page.Mui-selected': {
-                          background: theme => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                          color: '#fff',
-                          fontWeight: 700,
-                          boxShadow: theme => `0 4px 10px ${alpha(theme.palette.primary.main, 0.3)}`,
-                        }
-                      }}
-                    />
-                  </Box>
-                </motion.div>
+              {posts.length > 0 && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={handlePageChange}
+                    color="primary"
+                    showFirstButton
+                    showLastButton
+                  />
+                </Box>
               )}
-            </Box>
-          ) : (
-            <Box sx={{ 
-              textAlign: 'center', 
-              py: 8, 
-              background: theme => alpha(theme.palette.background.paper, isDark ? 0.7 : 0.9),
-              backdropFilter: 'blur(10px)',
-              borderRadius: 3,
-              border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-            }}>
-              <Typography variant="h5" paragraph fontWeight="bold">
-                No posts found matching your search.
-              </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph sx={{ maxWidth: 500, mx: 'auto', mb: 3 }}>
-                Try adjusting your search criteria or create a new post to start a discussion.
-              </Typography>
-              <Button 
-                variant="outlined"
-                size="large"
-                onClick={() => {
-                  setSearchQuery('');
-                  setCategory('');
-                  setSortTab(0);
-                }}
-                sx={{ 
-                  mr: 2,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1
-                }}
-              >
-                Clear Filters
-              </Button>
-              
-              <Button 
-                variant="contained"
-                size="large"
-                startIcon={<AddIcon />}
-                onClick={handleCreatePost}
-                sx={{ 
-                  borderRadius: 2,
-                  background: theme => `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  px: 3,
-                  py: 1
-                }}
-              >
-                Create Post
-              </Button>
-            </Box>
+            </>
           )}
-        </Box>
+        </Container>
         
-        {/* Post menu */}
-        <Menu
-          anchorEl={menuAnchorEl}
-          open={Boolean(menuAnchorEl)}
-          onClose={handleMenuClose}
-          TransitionComponent={Fade}
-          PaperProps={{
-            elevation: 3,
-            sx: {
-              mt: 1.5,
-              borderRadius: 2,
-              minWidth: 180,
-              overflow: 'visible',
-              background: theme => alpha(theme.palette.background.paper, isDark ? 0.9 : 1),
-              backdropFilter: 'blur(10px)',
-              border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-              boxShadow: theme => `0 5px 20px ${alpha(theme.palette.common.black, 0.1)}`,
-              '&:before': {
-                content: '""',
-                display: 'block',
-                position: 'absolute',
-                top: 0,
-                right: 14,
-                width: 10,
-                height: 10,
-                bgcolor: 'background.paper',
-                transform: 'translateY(-50%) rotate(45deg)',
-                zIndex: 0,
-                border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                borderBottom: 'none',
-                borderRight: 'none',
-              }
-            }
-          }}
-          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-          <MenuItem onClick={handleMenuClose} sx={{ py: 1.5 }}>
-            <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-              <i className="material-icons" style={{ fontSize: 18 }}>share</i>
-            </Box>
-            Share
-          </MenuItem>
-          <MenuItem onClick={handleMenuClose} sx={{ py: 1.5 }}>
-            <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-              <i className="material-icons" style={{ fontSize: 18 }}>flag</i>
-            </Box>
-            Report
-          </MenuItem>
-          {selectedPost && selectedPost.user.userId === (user?.id || 0) && (
-            <MenuItem onClick={handleMenuClose} sx={{ py: 1.5 }}>
-              <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-                <i className="material-icons" style={{ fontSize: 18 }}>edit</i>
-              </Box>
-              Edit
-            </MenuItem>
-          )}
-        </Menu>
-        
-        {/* New Post Dialog */}
+        {/* New post dialog */}
         <Dialog 
           open={newPostOpen} 
           onClose={handleCloseNewPost}
           fullWidth
           maxWidth="md"
-          TransitionComponent={Zoom}
-          PaperProps={{
-            sx: {
-              borderRadius: 3,
-              background: theme => alpha(theme.palette.background.paper, isDark ? 0.95 : 1),
-              backdropFilter: 'blur(10px)',
-              boxShadow: theme => `0 10px 40px ${alpha(theme.palette.common.black, 0.2)}`,
-            }
-          }}
         >
-          <DialogTitle sx={{ pb: 1, pt: 3, px: 3 }}>
-            <Typography variant="h5" fontWeight="bold">
-              <Box 
-                component="span" 
-                sx={{ 
-                  background: theme => `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Create New Post
-              </Box>
-            </Typography>
-          </DialogTitle>
-          <DialogContent sx={{ px: 3 }}>
+          <DialogTitle>Create New Post</DialogTitle>
+          <DialogContent>
             {postError && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {postError}
@@ -1174,161 +692,101 @@ export default function CommunityPage() {
             <TextField
               autoFocus
               margin="dense"
-              name="title"
               label="Title"
-              type="text"
               fullWidth
               variant="outlined"
+              name="title"
               value={newPostData.title}
               onChange={handleNewPostChange}
+              sx={{ mb: 2 }}
               required
-              sx={{ 
-                mb: 3,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  '& fieldset': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.2),
-                  },
-                  '&:hover fieldset': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: 'primary.main',
-                  }
-                }
-              }}
+              disabled={postSubmitting}
+              error={postError && !newPostData.title.trim()}
+              helperText={postError && !newPostData.title.trim() ? "Title is required" : ""}
             />
             
-            <TextField
-              margin="dense"
-              name="content"
-              label="Content"
-              multiline
-              rows={8}
-              fullWidth
-              variant="outlined"
-              value={newPostData.content}
-              onChange={handleNewPostChange}
-              required
-              sx={{ 
-                mb: 3,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                  '& fieldset': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.2),
-                  },
-                  '&:hover fieldset': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: 'primary.main',
-                  }
-                }
-              }}
-            />
-            
-            <FormControl fullWidth margin="dense" sx={{ mb: 3 }}>
-              <InputLabel id="category-select-label">Category</InputLabel>
+            <FormControl fullWidth sx={{ mb: 2 }} required error={postError && !newPostData.category}>
+              <InputLabel id="category-label">Category</InputLabel>
               <Select
-                labelId="category-select-label"
+                labelId="category-label"
                 name="category"
                 value={newPostData.category}
-                label="Category"
                 onChange={handleNewPostChange}
-                required
-                sx={{
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.2),
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  }
-                }}
+                label="Category"
+                disabled={postSubmitting}
               >
                 {categories.map((cat) => (
                   <MenuItem key={cat} value={cat}>{cat}</MenuItem>
                 ))}
               </Select>
+              {postError && !newPostData.category && 
+                <FormHelperText error>Category is required</FormHelperText>
+              }
             </FormControl>
             
-            <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
-              <InputLabel id="points-cost-label">Points Cost (Optional)</InputLabel>
-              <Select
-                labelId="points-cost-label"
-                name="pointsCost"
-                value={newPostData.pointsCost}
-                label="Points Cost (Optional)"
-                onChange={handleNewPostChange}
-                sx={{
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.2),
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'primary.main',
-                  }
-                }}
-              >
-                <MenuItem value={0}>0 - Free</MenuItem>
-                <MenuItem value={5}>5 Points</MenuItem>
-                <MenuItem value={10}>10 Points</MenuItem>
-                <MenuItem value={25}>25 Points</MenuItem>
-                <MenuItem value={50}>50 Points</MenuItem>
-              </Select>
-            </FormControl>
-            
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-              Points allow you to highlight your post and increase its visibility in the community.
-              You currently have {user?.points || 0} points available.
-            </Typography>
-          </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button 
-              onClick={handleCloseNewPost}
+            <TextField
+              margin="dense"
+              label="Content"
+              fullWidth
+              multiline
+              rows={6}
               variant="outlined"
-              sx={{ 
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                borderColor: theme => alpha(theme.palette.primary.main, 0.3),
-                color: 'text.primary',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  backgroundColor: theme => alpha(theme.palette.primary.main, 0.1),
-                }
+              name="content"
+              value={newPostData.content}
+              onChange={handleNewPostChange}
+              sx={{ mb: 2 }}
+              required
+              disabled={postSubmitting}
+              error={postError && !newPostData.content.trim()}
+              helperText={postError && !newPostData.content.trim() ? "Content is required" : ""}
+            />
+            
+            <TextField
+              margin="dense"
+              label="Points Cost (Optional)"
+              type="number"
+              fullWidth
+              variant="outlined"
+              name="pointsCost"
+              value={newPostData.pointsCost}
+              onChange={handleNewPostChange}
+              InputProps={{
+                inputProps: { min: 0 }
               }}
-            >
+              disabled={postSubmitting}
+              helperText="Spend points to give your post more visibility"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseNewPost} disabled={postSubmitting}>
               Cancel
             </Button>
             <Button 
               onClick={handleSubmitPost} 
-              variant="contained"
+              variant="contained" 
+              color="primary"
               disabled={postSubmitting}
-              sx={{ 
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                ml: 2,
-                fontWeight: 'bold',
-                background: theme => `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                boxShadow: theme => `0 4px 14px ${alpha(theme.palette.primary.main, 0.4)}`,
-                '&:hover': {
-                  boxShadow: theme => `0 6px 20px ${alpha(theme.palette.primary.main, 0.6)}`,
-                }
-              }}
+              startIcon={postSubmitting ? <CircularProgress size={20} /> : null}
             >
-              {postSubmitting ? <CircularProgress size={24} /> : 'Publish Post'}
+              {postSubmitting ? 'Creating...' : 'Create Post'}
             </Button>
           </DialogActions>
         </Dialog>
-      </Container>
-    </>
+        
+        {/* Post menu */}
+        <Menu
+          anchorEl={menuAnchorEl}
+          open={Boolean(menuAnchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={handleMenuClose}>
+            Share
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose}>
+            Report
+          </MenuItem>
+        </Menu>
+      </Box>
+    </motion.div>
   );
 }

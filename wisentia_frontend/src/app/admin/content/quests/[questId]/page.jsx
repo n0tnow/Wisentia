@@ -88,7 +88,7 @@ export default function QuestDetailPage(props) {
     const fetchQuestDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/admin/quests/${questId}`);
+        const response = await fetch(`/api/quests/${questId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch quest details');
@@ -108,7 +108,7 @@ export default function QuestDetailPage(props) {
           rewardPoints: data.RewardPoints || data.rewardPoints || 0,
           // Explicitly convert numeric/boolean/string values to boolean for consistency
           isActive: Boolean(data.IsActive === 1 || data.IsActive === true || 
-                           data.isActive === 1 || data.isActive === true || false),
+                         data.isActive === 1 || data.isActive === true || false),
         });
       } catch (err) {
         setError(err.message);
@@ -140,7 +140,7 @@ export default function QuestDetailPage(props) {
       
       console.log("Sending update:", updateData); // Debug log
       
-      const response = await fetch(`/api/admin/quests/${questId}`, {
+      const response = await fetch(`/api/quests/${questId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ export default function QuestDetailPage(props) {
     try {
       setSaving(true);
       
-      const response = await fetch(`/api/admin/quests/${questId}`, {
+      const response = await fetch(`/api/quests/${questId}`, {
         method: 'DELETE',
       });
       
@@ -181,6 +181,51 @@ export default function QuestDetailPage(props) {
     } finally {
       setSaving(false);
       setDeleteDialog(false);
+    }
+  };
+  
+  // Create NFT for quest
+  const handleCreateNFT = async () => {
+    try {
+      setSaving(true);
+      setSaveError(null);
+      
+      // Prepare NFT data from the quest
+      const response = await fetch(`/api/quests/${questId}/prepare-nft/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to prepare NFT data');
+      }
+      
+      const nftData = await response.json();
+      
+      // Redirect to NFT creation page with pre-filled data
+      if (nftData.nftData) {
+        // If quest already has an NFT
+        if (nftData.nftId) {
+          router.push(`/admin/content/nfts/${nftData.nftId}`);
+        } else {
+          // Create new NFT with pre-filled data
+          router.push(`/admin/content/nfts/create?${new URLSearchParams({
+            title: nftData.nftData.title,
+            description: nftData.nftData.description,
+            nftTypeId: nftData.nftData.nftTypeId,
+            tradeValue: nftData.nftData.tradeValue,
+            rarity: nftData.nftData.rarity,
+            questId: nftData.questId,
+            redirectUrl: `/admin/content/quests/${questId}`
+          }).toString()}`);
+        }
+      }
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -366,6 +411,16 @@ export default function QuestDetailPage(props) {
                   fullWidth={isMobile}
                 >
                   Delete
+                </Button>
+                
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleCreateNFT}
+                  disabled={saving}
+                  fullWidth={isMobile}
+                >
+                  {questData.rewardNFTID ? 'View NFT Reward' : 'Create NFT Reward'}
                 </Button>
               </>
             )}

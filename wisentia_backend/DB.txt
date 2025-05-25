@@ -50,11 +50,20 @@ CREATE TABLE CourseVideos (
 -- Sınavlar Tablosu
 CREATE TABLE Quizzes (
     QuizID INT PRIMARY KEY IDENTITY(1,1),
-    VideoID INT FOREIGN KEY REFERENCES CourseVideos(VideoID),
     Title NVARCHAR(100) NOT NULL,
     Description NVARCHAR(MAX),
     PassingScore INT NOT NULL,
-    IsActive BIT DEFAULT 1
+    IsActive BIT DEFAULT 1,
+    CourseID INT FOREIGN KEY REFERENCES Courses(CourseID),
+    VideoID INT FOREIGN KEY REFERENCES CourseVideos(VideoID) NULL
+);
+
+-- Quiz-Video İlişkisi Tablosu
+CREATE TABLE QuizVideoRelations (
+    RelationID INT PRIMARY KEY IDENTITY(1,1),
+    QuizID INT FOREIGN KEY REFERENCES Quizzes(QuizID) NOT NULL,
+    VideoID INT FOREIGN KEY REFERENCES CourseVideos(VideoID) NOT NULL,
+    CONSTRAINT UQ_Quiz_Video UNIQUE(QuizID, VideoID)
 );
 
 -- Sınav Soruları Tablosu
@@ -104,6 +113,10 @@ CREATE TABLE UserNFTs (
     ExpiryDate DATETIME, -- For subscription NFTs, NULL otherwise
     TransactionHash NVARCHAR(100), -- Blockchain transaction hash
     IsMinted BIT DEFAULT 0,
+    BlockchainNFTID INT,  -- The NFT ID on the blockchain
+    IsTraded BIT DEFAULT 0,  -- Whether the NFT was used in a trade
+    TradeDate DATETIME,  -- When the NFT was traded
+    TradeTransactionHash NVARCHAR(100),  -- Transaction hash of the trade
     CONSTRAINT UQ_User_NFT UNIQUE(UserID, NFTID)
 );
 

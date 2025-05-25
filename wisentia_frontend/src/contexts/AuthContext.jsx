@@ -400,6 +400,290 @@ const authService = {
     }
   },
 
+  // Şifre sıfırlama talebi
+  requestPasswordReset: async (email) => {
+    try {
+      console.log('Şifre sıfırlama talebi:', email);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/request-password-reset/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email }),
+        credentials: 'include'
+      });
+      
+      console.log('Şifre sıfırlama talebi yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Şifre sıfırlama yanıt parse hatası:', jsonError);
+        return {
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
+        };
+      }
+      
+      // Güvenlik nedeniyle başarılı yanıt dön (e-posta var mı yok mu belli olmaması için)
+      if (response.ok || response.status === 200) {
+        return {
+          success: true,
+          message: data.message || 'If your account exists, you will receive a password reset email'
+        };
+      }
+      
+      return {
+        success: false,
+        error: data.error || data.detail || `Şifre sıfırlama talebi başarısız: ${response.status}`
+      };
+    } catch (error) {
+      console.error('Şifre sıfırlama talebi hatası:', error);
+      return {
+        success: false,
+        error: error.message || 'Şifre sıfırlama talebi sırasında hata oluştu'
+      };
+    }
+  },
+
+  // Şifre sıfırlama işlemi
+  resetPassword: async (token, newPassword) => {
+    try {
+      console.log('Şifre sıfırlama işlemi başlatıldı');
+      
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token, newPassword }),
+        credentials: 'include'
+      });
+      
+      console.log('Şifre sıfırlama işlemi yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Şifre sıfırlama işlemi yanıt parse hatası:', jsonError);
+        return {
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
+        };
+      }
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || data.detail || `Şifre sıfırlama başarısız: ${response.status}`
+        };
+      }
+      
+      return {
+        success: true,
+        message: data.message || 'Your password has been reset successfully'
+      };
+    } catch (error) {
+      console.error('Şifre sıfırlama işlemi hatası:', error);
+      return {
+        success: false,
+        error: error.message || 'Şifre sıfırlama sırasında hata oluştu'
+      };
+    }
+  },
+
+  // E-posta doğrulama kodu ile doğrulama
+  verifyEmailWithCode: async (email, code) => {
+    try {
+      console.log('E-posta doğrulama kodu doğrulanıyor:', email);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/verify-email-with-code/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, code }),
+        credentials: 'include'
+      });
+      
+      console.log('Doğrulama yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Doğrulama yanıt parse hatası:', jsonError);
+        return {
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
+        };
+      }
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || data.detail || `Doğrulama başarısız: ${response.status}`
+        };
+      }
+      
+      return {
+        success: true,
+        message: data.message || 'E-posta başarıyla doğrulandı'
+      };
+    } catch (error) {
+      console.error('E-posta doğrulama işlemi hatası:', error);
+      return {
+        success: false,
+        error: error.message || 'E-posta doğrulama sırasında hata oluştu'
+      };
+    }
+  },
+
+  // Kod ile şifre sıfırlama
+  resetPasswordWithCode: async (email, code, newPassword) => {
+    try {
+      console.log('Şifre sıfırlama işlemi başlatıldı (kod ile)');
+      
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password-with-code/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, code, new_password: newPassword }),
+        credentials: 'include'
+      });
+      
+      console.log('Şifre sıfırlama işlemi yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Şifre sıfırlama işlemi yanıt parse hatası:', jsonError);
+        return {
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
+        };
+      }
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || data.detail || `Şifre sıfırlama başarısız: ${response.status}`
+        };
+      }
+      
+      return {
+        success: true,
+        message: data.message || 'Şifreniz başarıyla sıfırlandı'
+      };
+    } catch (error) {
+      console.error('Şifre sıfırlama işlemi hatası:', error);
+      return {
+        success: false,
+        error: error.message || 'Şifre sıfırlama sırasında hata oluştu'
+      };
+    }
+  },
+
+  // Yeni doğrulama kodu gönderme
+  resendVerificationCode: async (email) => {
+    try {
+      console.log('Yeni doğrulama kodu isteniyor:', email);
+      
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification-code/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email }),
+        credentials: 'include'
+      });
+      
+      console.log('Doğrulama kodu yeniden gönderme yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Doğrulama kodu yeniden gönderme yanıt parse hatası:', jsonError);
+        return {
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
+        };
+      }
+      
+      // Güvenlik nedeniyle başarılı yanıt dön
+      if (response.ok || response.status === 200) {
+        return {
+          success: true,
+          message: data.message || 'Doğrulama kodu gönderildi'
+        };
+      }
+      
+      return {
+        success: false,
+        error: data.error || data.detail || `Doğrulama kodu gönderme başarısız: ${response.status}`
+      };
+    } catch (error) {
+      console.error('Doğrulama kodu gönderme hatası:', error);
+      return {
+        success: false,
+        error: error.message || 'Doğrulama kodu gönderme sırasında hata oluştu'
+      };
+    }
+  },
+
+  // E-posta doğrulama işlemi
+  verifyEmail: async (token) => {
+    try {
+      console.log('E-posta doğrulama işlemi başlatıldı');
+      
+      const response = await fetch(`${API_BASE_URL}/auth/verify-email/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token }),
+        credentials: 'include'
+      });
+      
+      console.log('E-posta doğrulama işlemi yanıt durumu:', response.status);
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('E-posta doğrulama işlemi yanıt parse hatası:', jsonError);
+        return {
+          success: false,
+          error: 'Sunucudan geçersiz yanıt'
+        };
+      }
+      
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || data.detail || `E-posta doğrulama başarısız: ${response.status}`
+        };
+      }
+      
+      return {
+        success: true,
+        message: data.message || 'Your email has been verified successfully'
+      };
+    } catch (error) {
+      console.error('E-posta doğrulama işlemi hatası:', error);
+      return {
+        success: false,
+        error: error.message || 'E-posta doğrulama sırasında hata oluştu'
+      };
+    }
+  },
+
   // Kimlik doğrulama durumunu kontrol et - düzeltildi
   isAuthenticated: () => {
     if (typeof window === 'undefined') return false;
@@ -446,8 +730,8 @@ export function AuthProvider({ children }) {
         const path = window.location.pathname;
         
         // Login veya register sayfasındaysa token kontrolü yapmadan geç
-        if (path === '/login' || path === '/register') {
-          console.log('Login/Register sayfası: Auth kontrolü atlandı');
+        if (path === '/login' || path === '/register' || path.includes('/forgot-password') || path.includes('/reset-password') || path.includes('/verify-email')) {
+          console.log('Kimlik doğrulama gerektirmeyen sayfa: Auth kontrolü atlandı');
           setIsLoading(false);
           setAuthChecked(true);
           return;
@@ -617,6 +901,102 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Şifre sıfırlama talebi 
+  const requestPasswordReset = async (email) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const result = await authService.requestPasswordReset(email);
+      return result;
+    } catch (error) {
+      setAuthError(error.message || 'Şifre sıfırlama talebi başarısız');
+      return { success: false, error: error.message || 'Şifre sıfırlama talebi başarısız' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Şifre sıfırlama işlemi
+  const resetPassword = async (token, newPassword) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const result = await authService.resetPassword(token, newPassword);
+      return result;
+    } catch (error) {
+      setAuthError(error.message || 'Şifre sıfırlama başarısız');
+      return { success: false, error: error.message || 'Şifre sıfırlama başarısız' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // E-posta doğrulama işlemi
+  const verifyEmail = async (token) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const result = await authService.verifyEmail(token);
+      return result;
+    } catch (error) {
+      setAuthError(error.message || 'E-posta doğrulama başarısız');
+      return { success: false, error: error.message || 'E-posta doğrulama başarısız' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // E-posta doğrulama kodu ile doğrulama
+  const verifyEmailWithCode = async (email, code) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const result = await authService.verifyEmailWithCode(email, code);
+      return result;
+    } catch (error) {
+      setAuthError(error.message || 'E-posta doğrulama başarısız');
+      return { success: false, error: error.message || 'E-posta doğrulama başarısız' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Kod ile şifre sıfırlama
+  const resetPasswordWithCode = async (email, code, newPassword) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const result = await authService.resetPasswordWithCode(email, code, newPassword);
+      return result;
+    } catch (error) {
+      setAuthError(error.message || 'Şifre sıfırlama başarısız');
+      return { success: false, error: error.message || 'Şifre sıfırlama başarısız' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Yeni doğrulama kodu gönderme
+  const resendVerificationCode = async (email) => {
+    setIsLoading(true);
+    setAuthError(null);
+    
+    try {
+      const result = await authService.resendVerificationCode(email);
+      return result;
+    } catch (error) {
+      setAuthError(error.message || 'Doğrulama kodu gönderme başarısız');
+      return { success: false, error: error.message || 'Doğrulama kodu gönderme başarısız' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Kimlik doğrulama kontrolü
   const isAuthenticated = () => {
     return authService.isAuthenticated();
@@ -633,7 +1013,12 @@ export function AuthProvider({ children }) {
     logout,
     isAuthenticated,
     refreshToken: authService.refreshToken,
-    getProfile: authService.getProfile,
+    requestPasswordReset,
+    resetPassword,
+    resetPasswordWithCode,  // Yeni eklenen
+    verifyEmail,
+    verifyEmailWithCode,   // Yeni eklenen
+    resendVerificationCode, // Yeni eklenen
     updateUser: (userData) => setUser(userData)
   };
 

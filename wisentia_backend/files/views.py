@@ -1,5 +1,6 @@
 import os
 import uuid
+import shutil
 from django.conf import settings
 from django.db import connection
 from django.http import HttpResponse, FileResponse
@@ -14,9 +15,18 @@ UPLOAD_DIR = os.path.join(settings.MEDIA_ROOT, 'uploads')
 PROFILE_IMAGE_DIR = os.path.join(UPLOAD_DIR, 'profile_images')
 NFT_IMAGE_DIR = os.path.join(UPLOAD_DIR, 'nft_images')
 
+# Frontend dosya yolları (frontend için public dizinine kopyalamak için)
+FRONTEND_DIR = os.path.abspath(os.path.join(settings.BASE_DIR, '..', 'wisentia_frontend'))
+FRONTEND_PUBLIC_DIR = os.path.join(FRONTEND_DIR, 'public')
+FRONTEND_MEDIA_DIR = os.path.join(FRONTEND_PUBLIC_DIR, 'media', 'uploads')
+FRONTEND_NFT_IMAGES_DIR = os.path.join(FRONTEND_MEDIA_DIR, 'nft_images')
+FRONTEND_PROFILE_IMAGES_DIR = os.path.join(FRONTEND_MEDIA_DIR, 'profile_images')
+
 # Dizinlerin var olduğundan emin ol
 os.makedirs(PROFILE_IMAGE_DIR, exist_ok=True)
 os.makedirs(NFT_IMAGE_DIR, exist_ok=True)
+os.makedirs(FRONTEND_NFT_IMAGES_DIR, exist_ok=True)
+os.makedirs(FRONTEND_PROFILE_IMAGES_DIR, exist_ok=True)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -48,10 +58,17 @@ def upload_profile_image(request):
     new_filename = f"{uuid.uuid4().hex}{file_ext}"
     file_path = os.path.join(PROFILE_IMAGE_DIR, new_filename)
     
-    # Dosyayı kaydet
+    # Dosyayı backend'e kaydet
     with open(file_path, 'wb+') as destination:
         for chunk in image_file.chunks():
             destination.write(chunk)
+    
+    # Dosyayı frontend'e kopyala
+    frontend_file_path = os.path.join(FRONTEND_PROFILE_IMAGES_DIR, new_filename)
+    try:
+        shutil.copy2(file_path, frontend_file_path)
+    except Exception as e:
+        print(f"Frontend'e kopyalama hatası: {e}")
     
     # URL oluştur
     file_url = f"/media/uploads/profile_images/{new_filename}"
@@ -81,6 +98,11 @@ def upload_profile_image(request):
             if os.path.exists(old_path):
                 try:
                     os.remove(old_path)
+                    
+                    # Frontend'den de sil
+                    old_frontend_path = os.path.join(FRONTEND_PROFILE_IMAGES_DIR, old_filename)
+                    if os.path.exists(old_frontend_path):
+                        os.remove(old_frontend_path)
                 except:
                     pass
     
@@ -130,10 +152,18 @@ def upload_nft_image(request):
     new_filename = f"{uuid.uuid4().hex}{file_ext}"
     file_path = os.path.join(NFT_IMAGE_DIR, new_filename)
     
-    # Dosyayı kaydet
+    # Dosyayı backend'e kaydet
     with open(file_path, 'wb+') as destination:
         for chunk in image_file.chunks():
             destination.write(chunk)
+    
+    # Dosyayı frontend'e kopyala
+    frontend_file_path = os.path.join(FRONTEND_NFT_IMAGES_DIR, new_filename)
+    try:
+        shutil.copy2(file_path, frontend_file_path)
+        print(f"NFT görseli frontend'e kopyalandı: {frontend_file_path}")
+    except Exception as e:
+        print(f"Frontend'e kopyalama hatası: {e}")
     
     # URL oluştur
     file_url = f"/media/uploads/nft_images/{new_filename}"

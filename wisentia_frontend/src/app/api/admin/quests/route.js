@@ -34,47 +34,30 @@ export async function GET(request) {
     
     console.log('Quests arama parametreleri:', { page, pageSize, search, difficulty, status, aiGenerated });
     
-    // Önce doğrudan quests API'ye bir istek deneyelim
-    let backendUrl = `http://localhost:8000/api/quests/?page=${page}&pageSize=${pageSize}`;
-    
-    if (search) backendUrl += `&search=${encodeURIComponent(search)}`;
-    if (difficulty) backendUrl += `&difficulty=${encodeURIComponent(difficulty)}`;
-    if (status) backendUrl += `&status=${encodeURIComponent(status)}`;
-    if (aiGenerated) backendUrl += `&aiGenerated=${encodeURIComponent(aiGenerated)}`;
-    
-    console.log('Quests API isteği yapılıyor:', backendUrl);
-    
-    // Backend'e API isteği
-    let response = await fetch(backendUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store'
-      },
-      cache: 'no-store'
+    // Content API'nin beklediği parametre formatını oluştur
+    const queryParams = new URLSearchParams({
+      page,
+      pageSize,
+      type: 'quests'  // content endpoint'i için önemli parametre
     });
     
-    // Eğer doğrudan quests API çalışmazsa, admin/content API'yi deneyelim
-    if (response.status === 404) {
-      console.log('Quests API bulunamadı, admin/content API deneniyor...');
-      
-      // Content API'nin beklediği parametre formatını oluştur
-      const queryParams = new URLSearchParams({
-        page,
-        pageSize,
-        type: 'quests'  // content endpoint'i için önemli parametre
-      });
-      
-      if (search) queryParams.append('search', search);
-      if (difficulty) queryParams.append('difficulty', difficulty);
-      if (status) queryParams.append('status', status);
-      if (aiGenerated) queryParams.append('aiGenerated', aiGenerated);
-      
-      backendUrl = `http://localhost:8000/api/admin/content/?${queryParams.toString()}`;
-      console.log('Admin Content API isteği yapılıyor:', backendUrl);
-      
+    if (search) queryParams.append('search', search);
+    if (difficulty) queryParams.append('difficulty', difficulty);
+    if (status) queryParams.append('active', status);
+    if (aiGenerated) queryParams.append('aiGenerated', aiGenerated);
+    
+    // Backend API URL - use NEXT_PUBLIC_API_URL or default to localhost
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    let backendUrl = `${apiBaseUrl}/api/admin/content/?${queryParams.toString()}`;
+    console.log('Admin Content API isteği yapılıyor:', backendUrl);
+    
+    // Set a timeout to avoid hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    // Backend'e API isteği
+    let response;
+    try {
       response = await fetch(backendUrl, {
         method: 'GET',
         headers: {
@@ -83,8 +66,41 @@ export async function GET(request) {
           'Accept': 'application/json',
           'Cache-Control': 'no-cache, no-store'
         },
-        cache: 'no-store'
-      });
+        cache: 'no-store',
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
+      
+      // Try AI endpoint if admin/content fails
+      if (!response.ok) {
+        console.log('Admin Content API başarısız oldu, AI API deneniyor...');
+        
+        backendUrl = `${apiBaseUrl}/api/ai/admin/pending-content/?${queryParams.toString()}`;
+        console.log('AI Admin API isteği yapılıyor:', backendUrl);
+        
+        const aiController = new AbortController();
+        const aiTimeoutId = setTimeout(() => aiController.abort(), 5000);
+        
+        response = await fetch(backendUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache, no-store'
+          },
+          cache: 'no-store',
+          signal: aiController.signal
+        }).finally(() => clearTimeout(aiTimeoutId));
+      }
+    } catch (fetchError) {
+      console.error('Fetch hatası:', fetchError);
+      if (fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { error: 'Bağlantı zaman aşımına uğradı', message: 'Backend yanıt vermedi' },
+          { status: 504 }
+        );
+      }
+      throw fetchError;
     }
     
     console.log('Backend yanıt durumu:', response.status);
@@ -116,37 +132,47 @@ export async function GET(request) {
     const data = await response.json();
     console.log('Backend API yanıtı alındı. Veri yapısı:', Object.keys(data));
     
-    // Dönen veriyi analiz et ve frontend'in beklediği formata dönüştür
+    // Transform response to match what the frontend expects
     let formattedResponse;
     
-    // Olası veri yapıları için kontrol
-    if (Array.isArray(data)) {
-      // Eğer doğrudan dizi dönüyorsa
-      formattedResponse = {
-        quests: data,
-        totalCount: data.length
-      };
-      console.log('Array veri yapısı tespit edildi ve dönüştürüldü');
-    } else if (data.items) {
-      // admin/content API formatı
+    // If the response has 'items' property (admin/content API format)
+    if (data.items) {
       formattedResponse = {
         quests: data.items,
         totalCount: data.totalCount || data.items.length,
         page: data.page || 1,
         pageSize: data.pageSize || 20
       };
-      console.log('Content API veri yapısı tespit edildi ve dönüştürüldü');
-    } else if (data.quests) {
-      // Zaten doğru format
+      console.log('Admin Content API format detected and transformed');
+    }
+    // If the response has 'quests' property
+    else if (data.quests) {
       formattedResponse = data;
-      console.log('Quests API veri yapısı tespit edildi');
-    } else {
-      // Bilinmeyen format, olduğu gibi dön
+      console.log('Quests API format detected');
+    }
+    // If the response is an array of quests
+    else if (Array.isArray(data)) {
       formattedResponse = {
-        quests: data.results || data,
-        totalCount: data.count || data.total || (data.results ? data.results.length : Object.keys(data).length)
+        quests: data,
+        totalCount: data.length
       };
-      console.log('Bilinmeyen veri yapısı, en iyi tahminle dönüştürüldü');
+      console.log('Array format detected and transformed');
+    }
+    // If we have 'results' property (common in paginated APIs)
+    else if (data.results) {
+      formattedResponse = {
+        quests: data.results,
+        totalCount: data.count || data.results.length
+      };
+      console.log('Results format detected and transformed');
+    }
+    // Fallback for unknown format
+    else {
+      formattedResponse = {
+        quests: data,
+        totalCount: Object.keys(data).length
+      };
+      console.log('Unknown format, best guess transformation applied');
     }
     
     console.log(`Formatlanmış yanıt: ${formattedResponse.quests.length} görev, toplam: ${formattedResponse.totalCount}`);
@@ -189,9 +215,10 @@ export async function POST(request) {
     // İstek verisini al
     const requestData = await request.json();
     
-    // AI ile quest oluşturma işlemi için API yolu
+    // Use the AI endpoint for quest creation
     const backendUrl = 'http://localhost:8000/api/ai/admin/generate-quest/';
-    console.log('Quest oluşturma isteği yapılıyor:', backendUrl);
+    
+    console.log('AI Quest oluşturma isteği yapılıyor:', backendUrl);
     console.log('İstek verisi:', JSON.stringify(requestData, null, 2));
     
     // Backend'e API isteği

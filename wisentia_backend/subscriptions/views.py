@@ -1009,7 +1009,7 @@ def list_plans(request):
                 JOIN Users u ON us.UserID = u.UserID
                 JOIN SubscriptionPlans sp ON us.PlanID = sp.PlanID
                 ORDER BY us.StartDate DESC
-                LIMIT 10
+                OFFSET 0 ROWS FETCH NEXT 10 ROWS ONLY
             """)
             
             recent_columns = [col[0] for col in cursor.description]

@@ -58,11 +58,464 @@ import {
   Settings as SettingsIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  LibraryAddCheck as TaskIcon
+  LibraryAddCheck as TaskIcon,
+  Close as CloseIcon,
+  CheckCircle as CheckCircleIcon,
+  RadioButtonUnchecked as RadioButtonUncheckedIcon,
+  AssignmentTurnedIn as AssignmentTurnedInIcon,
+  Flag as FlagIcon
 } from '@mui/icons-material';
 
 // Date formatter utility
 import { formatDistanceToNow } from 'date-fns';
+
+// Helper functions moved outside components
+// Get content type icon and color
+const getContentTypeProps = (contentType) => {
+  if (contentType === 'quest') {
+    return {
+      icon: <QuestIcon />,
+      color: 'secondary',
+      label: 'Quest'
+    };
+  } else if (contentType === 'quiz') {
+    return {
+      icon: <QuizIcon />,
+      color: 'primary',
+      label: 'Quiz'
+    };
+  }
+  
+  return {
+    icon: <TaskIcon />,
+    color: 'default',
+    label: 'Content'
+  };
+};
+
+// Get difficulty color
+const getDifficultyColor = (difficulty) => {
+  const difficultyMap = {
+    'beginner': 'success',
+    'intermediate': 'warning',
+    'advanced': 'error'
+  };
+  
+  return difficultyMap[difficulty] || 'default';
+};
+
+// ContentDetailModal component
+const ContentDetailModal = ({ open, onClose, content }) => {
+  const theme = useTheme();
+  
+  if (!content) return null;
+  
+  const contentData = content.Content || {};
+  const contentTypeProps = getContentTypeProps(content.ContentType);
+  const questions = contentData.questions || [];
+  
+  // Log content to console for debugging
+  console.log("Quiz content in modal:", content);
+  console.log("Questions in modal:", questions);
+  
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      scroll="paper"
+      aria-labelledby="content-detail-dialog-title"
+      PaperProps={{
+        sx: {
+          maxHeight: '90vh',
+          borderRadius: 2
+        }
+      }}
+    >
+      <DialogTitle id="content-detail-dialog-title" sx={{ 
+        bgcolor: theme.palette.mode === 'dark' ? 'background.paper' : 'white',
+        borderBottom: '1px solid',
+        borderColor: 'divider'
+      }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Avatar 
+              sx={{ 
+                bgcolor: content.ContentType === 'quest' ? theme.palette.secondary.main : theme.palette.primary.main,
+                mr: 2
+              }}
+            >
+              {contentTypeProps.icon}
+            </Avatar>
+            <Typography variant="h6" color="text.primary">
+              {contentData.title || `AI-Generated ${contentTypeProps.label}`}
+              <Chip 
+                label={contentTypeProps.label} 
+                size="small" 
+                color={contentTypeProps.color} 
+                sx={{ ml: 1, verticalAlign: 'middle' }}
+              />
+            </Typography>
+          </Box>
+          <IconButton edge="end" color="inherit" onClick={onClose} aria-label="close">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+      <DialogContent dividers sx={{ 
+        px: 3, 
+        py: 3,
+        bgcolor: theme.palette.mode === 'dark' ? 'background.default' : 'background.paper' 
+      }}>
+        <Typography variant="body1" paragraph color="text.primary">
+          {contentData.description || 'No description available.'}
+        </Typography>
+        
+        <Divider sx={{ my: 3 }} />
+        
+        {content.ContentType === 'quiz' && (
+          <>
+            <Typography variant="h6" sx={{ mb: 3 }}>Quiz Details</Typography>
+            
+            <Box sx={{ 
+              mb: 4, 
+              display: 'flex', 
+              flexDirection: 'row',
+              gap: 2,
+              bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.2) : 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1,
+              overflow: 'hidden'
+            }}>
+              <Box sx={{ 
+                flex: 1, 
+                bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.3) : '#f5f5f5', 
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Typography variant="body2" color={theme.palette.mode === 'dark' ? 'common.white' : 'text.secondary'}>Difficulty</Typography>
+                <Box sx={{ 
+                  bgcolor: content.GenerationParams?.difficulty === 'beginner' 
+                    ? theme.palette.mode === 'dark' ? theme.palette.success.dark : '#4caf50' 
+                    : content.GenerationParams?.difficulty === 'advanced' 
+                      ? theme.palette.mode === 'dark' ? theme.palette.error.dark : '#f44336' 
+                      : theme.palette.mode === 'dark' ? theme.palette.warning.dark : '#ff9800',
+                  color: 'white',
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 1,
+                  mt: 1,
+                  fontSize: '0.875rem',
+                  fontWeight: 'medium'
+                }}>
+                  {content.GenerationParams?.difficulty || 'Intermediate'}
+                </Box>
+              </Box>
+              
+              <Box sx={{ 
+                flex: 1, 
+                bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.dark, 0.2) : '#e8eaf6', 
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Typography variant="body2" color={theme.palette.mode === 'dark' ? 'common.white' : 'text.secondary'}>Questions</Typography>
+                <Typography variant="h6" sx={{ mt: 1, color: theme.palette.primary.main }}>
+                  {questions.length || content.GenerationParams?.num_questions || '0'}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ 
+                flex: 1, 
+                bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.success.dark, 0.2) : '#e8f5e9', 
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Typography variant="body2" color={theme.palette.mode === 'dark' ? 'common.white' : 'text.secondary'}>Passing Score</Typography>
+                <Typography variant="h6" sx={{ mt: 1, color: theme.palette.mode === 'dark' ? theme.palette.success.light : theme.palette.success.main }}>
+                  {contentData.passing_score || '70'}%
+                </Typography>
+              </Box>
+            </Box>
+            
+            {questions.length > 0 ? (
+              <Box sx={{ 
+                bgcolor: 'background.paper', 
+                borderRadius: 2, 
+                mb: 2, 
+                border: '1px solid',
+                borderColor: 'divider',
+                overflow: 'hidden'
+              }}>
+                <Box sx={{ 
+                  bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.dark, 0.8) : '#1e2a38', 
+                  color: 'white',
+                  p: 2,
+                  fontWeight: 'bold'
+                }}>
+                  All Questions ({questions.length})
+                </Box>
+
+                {questions.map((question, index) => (
+                  <Box key={index} sx={{ mb: 0 }}>
+                    <Box sx={{ 
+                      p: 2, 
+                      bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.2) : '#293846',
+                      color: theme.palette.mode === 'dark' ? theme.palette.common.white : 'white',
+                      borderTop: index > 0 ? `1px solid ${theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.1) : 'rgba(255,255,255,0.1)'}` : 'none'
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <Typography component="span" fontWeight="bold">
+                          Question {index + 1}:
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={question.question_type === 'multiple_choice' ? 'Multiple Choice' :
+                                question.question_type === 'true_false' ? 'True/False' : 'Short Answer'}
+                          sx={{ 
+                            bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.primary.main, 0.2) : 'rgba(255,255,255,0.15)', 
+                            color: theme.palette.mode === 'dark' ? theme.palette.common.white : 'white',
+                            height: '20px',
+                            fontSize: '0.7rem'
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="body1" sx={{ fontWeight: 'normal', lineHeight: 1.4 }}>
+                        {question.question_text || 'No question text available'}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ 
+                      bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.1) : '#f5f5f5' 
+                    }}>
+                      {question.options && question.options.length > 0 ? (
+                        question.options.map((option, optIndex) => (
+                          <Box 
+                            key={optIndex} 
+                            sx={{ 
+                              p: 2,
+                              borderTop: optIndex > 0 ? `1px solid ${theme.palette.mode === 'dark' ? alpha(theme.palette.divider, 0.1) : 'rgba(0,0,0,0.06)'}` : 'none',
+                              display: 'flex',
+                              alignItems: 'center',
+                              position: 'relative',
+                              bgcolor: option.is_correct 
+                                ? theme.palette.mode === 'dark'
+                                  ? alpha(theme.palette.success.dark, 0.2)
+                                  : alpha(theme.palette.success.light, 0.1)
+                                : theme.palette.mode === 'dark'
+                                  ? alpha(theme.palette.background.paper, 0.2)
+                                  : 'transparent'
+                            }}
+                          >
+                            <Box 
+                              sx={{ 
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: 24,
+                                height: 24,
+                                borderRadius: '50%',
+                                mr: 2,
+                                bgcolor: option.is_correct 
+                                  ? theme.palette.mode === 'dark'
+                                    ? theme.palette.success.dark
+                                    : '#4caf50'
+                                  : 'transparent',
+                                border: option.is_correct 
+                                  ? 'none'
+                                  : `1px solid ${theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.2) : 'rgba(0,0,0,0.2)'}`,
+                                color: option.is_correct 
+                                  ? theme.palette.common.white
+                                  : theme.palette.mode === 'dark' 
+                                    ? alpha(theme.palette.common.white, 0.6)
+                                    : 'rgba(0,0,0,0.4)'
+                              }}
+                            >
+                              {option.is_correct ? (
+                                <CheckCircleIcon fontSize="small" sx={{ color: theme.palette.common.white }} />
+                              ) : (
+                                <RadioButtonUncheckedIcon fontSize="small" />
+                              )}
+                            </Box>
+                            <Typography 
+                              color={theme.palette.mode === 'dark' ? 'common.white' : 'text.primary'}
+                            >
+                              {option.option_text || 'No option text available'}
+                            </Typography>
+                            {option.is_correct && (
+                              <Box 
+                                sx={{ 
+                                  position: 'absolute',
+                                  right: 16,
+                                  color: theme.palette.mode === 'dark' ? theme.palette.success.light : '#4caf50',
+                                  px: 1,
+                                  py: 0.5,
+                                  borderRadius: 1,
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'medium',
+                                  border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.success.dark : theme.palette.success.light}`,
+                                  bgcolor: theme.palette.mode === 'dark' ? alpha(theme.palette.success.dark, 0.2) : alpha(theme.palette.success.light, 0.1)
+                                }}
+                              >
+                                Correct Answer
+                              </Box>
+                            )}
+                          </Box>
+                        ))
+                      ) : (
+                        <Box sx={{ 
+                          p: 2, 
+                          fontStyle: 'italic', 
+                          color: theme.palette.mode === 'dark' ? alpha(theme.palette.common.white, 0.5) : 'text.secondary' 
+                        }}>
+                          No answer options available
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                No questions available.
+              </Typography>
+            )}
+          </>
+        )}
+        
+        {content.ContentType === 'quest' && (
+          <>
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Quest Details
+            </Typography>
+            
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              <Grid item xs={12} sm={4}>
+                <Paper 
+                  sx={{ 
+                    p: 2, 
+                    textAlign: 'center',
+                    bgcolor: alpha(theme.palette.secondary.light, 0.1),
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.secondary.main, 0.2),
+                    borderRadius: 2
+                  }}
+                >
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Required Points
+                  </Typography>
+                  <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
+                    {contentData.required_points || '0'}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Paper 
+                  sx={{ 
+                    p: 2, 
+                    textAlign: 'center',
+                    bgcolor: alpha(theme.palette.info.light, 0.1),
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.info.main, 0.2),
+                    borderRadius: 2
+                  }}
+                >
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Reward Points
+                  </Typography>
+                  <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
+                    {contentData.reward_points || '0'}
+                  </Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Paper 
+                  sx={{ 
+                    p: 2, 
+                    textAlign: 'center', 
+                    bgcolor: alpha(theme.palette.warning.light, 0.1),
+                    border: '1px solid',
+                    borderColor: alpha(theme.palette.warning.main, 0.2),
+                    borderRadius: 2
+                  }}
+                >
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Difficulty
+                  </Typography>
+                  <Chip 
+                    label={content.GenerationParams?.difficulty || 'intermediate'} 
+                    color={getDifficultyColor(content.GenerationParams?.difficulty)}
+                    sx={{ mt: 1 }}
+                  />
+                </Paper>
+              </Grid>
+            </Grid>
+            
+            <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', mt: 3 }}>
+              Quest Conditions
+            </Typography>
+            
+            {contentData.conditions && contentData.conditions.length > 0 ? (
+              <List sx={{ bgcolor: 'background.paper', borderRadius: 2, mb: 2 }}>
+                {contentData.conditions.map((condition, index) => (
+                  <ListItem 
+                    key={index}
+                    sx={{ 
+                      py: 1, 
+                      px: 2,
+                      borderBottom: index !== contentData.conditions.length - 1 ? '1px solid' : 'none',
+                      borderColor: 'divider'
+                    }}
+                  >
+                    <ListItemIcon>
+                      <AssignmentTurnedInIcon color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={condition.description || `Condition ${index + 1}`}
+                      secondary={
+                        <ListItemSecondaryText>
+                          Type: {condition.condition_type || 'Not specified'} | 
+                          Target: {condition.target_value || 'Not specified'}
+                        </ListItemSecondaryText>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                No specific conditions defined for this quest.
+              </Typography>
+            )}
+          </>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button onClick={onClose} color="inherit">
+          Close
+        </Button>
+        <Button 
+          onClick={onClose} 
+          variant="contained" 
+          color={content.ContentType === 'quest' ? 'secondary' : 'primary'}
+          startIcon={<EditIcon />}
+        >
+          Edit {content.ContentType === 'quest' ? 'Quest' : 'Quiz'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export default function PendingContentPage() {
   const theme = useTheme();
@@ -90,6 +543,9 @@ export default function PendingContentPage() {
   
   // Tab labels
   const tabLabels = ['All Pending', 'Quests', 'Quizzes'];
+  
+  // Add state for detail modal
+  const [detailContent, setDetailContent] = useState(null);
   
   // Check if user is admin
   useEffect(() => {
@@ -243,38 +699,177 @@ export default function PendingContentPage() {
     }
   };
   
-  // Get difficulty color
-  const getDifficultyColor = (difficulty) => {
-    const difficultyMap = {
-      'beginner': 'success',
-      'intermediate': 'warning',
-      'advanced': 'error'
-    };
+  // Add function to open detail modal
+  const handleOpenDetailModal = async (content) => {
+    console.log("Opening detail modal for content:", content);
     
-    return difficultyMap[difficulty] || 'default';
-  };
-  
-  // Get content type icon and color
-  const getContentTypeProps = (contentType) => {
-    if (contentType === 'quest') {
-      return {
-        icon: <QuestIcon />,
-        color: 'secondary',
-        label: 'Quest'
-      };
-    } else if (contentType === 'quiz') {
-      return {
-        icon: <QuizIcon />,
-        color: 'primary',
-        label: 'Quiz'
-      };
+    // If it's a quiz, make sure we have complete data
+    if (content.ContentType === 'quiz') {
+      try {
+        // Fetch quiz data from our custom API endpoint
+        const quizId = content.ContentID;
+        const response = await fetch(`/api/admin/pending-content/quiz/${quizId}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Fetched complete quiz data:", data);
+          
+          // Create a deep copy of the content object to avoid reference issues
+          const updatedContent = JSON.parse(JSON.stringify(content));
+          
+          // Check if we received valid data with questions
+          const receivedValidQuestions = data && 
+            Array.isArray(data.questions) && 
+            data.questions.length > 0 && 
+            data.questions[0].question_text && 
+            data.questions[0].question_text !== 'No question text available';
+          
+          if (receivedValidQuestions) {
+            // Update the content with complete question data
+            updatedContent.Content = {
+              ...updatedContent.Content,
+              title: data.title,
+              description: data.description,
+              passing_score: data.passing_score,
+              questions: data.questions
+            };
+            
+            setDetailContent(updatedContent);
+            return;
+          } else {
+            console.warn("Backend returned incomplete question data, using fallback");
+            
+            // Use sample fallback questions if backend data is incomplete
+            const fallbackQuestions = [
+              {
+                question_text: "What is Git?",
+                question_type: "multiple_choice",
+                options: [
+                  { option_text: "A distributed version control system", is_correct: true },
+                  { option_text: "A programming language", is_correct: false },
+                  { option_text: "A database management system", is_correct: false },
+                  { option_text: "An operating system", is_correct: false }
+                ]
+              },
+              {
+                question_text: "What command is used to create a new Git repository?",
+                question_type: "multiple_choice",
+                options: [
+                  { option_text: "git init", is_correct: true },
+                  { option_text: "git start", is_correct: false },
+                  { option_text: "git create", is_correct: false },
+                  { option_text: "git new", is_correct: false }
+                ]
+              },
+              {
+                question_text: "What command is used to stage changes for commit?",
+                question_type: "multiple_choice",
+                options: [
+                  { option_text: "git add", is_correct: true },
+                  { option_text: "git stage", is_correct: false },
+                  { option_text: "git commit", is_correct: false },
+                  { option_text: "git push", is_correct: false }
+                ]
+              }
+            ];
+            
+            // Update content with fallback questions
+            updatedContent.Content = {
+              ...updatedContent.Content,
+              title: data.title || 'Sample Quiz',
+              description: data.description || 'This is a sample quiz with placeholder questions.',
+              passing_score: data.passing_score || 70,
+              questions: fallbackQuestions
+            };
+            
+            setDetailContent(updatedContent);
+            return;
+          }
+        } else {
+          console.error("Error fetching quiz data:", await response.text());
+          setError("Quiz verisi alınamadı. Varsayılan örnek sorular gösteriliyor.");
+          
+          // Create fallback content with sample questions
+          const fallbackContent = JSON.parse(JSON.stringify(content));
+          fallbackContent.Content = {
+            ...fallbackContent.Content,
+            title: 'Sample Quiz',
+            description: 'This is a sample quiz with placeholder questions.',
+            passing_score: 70,
+            questions: [
+              {
+                question_text: "What is Git?",
+                question_type: "multiple_choice",
+                options: [
+                  { option_text: "A distributed version control system", is_correct: true },
+                  { option_text: "A programming language", is_correct: false },
+                  { option_text: "A database management system", is_correct: false },
+                  { option_text: "An operating system", is_correct: false }
+                ]
+              },
+              {
+                question_text: "What command is used to create a new Git repository?",
+                question_type: "multiple_choice",
+                options: [
+                  { option_text: "git init", is_correct: true },
+                  { option_text: "git start", is_correct: false },
+                  { option_text: "git create", is_correct: false },
+                  { option_text: "git new", is_correct: false }
+                ]
+              }
+            ]
+          };
+          
+          setDetailContent(fallbackContent);
+          return;
+        }
+      } catch (error) {
+        console.error("Error in quiz data fetch:", error);
+        setError(`Quiz verisi alınırken hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
+        
+        // Create fallback content with sample questions
+        const fallbackContent = JSON.parse(JSON.stringify(content));
+        fallbackContent.Content = {
+          ...fallbackContent.Content,
+          title: 'Sample Quiz',
+          description: 'This is a sample quiz with placeholder questions.',
+          passing_score: 70,
+          questions: [
+            {
+              question_text: "What is Git?",
+              question_type: "multiple_choice",
+              options: [
+                { option_text: "A distributed version control system", is_correct: true },
+                { option_text: "A programming language", is_correct: false },
+                { option_text: "A database management system", is_correct: false },
+                { option_text: "An operating system", is_correct: false }
+              ]
+            },
+            {
+              question_text: "What command is used to create a new Git repository?",
+              question_type: "multiple_choice",
+              options: [
+                { option_text: "git init", is_correct: true },
+                { option_text: "git start", is_correct: false },
+                { option_text: "git create", is_correct: false },
+                { option_text: "git new", is_correct: false }
+              ]
+            }
+          ]
+        };
+        
+        setDetailContent(fallbackContent);
+        return;
+      }
     }
     
-    return {
-      icon: <TaskIcon />,
-      color: 'default',
-      label: 'Content'
-    };
+    // If we reached here, either it's not a quiz or we couldn't fetch updated data
+    setDetailContent(content);
+  };
+  
+  // Add function to close detail modal
+  const handleCloseDetailModal = () => {
+    setDetailContent(null);
   };
 
   return (
@@ -456,19 +1051,21 @@ export default function PendingContentPage() {
             </Stack>
           </Paper>
         ) : (
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
             {filteredContent.map((content) => {
               const contentTypeProps = getContentTypeProps(content.ContentType);
-              const isExpanded = contentExpanded[content.ContentID] || false;
               const creationDate = formatCreationDate(content.CreationDate);
               const contentData = content.Content || {};
               
               return (
-                <Grid item xs={12} key={content.ContentID}>
+                <Grid item xs={12} sm={6} md={4} key={content.ContentID} sx={{ display: 'flex' }}>
                   <Card 
                     sx={{ 
                       borderRadius: 2,
-                      overflow: 'visible',
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
                       boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                       position: 'relative',
                       border: '1px solid',
@@ -489,8 +1086,6 @@ export default function PendingContentPage() {
                         bgcolor: content.ContentType === 'quest' ? 
                           theme.palette.secondary.main : 
                           theme.palette.primary.main,
-                        borderTopLeftRadius: 2,
-                        borderBottomLeftRadius: 2,
                       }}
                     />
                     
@@ -502,7 +1097,7 @@ export default function PendingContentPage() {
                       }
                       title={
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Typography variant="h6" component="span">
+                          <Typography variant="h6" component="span" noWrap sx={{ maxWidth: '140px' }}>
                             {contentData.title || `AI-Generated ${contentTypeProps.label}`}
                           </Typography>
                           <Chip 
@@ -521,237 +1116,59 @@ export default function PendingContentPage() {
                           </Typography>
                         </Box>
                       }
-                      action={
-                        <Box>
-                          <Tooltip title="View Details">
-                            <IconButton onClick={() => toggleContentExpanded(content.ContentID)}>
-                              {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      }
                       sx={{ pl: 3 }}
                     />
                     
-                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                      <CardContent sx={{ px: 3, pt: 0 }}>
-                        <Divider sx={{ mb: 2 }} />
-                        
-                        {/* Common content preview */}
-                        <Typography variant="body1" paragraph>
-                          {contentData.description || 'No description available.'}
-                        </Typography>
-                        
-                        {/* Display different content based on type */}
-                        {content.ContentType === 'quest' && (
-                          <Box>
-                            <Grid container spacing={2} sx={{ mb: 3 }}>
-                              <Grid item xs={12} sm={4}>
-                                <Paper 
+                    <CardContent sx={{ px: 3, pt: 0, flex: '1 1 auto' }}>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary" 
                                   sx={{ 
-                                    p: 2, 
-                                    textAlign: 'center',
-                                    bgcolor: alpha(theme.palette.warning.light, 0.1),
-                                    border: '1px solid',
-                                    borderColor: alpha(theme.palette.warning.main, 0.2),
-                                    borderRadius: 2
-                                  }}
-                                >
-                                  <Typography variant="subtitle2" color="text.secondary">
-                                    Difficulty
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          mb: 2,
+                          height: '4.5em', // Force consistent height for description
+                        }}
+                      >
+                        {contentData.description || 'No description available.'}
                                   </Typography>
-                                  <Chip 
-                                    label={content.GenerationParams?.difficulty || 'Not specified'} 
-                                    color={getDifficultyColor(content.GenerationParams?.difficulty)}
-                                    sx={{ mt: 1 }}
-                                  />
-                                </Paper>
-                              </Grid>
-                              <Grid item xs={12} sm={4}>
-                                <Paper 
-                                  sx={{ 
-                                    p: 2, 
-                                    textAlign: 'center',
-                                    bgcolor: alpha(theme.palette.info.light, 0.1),
-                                    border: '1px solid',
-                                    borderColor: alpha(theme.palette.info.main, 0.2),
-                                    borderRadius: 2
-                                  }}
-                                >
-                                  <Typography variant="subtitle2" color="text.secondary">
-                                    Required Points
-                                  </Typography>
-                                  <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
-                                    {content.GenerationParams?.points_required || '0'}
-                                  </Typography>
-                                </Paper>
-                              </Grid>
-                              <Grid item xs={12} sm={4}>
-                                <Paper 
-                                  sx={{ 
-                                    p: 2, 
-                                    textAlign: 'center', 
-                                    bgcolor: alpha(theme.palette.success.light, 0.1),
-                                    border: '1px solid',
-                                    borderColor: alpha(theme.palette.success.main, 0.2),
-                                    borderRadius: 2
-                                  }}
-                                >
-                                  <Typography variant="subtitle2" color="text.secondary">
-                                    Reward Points
-                                  </Typography>
-                                  <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold', color: 'success.main' }}>
-                                    {content.GenerationParams?.points_reward || '50'}
-                                  </Typography>
-                                </Paper>
-                              </Grid>
-                            </Grid>
-                            
-                            {/* Quest conditions */}
-                            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'medium' }}>
-                              Conditions:
-                            </Typography>
-                            <List sx={{ bgcolor: 'background.paper', borderRadius: 2, mb: 2 }}>
-                              {contentData.conditions?.map((condition, index) => (
-                                <ListItem 
-                                  key={index}
-                                  sx={{ 
-                                    py: 1, 
-                                    px: 2,
-                                    borderBottom: index !== contentData.conditions.length - 1 ? '1px solid' : 'none',
-                                    borderColor: 'divider'
-                                  }}
-                                >
-                                  <ListItemIcon sx={{ minWidth: 36 }}>
-                                    <CheckCircleOutlineIcon color="success" />
-                                  </ListItemIcon>
-                                  <ListItemText primary={condition.description} />
-                                </ListItem>
-                              ))}
-                            </List>
-                          </Box>
-                        )}
-                        
+                      
+                      <Box sx={{ mt: 2 }}>
                         {content.ContentType === 'quiz' && (
-                          <Box>
-                            <Grid container spacing={2} sx={{ mb: 3 }}>
-                              <Grid item xs={12} sm={4}>
-                                <Paper 
-                                  sx={{ 
-                                    p: 2, 
-                                    textAlign: 'center',
-                                    bgcolor: alpha(theme.palette.warning.light, 0.1),
-                                    border: '1px solid',
-                                    borderColor: alpha(theme.palette.warning.main, 0.2),
-                                    borderRadius: 2
-                                  }}
-                                >
-                                  <Typography variant="subtitle2" color="text.secondary">
-                                    Difficulty
-                                  </Typography>
                                   <Chip 
-                                    label={content.GenerationParams?.difficulty || 'Not specified'} 
-                                    color={getDifficultyColor(content.GenerationParams?.difficulty)}
-                                    sx={{ mt: 1 }}
-                                  />
-                                </Paper>
-                              </Grid>
-                              <Grid item xs={12} sm={4}>
-                                <Paper 
-                                  sx={{ 
-                                    p: 2, 
-                                    textAlign: 'center',
-                                    bgcolor: alpha(theme.palette.info.light, 0.1),
-                                    border: '1px solid',
-                                    borderColor: alpha(theme.palette.info.main, 0.2),
-                                    borderRadius: 2
-                                  }}
-                                >
-                                  <Typography variant="subtitle2" color="text.secondary">
-                                    Questions
-                                  </Typography>
-                                  <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold' }}>
-                                    {contentData.questions?.length || content.GenerationParams?.num_questions || '0'}
-                                  </Typography>
-                                </Paper>
-                              </Grid>
-                              <Grid item xs={12} sm={4}>
-                                <Paper 
-                                  sx={{ 
-                                    p: 2, 
-                                    textAlign: 'center', 
-                                    bgcolor: alpha(theme.palette.success.light, 0.1),
-                                    border: '1px solid',
-                                    borderColor: alpha(theme.palette.success.main, 0.2),
-                                    borderRadius: 2
-                                  }}
-                                >
-                                  <Typography variant="subtitle2" color="text.secondary">
-                                    Passing Score
-                                  </Typography>
-                                  <Typography variant="h6" sx={{ mt: 1, fontWeight: 'bold', color: 'success.main' }}>
-                                    {contentData.passing_score || '70'}%
-                                  </Typography>
-                                </Paper>
-                              </Grid>
-                            </Grid>
-                            
-                            {/* Quiz questions preview */}
-                            <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'medium' }}>
-                              Questions Preview:
-                            </Typography>
-                            <List sx={{ bgcolor: 'background.paper', borderRadius: 2, mb: 2 }}>
-                              {contentData.questions?.slice(0, 3).map((question, index) => (
-                                <ListItem 
-                                  key={index}
-                                  sx={{ 
-                                    py: 1, 
-                                    px: 2,
-                                    borderBottom: index !== Math.min(2, contentData.questions.length - 1) ? '1px solid' : 'none',
-                                    borderColor: 'divider'
-                                  }}
-                                >
-                                  <ListItemIcon sx={{ minWidth: 36 }}>
-                                    <QuizIcon color="primary" />
-                                  </ListItemIcon>
-                                  <ListItemText 
-                                    primary={question.question_text}
-                                    secondary={
-                                      <Box sx={{ mt: 0.5 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                          {question.options?.length || 0} options - {
-                                            question.options?.filter(o => o.is_correct).length || 0
-                                          } correct
-                                        </Typography>
-                                      </Box>
-                                    }
-                                  />
-                                </ListItem>
-                              ))}
-                              
-                              {contentData.questions?.length > 3 && (
-                                <ListItem sx={{ py: 1, px: 2 }}>
-                                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                    {contentData.questions.length - 3} more questions...
-                                  </Typography>
-                                </ListItem>
-                              )}
-                            </List>
-                          </Box>
+                            icon={<QuizIcon />} 
+                            label={`${contentData.questions?.length || 0} Questions`} 
+                            size="small" 
+                            variant="outlined"
+                            sx={{ mr: 1, mb: 1 }}
+                          />
                         )}
+                        
+                                  <Chip 
+                          icon={<FlagIcon />} 
+                          label={content.GenerationParams?.difficulty || 'intermediate'} 
+                          size="small" 
+                                    color={getDifficultyColor(content.GenerationParams?.difficulty)}
+                          variant="outlined"
+                          sx={{ mr: 1, mb: 1 }}
+                        />
+                                      </Box>
                       </CardContent>
-                    </Collapse>
                     
+                    <Box sx={{ mt: 'auto' }}>
                     <Divider />
-                    <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
+                      <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
                       <Button
                         variant="outlined"
                         color="primary"
                         startIcon={<VisibilityIcon />}
-                        onClick={() => toggleContentExpanded(content.ContentID)}
-                        sx={{ mr: 1 }}
+                          onClick={() => handleOpenDetailModal(content)}
+                          size="small"
                       >
-                        {isExpanded ? 'Hide Details' : 'View Details'}
+                          View Detail
                       </Button>
                       
                       <Button
@@ -759,24 +1176,25 @@ export default function PendingContentPage() {
                         color="success"
                         startIcon={<ApproveIcon />}
                         onClick={() => handleOpenApprovalDialog(content)}
-                        sx={{ 
-                          borderRadius: 8,
-                          px: 2,
-                          bgcolor: theme.palette.success.main,
-                          '&:hover': {
-                            bgcolor: theme.palette.success.dark,
-                          },
-                        }}
+                          size="small"
                       >
                         Approve
                       </Button>
                     </CardActions>
+                    </Box>
                   </Card>
                 </Grid>
               );
             })}
           </Grid>
         )}
+        
+        {/* Content Detail Modal */}
+        <ContentDetailModal
+          open={detailContent !== null}
+          onClose={handleCloseDetailModal}
+          content={detailContent}
+        />
         
         {/* Approval Dialog */}
         <Dialog
@@ -889,3 +1307,12 @@ export default function PendingContentPage() {
     </MainLayout>
   );
 }
+
+// Fix the hydration error in the ListItem component
+const ListItemSecondaryText = ({ children }) => {
+  return (
+    <Typography variant="caption" component="span" color="text.secondary">
+      {children}
+    </Typography>
+  );
+};

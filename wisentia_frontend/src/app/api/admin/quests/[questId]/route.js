@@ -1,111 +1,151 @@
 // app/api/admin/quests/[questId]/route.js
 import { NextResponse } from 'next/server';
+import { getToken } from "next-auth/jwt";
 
-export async function GET(request, { params }) {
-  // Get token
-  let token = '';
+// API baz URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+// Admin yetkisini kontrol et
+const checkAdminPermission = async (request) => {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
+    const token = await getToken({ req: request });
+    
+    // Token yoksa ya da admin değilse
+    if (!token?.accessToken || !token?.user?.isAdmin) {
+      return false;
     }
     
-    if (!token) {
-      const tokenCookie = request.cookies.get('access_token');
-      token = tokenCookie?.value || '';
-    }
+    return {
+      token: token.accessToken,
+      userId: token.user.id
+    };
   } catch (error) {
-    console.error('Token access error:', error);
+    console.error('Admin permission check failed:', error);
+    return false;
   }
+};
+
+// Quest detaylarını al
+export async function GET(request, { params }) {
+  const { questId } = params;
   
-  const questId = params.questId;
+  console.log(`API: Getting quest details for ID ${questId}`);
   
   try {
-    // Try standard quests API
-    let backendUrl = `http://localhost:8000/api/quests/${questId}/`;
+    const admin = await checkAdminPermission(request);
     
-    console.log('Fetching quest details:', backendUrl);
+    if (!admin) {
+      console.log('API: Admin permission denied');
+      return NextResponse.json(
+        { error: 'This operation requires admin permission' },
+        { status: 403 }
+      );
+    }
     
-    let response = await fetch(backendUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
+    // Backend API call with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    // If not found, try admin/content API
-    if (response.status === 404) {
-      backendUrl = `http://localhost:8000/api/admin/content/?type=quests&id=${questId}`;
+    // Try the main admin content endpoint first
+    let response;
+    try {
+      console.log(`API: Calling primary endpoint for quest ID ${questId}`);
       
-      console.log('Trying admin content API:', backendUrl);
-      
-      response = await fetch(backendUrl, {
+      response = await fetch(`${API_BASE_URL}/admin/content/?type=quests&quest_id=${questId}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+          'Authorization': `Bearer ${admin.token}`,
+          'Cache-Control': 'no-cache'
+        },
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
+    } catch (fetchError) {
+      console.error('API: Primary endpoint fetch error:', fetchError);
+      if (fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { error: 'Connection timed out', message: 'Backend did not respond' },
+          { status: 504 }
+        );
+      }
+      throw fetchError;
+    }
+    
+    // If the first endpoint fails, try the direct quest endpoint
+    if (!response.ok) {
+      console.log(`API: Primary endpoint failed (${response.status}), trying secondary endpoint`);
       
-      // If still not found, try one more path
-      if (response.status === 404) {
-        backendUrl = `http://localhost:8000/api/admin/content/quests/${questId}/`;
-        
-        console.log('Trying another admin quest path:', backendUrl);
-        
-        response = await fetch(backendUrl, {
+      const altController = new AbortController();
+      const altTimeoutId = setTimeout(() => altController.abort(), 5000);
+      
+      try {
+        response = await fetch(`${API_BASE_URL}/admin/quests/${questId}/`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
+            'Authorization': `Bearer ${admin.token}`,
+            'Cache-Control': 'no-cache'
+          },
+          signal: altController.signal
+        }).finally(() => clearTimeout(altTimeoutId));
+      } catch (altFetchError) {
+        console.error('API: Secondary endpoint fetch error:', altFetchError);
+        if (altFetchError.name === 'AbortError') {
+          return NextResponse.json(
+            { error: 'Connection timed out', message: 'Backend did not respond' },
+            { status: 504 }
+          );
+        }
+        throw altFetchError;
       }
     }
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Quest details error:', errorText);
+      console.error(`API: Both endpoints failed for quest ${questId}. Response:`, errorText);
       
+      try {
+        const errorData = JSON.parse(errorText);
+        return NextResponse.json(errorData, { status: response.status });
+      } catch (parseError) {
+        return NextResponse.json(
+          { error: 'Failed to get quest details', message: errorText.substring(0, 500) },
+          { status: response.status }
+        );
+      }
+    }
+    
+    // Parse response
+    const responseText = await response.text();
+    let data;
+    
+    try {
+      data = JSON.parse(responseText);
+      console.log(`API: Successfully retrieved quest ${questId} data`);
+    } catch (parseError) {
+      console.error('API: Error parsing quest response:', parseError);
       return NextResponse.json(
-        { error: 'Failed to fetch quest details', details: errorText },
-        { status: response.status }
+        { error: 'Error parsing response', message: responseText.substring(0, 500) },
+        { status: 500 }
       );
     }
     
-    const data = await response.json();
-    console.log('Quest details successfully retrieved:', data);
-    
-    // Process the data - convert different formats of isActive to boolean
-    let processedData = data;
-    
-    // If response is an array, take the first item (for admin/content API)
-    if (Array.isArray(data) && data.length > 0) {
-      processedData = data[0];
-    } else if (data.items && Array.isArray(data.items) && data.items.length > 0) {
-      // If using the content management API which returns {items: [...]}
-      processedData = data.items.find(item => 
-        item.QuestID == questId || 
-        item.questId == questId || 
-        item.id == questId
-      ) || data.items[0];
+    // Handle different response formats
+    let quest;
+    if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+      quest = data.items[0];
+    } else if (Array.isArray(data) && data.length > 0) {
+      quest = data[0];
+    } else if (data.quest) {
+      quest = data.quest;
+    } else {
+      quest = data; // Assume the response is the quest object directly
     }
     
-    // Normalize isActive values to boolean
-    if (processedData.IsActive === 1 || processedData.IsActive === 0) {
-      processedData.IsActive = processedData.IsActive === 1;
-    }
-    if (processedData.isActive === 1 || processedData.isActive === 0) {
-      processedData.isActive = processedData.isActive === 1;
-    }
+    return NextResponse.json(quest);
     
-    return NextResponse.json(processedData);
   } catch (error) {
-    console.error('Quest details proxy error:', error);
+    console.error('API: Quest details error:', error);
     return NextResponse.json(
       { error: 'Server error', message: error.message },
       { status: 500 }
@@ -113,144 +153,87 @@ export async function GET(request, { params }) {
   }
 }
 
+// Update quest details
 export async function PUT(request, { params }) {
-  // Get token
-  let token = '';
-  try {
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    }
-    
-    if (!token) {
-      const tokenCookie = request.cookies.get('access_token');
-      token = tokenCookie?.value || '';
-    }
-  } catch (error) {
-    console.error('Token access error:', error);
-  }
+  const { questId } = params;
   
-  const questId = params.questId;
+  console.log(`API: Updating quest ID ${questId}`);
   
   try {
-    const requestData = await request.json();
-    console.log('Update request data:', requestData);
+    const admin = await checkAdminPermission(request);
     
-    // Since there is no update endpoint in the backend, we need to inform the user
-    // but still reflect their changes in the UI
-    
-    // First, get the current quest details
-    const currentResponse = await fetch(`http://localhost:8000/api/quests/${questId}/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    // If we can't even get the current quest, return an error
-    if (!currentResponse.ok && currentResponse.status !== 404) {
+    if (!admin) {
+      console.log('API: Admin permission denied for update');
       return NextResponse.json(
-        { error: 'Could not retrieve current quest data' },
-        { status: currentResponse.status }
+        { error: 'This operation requires admin permission' },
+        { status: 403 }
       );
     }
     
-    let currentQuest = {};
-    if (currentResponse.ok) {
-      currentQuest = await currentResponse.json();
+    // Get request data
+    const requestData = await request.json();
+    console.log('API: Update quest data:', requestData);
+    
+    // Backend API call with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}/admin/quests/${questId}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${admin.token}`,
+        },
+        body: JSON.stringify(requestData),
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
+    } catch (fetchError) {
+      console.error('API: Update endpoint fetch error:', fetchError);
+      if (fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { error: 'Connection timed out', message: 'Backend did not respond' },
+          { status: 504 }
+        );
+      }
+      throw fetchError;
     }
     
-    // Try to update quest through a backend endpoint that might exist
-    // Some common patterns in REST APIs
-    const possibleEndpoints = [
-      {
-        url: `http://localhost:8000/api/quests/${questId}/update/`,
-        method: 'POST',
-        transform: data => data
-      },
-      {
-        url: `http://localhost:8000/api/admin/quests/update/`,
-        method: 'POST',
-        transform: data => ({ questId, ...data })
-      },
-      {
-        url: `http://localhost:8000/api/admin/content/update/`,
-        method: 'POST',
-        transform: data => ({ 
-          contentType: 'quest', 
-          contentId: questId, 
-          ...data 
-        })
-      }
-    ];
-    
-    let updateSuccess = false;
-    let updatedData = null;
-    
-    // Try each possible endpoint
-    for (const endpoint of possibleEndpoints) {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API: Failed to update quest ${questId}. Response:`, errorText);
+      
       try {
-        console.log(`Trying update endpoint: ${endpoint.url}`);
-        
-        const transformedData = endpoint.transform({
-          ...requestData,
-          // Convert boolean to 1/0 if needed by backend
-          isActive: requestData.isActive === true ? 1 : 0
-        });
-        
-        const response = await fetch(endpoint.url, {
-          method: endpoint.method,
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(transformedData)
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          updateSuccess = true;
-          updatedData = data;
-          console.log('Update successful via:', endpoint.url);
-          break;
-        }
-      } catch (endpointError) {
-        console.warn(`Failed with endpoint ${endpoint.url}:`, endpointError);
-        // Continue to next endpoint
+        const errorData = JSON.parse(errorText);
+        return NextResponse.json(errorData, { status: response.status });
+      } catch (parseError) {
+        return NextResponse.json(
+          { error: 'Failed to update quest', message: errorText.substring(0, 500) },
+          { status: response.status }
+        );
       }
     }
     
-    // If update was successful through any endpoint
-    if (updateSuccess && updatedData) {
-      return NextResponse.json(updatedData);
+    // Parse response
+    const responseText = await response.text();
+    let data;
+    
+    try {
+      data = JSON.parse(responseText);
+      console.log(`API: Successfully updated quest ${questId}`);
+    } catch (parseError) {
+      console.error('API: Error parsing update response:', parseError);
+      return NextResponse.json(
+        { error: 'Error parsing response', message: responseText.substring(0, 500) },
+        { status: 500 }
+      );
     }
     
-    // If all endpoints failed, return a merged object that looks like it updated
-    // for frontend display purposes
-    console.log('No update endpoints worked. Returning simulated update response.');
-    
-    // Merge the current quest with updates for UI display
-    const simulatedUpdate = {
-      ...currentQuest,
-      ...requestData,
-      // Include both casing variants to ensure UI compatibility
-      IsActive: requestData.isActive,
-      isActive: requestData.isActive,
-      // Add notice for debugging
-      _notice: "Backend update failed, showing UI-only changes"
-    };
-    
-    // Return with a 200 status so frontend doesn't show error,
-    // but include a notice in the response
-    return NextResponse.json({
-      ...simulatedUpdate,
-      notice: "Quest changes shown in UI only",
-      message: "Backend API does not support quest updates. Please implement an update endpoint."
-    });
+    return NextResponse.json(data);
     
   } catch (error) {
-    console.error('Quest update proxy error:', error);
+    console.error('API: Quest update error:', error);
     return NextResponse.json(
       { error: 'Server error', message: error.message },
       { status: 500 }
@@ -258,74 +241,81 @@ export async function PUT(request, { params }) {
   }
 }
 
+// Delete quest
 export async function DELETE(request, { params }) {
-  // Get token
-  let token = '';
-  try {
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    }
-    
-    if (!token) {
-      const tokenCookie = request.cookies.get('access_token');
-      token = tokenCookie?.value || '';
-    }
-  } catch (error) {
-    console.error('Token access error:', error);
-  }
+  const { questId } = params;
   
-  const questId = params.questId;
+  console.log(`API: Deleting quest ID ${questId}`);
   
   try {
-    // Try multiple possible endpoints for deletion
-    const possibleEndpoints = [
-      `http://localhost:8000/api/quests/${questId}/`,
-      `http://localhost:8000/api/quests/${questId}/delete/`,
-      `http://localhost:8000/api/admin/quests/${questId}/`,
-      `http://localhost:8000/api/admin/content/quests/${questId}/`
-    ];
+    const admin = await checkAdminPermission(request);
     
-    let deleteSuccess = false;
+    if (!admin) {
+      console.log('API: Admin permission denied for delete');
+      return NextResponse.json(
+        { error: 'This operation requires admin permission' },
+        { status: 403 }
+      );
+    }
     
-    // Try each endpoint
-    for (const endpoint of possibleEndpoints) {
+    // Backend API call with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}/admin/quests/${questId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${admin.token}`,
+        },
+        signal: controller.signal
+      }).finally(() => clearTimeout(timeoutId));
+    } catch (fetchError) {
+      console.error('API: Delete endpoint fetch error:', fetchError);
+      if (fetchError.name === 'AbortError') {
+        return NextResponse.json(
+          { error: 'Connection timed out', message: 'Backend did not respond' },
+          { status: 504 }
+        );
+      }
+      throw fetchError;
+    }
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API: Failed to delete quest ${questId}. Response:`, errorText);
+      
       try {
-        console.log(`Trying to delete quest via: ${endpoint}`);
-        
-        const response = await fetch(endpoint, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (response.ok) {
-          deleteSuccess = true;
-          console.log('Quest deletion successful via:', endpoint);
-          break;
-        }
-      } catch (endpointError) {
-        console.warn(`Failed with endpoint ${endpoint}:`, endpointError);
-        // Continue to next endpoint
+        const errorData = JSON.parse(errorText);
+        return NextResponse.json(errorData, { status: response.status });
+      } catch (parseError) {
+        return NextResponse.json(
+          { error: 'Failed to delete quest', message: errorText.substring(0, 500) },
+          { status: response.status }
+        );
       }
     }
     
-    if (deleteSuccess) {
-      return NextResponse.json({ success: true, message: 'Quest successfully deleted' });
+    // Parse response
+    const responseText = await response.text();
+    let data = { success: true };
+    
+    try {
+      if (responseText.trim()) {
+        data = JSON.parse(responseText);
+      }
+      console.log(`API: Successfully deleted quest ${questId}`);
+    } catch (parseError) {
+      console.error('API: Error parsing delete response:', parseError);
+      // Continue with default success response
     }
     
-    // If all delete attempts failed
-    return NextResponse.json(
-      { 
-        error: 'Failed to delete quest', 
-        message: 'None of the possible API endpoints accepted the delete request.' 
-      },
-      { status: 404 }
-    );
+    return NextResponse.json(data);
+    
   } catch (error) {
-    console.error('Quest deletion proxy error:', error);
+    console.error('API: Quest delete error:', error);
     return NextResponse.json(
       { error: 'Server error', message: error.message },
       { status: 500 }

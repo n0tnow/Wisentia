@@ -9,12 +9,15 @@ import {
   useTheme,
   alpha,
   keyframes,
-  CircularProgress 
+  CircularProgress,
+  Button,
+  Typography 
 } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import LockIcon from '@mui/icons-material/Lock';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import ChatDialog from './ChatDialog';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Keyframes for animations
@@ -49,63 +52,115 @@ const ripple = keyframes`
 const ChatWidget = () => {
   const [open, setOpen] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
-  const [checkingSubscription, setCheckingSubscription] = useState(true);
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Initialize with false to avoid hydration mismatch
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const theme = useTheme();
-  const { user, isAuthenticated } = useAuth();
+  const router = useRouter();
+  const { user } = useAuth();
 
-  // Check subscription status
+  // Only update authentication status on client-side after component mounts
   useEffect(() => {
-    const checkSubscription = async () => {
-      if (!isAuthenticated()) {
-        setCheckingSubscription(false);
-        return;
-      }
-
+    // Check if user data exists in localStorage
+    const token = localStorage.getItem('access_token');
+    const userJson = localStorage.getItem('user');
+    if (token && userJson) {
       try {
-        setCheckingSubscription(true);
+        setIsAuthenticated(true);
         
-        // Make request to subscription API
-        const response = await fetch('/api/normal-user/subscriptions/check-access/', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        });
+        // Skip subscription check if on admin routes
+        const pathname = window.location.pathname;
+        const isAdminRoute = pathname.startsWith('/admin');
         
-        const data = await response.json();
-        setHasSubscription(data.hasAccess);
-        
-        // Fetch unread message count if subscribed
-        if (data.hasAccess) {
-          // Example API call for unread message count
-          // const msgResponse = await fetch('/api/chat/unread-count', options);
-          // const msgData = await msgResponse.json();
-          // setUnreadCount(msgData.count);
-          
-          // For now, just set demo value
-          setUnreadCount(3);
+        if (isAdminRoute) {
+          // If admin route, set hasSubscription to true by default (admins always have access)
+          setHasSubscription(true);
+          setCheckingSubscription(false);
+        } else {
+          // Only check subscription status for non-admin routes
+          checkSubscriptionStatus(token);
         }
       } catch (error) {
-        console.error('Error checking subscription:', error);
-        setHasSubscription(false);
-      } finally {
-        setCheckingSubscription(false);
+        console.error("Error parsing user data:", error);
+        setIsAuthenticated(false);
       }
-    };
+    } else {
+      setIsAuthenticated(false);
+    }
+  }, [user]);
 
-    checkSubscription();
-  }, [isAuthenticated]);
+  // Check subscription status
+  const checkSubscriptionStatus = async (token) => {
+    if (!token) return;
+    
+    // Skip subscription check if on admin routes
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/admin')) {
+      setHasSubscription(true);
+      return;
+    }
+
+    try {
+      setCheckingSubscription(true);
+      
+      // Make request to subscription API
+      const response = await fetch('/api/subscriptions/check-access/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        setHasSubscription(false);
+        return;
+      }
+      
+      const data = await response.json();
+      setHasSubscription(data.hasAccess);
+      
+      // Fetch unread message count if subscribed
+      if (data.hasAccess) {
+        // Disable unread count fetching since the endpoint doesn't exist yet
+        // We'll just use a static value of 0 for now
+        setUnreadCount(0);
+        
+        /* Comment out the API call that's causing 404 errors
+        try {
+          const msgResponse = await fetch('/api/normal-user/chat/unread-count', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (msgResponse.ok) {
+            const msgData = await msgResponse.json();
+            setUnreadCount(msgData.count || 0);
+          }
+        } catch (msgError) {
+          console.error('Error fetching unread count:', msgError);
+          setUnreadCount(0);
+        }
+        */
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      setHasSubscription(false);
+    } finally {
+      setCheckingSubscription(false);
+    }
+  };
 
   const handleOpen = () => {
-    if (hasSubscription || !isAuthenticated()) {
-      setOpen(true);
-      setUnreadCount(0); // Clear unread count when opening
-    } else {
-      // If no subscription, we'll still open the dialog but it will show subscription prompt
-      setOpen(true);
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
     }
+    
+    setOpen(true);
+    setUnreadCount(0); // Clear unread count when opening
   };
 
   const handleClose = () => {
@@ -123,18 +178,12 @@ const ChatWidget = () => {
         }}
       >
         <Tooltip 
-          title={
-            checkingSubscription 
-              ? "Checking access..." 
-              : hasSubscription 
-                ? "Chat with Wisentia AI" 
-                : "Premium feature - Subscribe to chat with Wisentia AI"
-          }
+          title={isAuthenticated ? "Chat with Wisentia AI" : "Sign in to use Wisentia AI"}
           placement="left"
         >
           <Box sx={{ position: 'relative' }}>
-            {/* Ripple effect for premium feature */}
-            {hasSubscription && (
+            {/* Ripple effect for premium feature - only shown client-side when authenticated */}
+            {isAuthenticated && (
               <>
                 <Box sx={{
                   position: 'absolute',
@@ -147,7 +196,6 @@ const ChatWidget = () => {
                   animation: `${ripple} 1.5s infinite`,
                   zIndex: -1,
                 }} />
-                {/* Second ripple effect with delay */}
                 <Box sx={{
                   position: 'absolute',
                   top: 0,
@@ -169,38 +217,38 @@ const ChatWidget = () => {
               sx={{ '& .MuiBadge-badge': { fontSize: 10, height: 18, minWidth: 18 } }}
             >
               <Fab
-                color={hasSubscription ? "primary" : "default"}
-                aria-label="chat"
+                color="primary"
+                aria-label={isAuthenticated ? "Chat with Wisentia AI" : "Sign in to use Wisentia AI"}
                 onClick={handleOpen}
                 sx={{
-                  background: hasSubscription 
+                  background: isAuthenticated 
                     ? `linear-gradient(135deg, #06b6d4, #0ea5e9, #14b8a6)`
-                    : 'rgba(255, 255, 255, 0.15)',
-                  animation: hasSubscription ? `${pulse} 2s infinite` : 'none',
-                  border: hasSubscription 
-                    ? 'none' 
-                    : `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
+                    : `linear-gradient(135deg, #94a3b8, #64748b)`,
+                  animation: isAuthenticated ? `${pulse} 2s infinite` : 'none',
+                  border: 'none',
                   backdropFilter: 'blur(4px)',
-                  boxShadow: hasSubscription 
-                    ? theme.palette.mode === 'dark'
+                  boxShadow: theme.palette.mode === 'dark'
+                    ? isAuthenticated 
                       ? '0 4px 20px rgba(6, 182, 212, 0.4), 0 0 10px rgba(6, 182, 212, 0.2) inset'
-                      : '0 4px 20px rgba(6, 182, 212, 0.4), 0 0 10px rgba(255, 255, 255, 0.2) inset'
-                    : theme.shadows[2],
+                      : '0 4px 15px rgba(0, 0, 0, 0.3)'
+                    : isAuthenticated
+                      ? '0 4px 20px rgba(6, 182, 212, 0.4), 0 0 10px rgba(255, 255, 255, 0.2) inset'
+                      : '0 4px 15px rgba(0, 0, 0, 0.2)',
                   transition: 'all 0.3s ease',
                   '&:hover': {
-                    transform: 'translateY(-3px) rotate(5deg)',
-                    boxShadow: hasSubscription 
-                      ? theme.palette.mode === 'dark'
+                    transform: isAuthenticated ? 'translateY(-3px) rotate(5deg)' : 'translateY(-2px)',
+                    boxShadow: theme.palette.mode === 'dark'
+                      ? isAuthenticated
                         ? '0 6px 25px rgba(6, 182, 212, 0.6), 0 0 15px rgba(6, 182, 212, 0.3) inset'
-                        : '0 6px 25px rgba(6, 182, 212, 0.6), 0 0 15px rgba(255, 255, 255, 0.3) inset'
-                      : theme.shadows[4],
+                        : '0 6px 20px rgba(0, 0, 0, 0.4)'
+                      : isAuthenticated
+                        ? '0 6px 25px rgba(6, 182, 212, 0.6), 0 0 15px rgba(255, 255, 255, 0.3) inset'
+                        : '0 6px 20px rgba(0, 0, 0, 0.3)',
                   }
                 }}
               >
-                {checkingSubscription ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : hasSubscription ? (
-                  <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {isAuthenticated ? (
                     <SmartToyIcon sx={{ 
                       fontSize: 22,
                       color: '#fff',
@@ -211,58 +259,52 @@ const ChatWidget = () => {
                         '50%': { transform: 'scale(1.1)' },
                       }
                     }} />
-                    {/* Animated particles around the icon */}
-                    <Box sx={{
-                      position: 'absolute',
-                      width: '8px',
-                      height: '8px',
-                      background: '#fff',
-                      borderRadius: '50%',
-                      opacity: 0.6,
-                      animation: 'orbit 3s infinite linear',
-                      left: '50%',
-                      top: '50%',
-                      boxShadow: '0 0 4px #fff',
-                      '@keyframes orbit': {
-                        '0%': { transform: 'translate(-50%, -50%) rotate(0deg) translateX(14px)' },
-                        '100%': { transform: 'translate(-50%, -50%) rotate(360deg) translateX(14px)' },
-                      }
+                  ) : (
+                    <LockIcon sx={{
+                      fontSize: 22,
+                      color: '#fff',
                     }} />
-                    <Box sx={{
-                      position: 'absolute',
-                      width: '5px',
-                      height: '5px',
-                      background: '#fff',
-                      borderRadius: '50%',
-                      opacity: 0.4,
-                      animation: 'orbit 4s infinite linear',
-                      animationDelay: '0.5s',
-                      left: '50%',
-                      top: '50%',
-                      boxShadow: '0 0 4px #fff',
-                      '@keyframes orbit': {
-                        '0%': { transform: 'translate(-50%, -50%) rotate(0deg) translateX(16px)' },
-                        '100%': { transform: 'translate(-50%, -50%) rotate(360deg) translateX(16px)' },
-                      }
-                    }} />
-                  </Box>
-                ) : (
-                  <Box sx={{ position: 'relative' }}>
-                    <SmartToyIcon sx={{ fontSize: 22 }} />
-                    <LockIcon 
-                      sx={{ 
-                        position: 'absolute', 
-                        top: -10, 
-                        right: -12, 
-                        fontSize: 14,
-                        backgroundColor: 'background.paper',
+                  )}
+                  
+                  {/* Animated particles - only rendered client-side when authenticated */}
+                  {isAuthenticated && (
+                    <>
+                      <Box sx={{
+                        position: 'absolute',
+                        width: '8px',
+                        height: '8px',
+                        background: '#fff',
                         borderRadius: '50%',
-                        p: 0.5,
-                        boxShadow: 1
-                      }} 
-                    />
-                  </Box>
-                )}
+                        opacity: 0.6,
+                        animation: 'orbit 3s infinite linear',
+                        left: '50%',
+                        top: '50%',
+                        boxShadow: '0 0 4px #fff',
+                        '@keyframes orbit': {
+                          '0%': { transform: 'translate(-50%, -50%) rotate(0deg) translateX(14px)' },
+                          '100%': { transform: 'translate(-50%, -50%) rotate(360deg) translateX(14px)' },
+                        }
+                      }} />
+                      <Box sx={{
+                        position: 'absolute',
+                        width: '5px',
+                        height: '5px',
+                        background: '#fff',
+                        borderRadius: '50%',
+                        opacity: 0.4,
+                        animation: 'orbit 4s infinite linear',
+                        animationDelay: '0.5s',
+                        left: '50%',
+                        top: '50%',
+                        boxShadow: '0 0 4px #fff',
+                        '@keyframes orbit': {
+                          '0%': { transform: 'translate(-50%, -50%) rotate(0deg) translateX(16px)' },
+                          '100%': { transform: 'translate(-50%, -50%) rotate(360deg) translateX(16px)' },
+                        }
+                      }} />
+                    </>
+                  )}
+                </Box>
               </Fab>
             </Badge>
           </Box>
@@ -274,7 +316,7 @@ const ChatWidget = () => {
         open={open} 
         onClose={handleClose} 
         hasSubscription={hasSubscription}
-        isAuthenticated={isAuthenticated()}
+        isAuthenticated={isAuthenticated}
       />
     </>
   );

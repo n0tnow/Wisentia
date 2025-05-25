@@ -124,13 +124,14 @@ export default function Header({ isLandingPage = false }) {
 
   // Star sparkle animation component
   const StarSparkles = () => {
-    // useState ile başlangıçta boş bir dizi oluştur
-    const [stars, setStars] = useState([]);
+    // Use useRef for stars data with null initial value to prevent hydration mismatch
+    const starsRef = useRef(null);
+    const [isClient, setIsClient] = useState(false);
     
-    // useEffect ile component mount olduktan sonra yıldızları oluştur
+    // Client-side only initialization of random values
     useEffect(() => {
-      // Yıldızları client tarafında oluştur
-      const generatedStars = [...Array(20)].map((_, i) => ({
+      setIsClient(true);
+      starsRef.current = [...Array(20)].map((_, i) => ({
         id: i,
         size: Math.random() * 3 + 1,
         top: `${Math.random() * 100}%`,
@@ -139,9 +140,25 @@ export default function Header({ isLandingPage = false }) {
         duration: 1 + Math.random() * 3,
         intensity: 0.3 + Math.random() * 0.7
       }));
-      
-      setStars(generatedStars);
-    }, []); // Sadece bir kez çalışsın
+    }, []);
+    
+    // Return empty placeholder during server-side rendering
+    if (!isClient) {
+      return (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            zIndex: 0
+          }}
+        />
+      );
+    }
     
     return (
       <Box
@@ -156,7 +173,7 @@ export default function Header({ isLandingPage = false }) {
           zIndex: 0
         }}
       >
-        {stars.map((star) => (
+        {starsRef.current && starsRef.current.map((star) => (
           <Box
             key={star.id}
             sx={{
@@ -193,11 +210,14 @@ export default function Header({ isLandingPage = false }) {
 
   // Button hover stars effect
   const ButtonStars = () => {
-    const [stars, setStars] = useState([]);
+    // Use useRef for stars data with null initial value to prevent hydration mismatch
+    const starsRef = useRef(null);
+    const [isClient, setIsClient] = useState(false);
     
+    // Client-side only initialization of random values
     useEffect(() => {
-      // Generate random stars that will appear when hovering over sign up button
-      const generatedStars = [...Array(10)].map((_, i) => ({
+      setIsClient(true);
+      starsRef.current = [...Array(10)].map((_, i) => ({
         id: i,
         size: Math.random() * 2 + 1,
         top: `${Math.random() * 100}%`,
@@ -205,9 +225,29 @@ export default function Header({ isLandingPage = false }) {
         delay: Math.random() * 0.5,
         duration: 0.5 + Math.random() * 1
       }));
-      
-      setStars(generatedStars);
     }, []);
+    
+    // Return empty placeholder during server-side rendering
+    if (!isClient) {
+      return (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            opacity: 0,
+            transition: 'opacity 0.2s ease',
+            '.MuiButton-root:hover &': {
+              opacity: 1
+            }
+          }}
+        />
+      );
+    }
   
     return (
       <Box
@@ -226,7 +266,7 @@ export default function Header({ isLandingPage = false }) {
           }
         }}
       >
-        {stars.map((star) => (
+        {starsRef.current && starsRef.current.map((star) => (
           <Box
             key={star.id}
             sx={{

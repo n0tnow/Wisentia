@@ -10,6 +10,8 @@ import logging
 
 from rest_framework.decorators import throttle_classes
 from users.throttling import SensitiveOperationsThrottle
+from .blockchain import BlockchainService
+from django.conf import settings
 
 logger = logging.getLogger('wisentia')
 
@@ -17,19 +19,21 @@ logger = logging.getLogger('wisentia')
 def get_web3_connection(network="educhain"):
     """Belirtilen blockchain ağı için Web3 bağlantısı sağlar"""
     try:
-        # Eğitim zinciri için test RPC url'si (örnek)
-        rpc_urls = {
-            "educhain": "http://localhost:8545",  # Test RPC - gerçek adresi buraya ekleyin
-            "ethereum": "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",  # Gerçek ağ için örnek
-            "polygon": "https://polygon-rpc.com",
-        }
+        # Force Educhain testnet
+        network = "educhain"
         
-        if network not in rpc_urls:
-            raise ValueError(f"Unsupported network: {network}")
+        # Educhain testnet settings
+        rpc_url = getattr(settings, 'BLOCKCHAIN_RPC_URLS', {}).get('educhain', 'https://rpc.open-campus-codex.gelato.digital')
+        chain_id = getattr(settings, 'BLOCKCHAIN_CHAIN_IDS', {}).get('educhain', 656476)
         
-        w3 = Web3(Web3.HTTPProvider(rpc_urls[network]))
+        w3 = Web3(Web3.HTTPProvider(rpc_url))
         if not w3.is_connected():
-            raise ConnectionError(f"Failed to connect to {network}")
+            raise ConnectionError("Failed to connect to Educhain testnet")
+        
+        # Verify chain ID
+        connected_chain_id = w3.eth.chain_id
+        if connected_chain_id != chain_id:
+            logger.warning(f"Connected to unexpected chain ID: got {connected_chain_id}, expected {chain_id}")
         
         return w3
     except Exception as e:
@@ -146,12 +150,22 @@ def get_wallet_info(request):
                 balance_eth = w3.from_wei(balance, 'ether')
             except:
                 balance_eth = None
+                
+            # BlockchainService ile abonelik durumunu kontrol et
+            subscription_info = {}
+            try:
+                blockchain_service = BlockchainService()
+                subscription_info = blockchain_service.check_subscription_status(wallet_address)
+            except Exception as e:
+                logger.error(f"Failed to get subscription info: {str(e)}")
+                subscription_info = {"error": "Failed to retrieve subscription information"}
             
             return Response({
                 'connected': True,
                 'address': wallet_address,
                 'nftCount': nft_count,
-                'balance': str(balance_eth) if balance_eth is not None else None
+                'balance': str(balance_eth) if balance_eth is not None else None,
+                'subscription': subscription_info
             })
     except Exception as e:
         logger.error(f"Get wallet info error: {str(e)}", exc_info=True)
@@ -188,9 +202,10 @@ def mint_nft(request):
                 
                 # NFT'yi kontrol et
                 cursor.execute("""
-                    SELECT un.UserNFTID, n.Title, n.ImageURI, n.BlockchainMetadata
+                    SELECT un.UserNFTID, n.Title, n.ImageURI, n.BlockchainMetadata, n.TradeValue, nt.TypeName
                     FROM UserNFTs un
                     JOIN NFTs n ON un.NFTID = n.NFTID
+                    JOIN NFTTypes nt ON n.NFTTypeID = nt.NFTTypeID
                     WHERE un.UserID = %s AND un.NFTID = %s AND un.IsMinted = 0
                 """, [user_id, nft_id])
                 
@@ -200,39 +215,67 @@ def mint_nft(request):
                         'error': 'NFT not found, already minted, or not owned by user'
                     }, status=status.HTTP_400_BAD_REQUEST)
                 
-                user_nft_id, nft_title, nft_image, blockchain_metadata = nft_data
+                user_nft_id, nft_title, nft_image, blockchain_metadata, trade_value, nft_type = nft_data
                 
-                # Blockchain ile etkileşim (örnek)
+                # NFT tipi takas edilebilir mi belirle
+                tradable = nft_type in ['achievement', 'quest_reward']  # Bu tipler takas edilebilir
+                
+                # BlockchainService ile mint işlemi
                 try:
-                    w3 = get_web3_connection()
+                    blockchain_service = BlockchainService()
+                    result = blockchain_service.mint_reward_nft(
+                        wallet_address, 
+                        nft_title,
+                        tradable,
+                        trade_value,
+                        nft_image
+                    )
                     
-                    # Burada gerçek NFT mint işlemi yapılacak
-                    # Örnek için basit bir transaction hash döndürüyoruz
-                    transaction_hash = "0x" + "0123456789abcdef" * 4
-                    
-                    # NFT'yi güncelle
-                    cursor.execute("""
-                        UPDATE UserNFTs
-                        SET IsMinted = 1, TransactionHash = %s
-                        WHERE UserNFTID = %s
-                    """, [transaction_hash, user_nft_id])
-                    
-                    # Etkinlik logu ekle
-                    cursor.execute("""
-                        INSERT INTO ActivityLogs
-                        (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
-                        VALUES (%s, 'nft_minted', %s, GETDATE(), %s, %s)
-                    """, [
-                        user_id,
-                        f"Minted NFT: {nft_title} (Transaction: {transaction_hash})",
-                        request.META.get('REMOTE_ADDR', ''),
-                        request.META.get('HTTP_USER_AGENT', '')
-                    ])
-                    
-                    return Response({
-                        'message': 'NFT minted successfully',
-                        'transactionHash': transaction_hash
-                    })
+                    if result["success"]:
+                        transaction_hash = result["transactionHash"]
+                        blockchain_nft_id = result.get("nftId", "Unknown")
+                        
+                        # NFT'yi güncelle
+                        cursor.execute("""
+                            UPDATE UserNFTs
+                            SET IsMinted = 1, TransactionHash = %s, 
+                            BlockchainNFTID = %s
+                            WHERE UserNFTID = %s
+                        """, [transaction_hash, blockchain_nft_id, user_nft_id])
+                        
+                        # Etkinlik logu ekle
+                        cursor.execute("""
+                            INSERT INTO ActivityLogs
+                            (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                            VALUES (%s, 'nft_minted', %s, GETDATE(), %s, %s)
+                        """, [
+                            user_id,
+                            f"Minted NFT: {nft_title} (Transaction: {transaction_hash}, BlockchainID: {blockchain_nft_id})",
+                            request.META.get('REMOTE_ADDR', ''),
+                            request.META.get('HTTP_USER_AGENT', '')
+                        ])
+                        
+                        # Bildirim ekle
+                        cursor.execute("""
+                            INSERT INTO Notifications
+                            (UserID, Title, Message, NotificationType, RelatedEntityID, IsRead, IsDismissed, CreationDate)
+                            VALUES (%s, 'NFT Minted', %s, 'achievement', %s, 0, 0, GETDATE())
+                        """, [
+                            user_id,
+                            f"Your NFT '{nft_title}' has been successfully minted to the blockchain.",
+                            nft_id
+                        ])
+                        
+                        return Response({
+                            'message': 'NFT minted successfully',
+                            'blockchainNftId': blockchain_nft_id,
+                            'transactionHash': transaction_hash
+                        })
+                    else:
+                        logger.error(f"Blockchain mint failed: {result['error']}")
+                        return Response({
+                            'error': f"Failed to mint NFT on blockchain: {result['error']}"
+                        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 except Exception as e:
                     logger.error(f"NFT minting error: {str(e)}", exc_info=True)
                     return Response({
@@ -250,23 +293,413 @@ def disconnect_wallet(request):
     """Kullanıcının cüzdan bağlantısını kesen API endpoint'i"""
     user_id = request.user.id
     
-    with connection.cursor() as cursor:
-        # Kullanıcının wallet adresini sıfırla
-        cursor.execute("""
-            UPDATE Users
-            SET WalletAddress = NULL
-            WHERE UserID = %s
-        """, [user_id])
-        
-        # Etkinlik logu ekle
-        cursor.execute("""
-            INSERT INTO ActivityLogs
-            (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
-            VALUES (%s, 'wallet_disconnected', 'Wallet disconnected', GETDATE(), %s, %s)
-        """, [
-            user_id, 
-            request.META.get('REMOTE_ADDR', ''),
-            request.META.get('HTTP_USER_AGENT', '')
-        ])
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                # Önce cüzdan adresini kontrol et
+                cursor.execute("""
+                    SELECT WalletAddress
+                    FROM Users
+                    WHERE UserID = %s
+                """, [user_id])
+                
+                result = cursor.fetchone()
+                if not result or not result[0]:
+                    return Response({'error': 'No wallet connected'}, status=status.HTTP_400_BAD_REQUEST)
+                
+                wallet_address = result[0]
+                
+                # Kullanıcının cüzdan adresini temizle
+                cursor.execute("""
+                    UPDATE Users
+                    SET WalletAddress = NULL
+                    WHERE UserID = %s
+                """, [user_id])
+                
+                # Etkinlik logu ekle
+                cursor.execute("""
+                    INSERT INTO ActivityLogs
+                    (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                    VALUES (%s, 'wallet_disconnected', %s, GETDATE(), %s, %s)
+                """, [
+                    user_id, 
+                    f"Disconnected wallet address: {wallet_address}", 
+                    request.META.get('REMOTE_ADDR', ''),
+                    request.META.get('HTTP_USER_AGENT', '')
+                ])
+                
+                return Response({'message': 'Wallet disconnected successfully'})
     
-    return Response({'message': 'Wallet disconnected successfully'})
+    except Exception as e:
+        logger.error(f"Disconnect wallet error: {str(e)}", exc_info=True)
+        return Response({
+            'error': f"Failed to disconnect wallet: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def subscription_info(request):
+    """Kullanıcının blockchain abonelik bilgilerini getiren API endpoint'i"""
+    user_id = request.user.id
+    
+    try:
+        # Kullanıcının wallet adresini al
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT WalletAddress
+                FROM Users
+                WHERE UserID = %s
+            """, [user_id])
+            
+            result = cursor.fetchone()
+            if not result or not result[0]:
+                return Response({
+                    'error': 'No wallet connected'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            wallet_address = result[0]
+        
+        # BlockchainService ile abonelik durumunu kontrol et
+        blockchain_service = BlockchainService()
+        subscription_info = blockchain_service.check_subscription_status(wallet_address)
+        
+        # Veritabanındaki NFT ve abonelik bilgileriyle eşleştir
+        if subscription_info.get("hasSubscription", False):
+            with connection.cursor() as cursor:
+                # Eğer bir aboneliği varsa veritabanı kayıtlarını güncelle veya ekle
+                sub_id = subscription_info.get("subscriptionId")
+                tier = subscription_info.get("tier")
+                end_time = subscription_info.get("endTime")
+                
+                # Mevcut aboneliği kontrol et
+                cursor.execute("""
+                    SELECT SubscriptionID, PlanID
+                    FROM UserSubscriptions
+                    WHERE UserID = %s AND IsActive = 1
+                    ORDER BY EndDate DESC
+                """, [user_id])
+                
+                db_subscription = cursor.fetchone()
+                
+                # Abonelik tipi ID'sini al
+                cursor.execute("""
+                    SELECT PlanID, PlanName
+                    FROM SubscriptionPlans
+                    WHERE PlanName = %s
+                """, [tier])
+                
+                plan_data = cursor.fetchone()
+                plan_id = plan_data[0] if plan_data else None
+                
+                if not db_subscription and plan_id:
+                    # Veritabanında abonelik yoksa ama blockchain'de varsa ekle
+                    from datetime import datetime, timedelta
+                    import time
+                    
+                    start_date = datetime.fromtimestamp(time.time())
+                    end_date = datetime.fromtimestamp(end_time)
+                    
+                    cursor.execute("""
+                        INSERT INTO UserSubscriptions
+                        (UserID, PlanID, StartDate, EndDate, IsActive, PaymentMethod, AutoRenew)
+                        VALUES (%s, %s, %s, %s, 1, 'blockchain', 0)
+                    """, [user_id, plan_id, start_date, end_date])
+                    
+                    # Etkinlik logu ekle
+                    cursor.execute("""
+                        INSERT INTO ActivityLogs
+                        (UserID, ActivityType, Description, Timestamp)
+                        VALUES (%s, 'subscription_synced', %s, GETDATE())
+                    """, [
+                        user_id,
+                        f"Blockchain {tier} subscription synced to database"
+                    ])
+                    
+                    # Bildirim ekle
+                    cursor.execute("""
+                        INSERT INTO Notifications
+                        (UserID, Title, Message, NotificationType, IsRead, IsDismissed, CreationDate)
+                        VALUES (%s, 'Subscription Activated', %s, 'system', 0, 0, GETDATE())
+                    """, [
+                        user_id,
+                        f"Your {tier} subscription has been activated on the platform."
+                    ])
+                
+        return Response(subscription_info)
+    
+    except Exception as e:
+        logger.error(f"Subscription info error: {str(e)}", exc_info=True)
+        return Response({
+            'error': f"Failed to get subscription info: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([SensitiveOperationsThrottle])
+def purchase_subscription(request):
+    """Blockchain üzerinden abonelik satın alma"""
+    user_id = request.user.id
+    tier = request.data.get('tier')  # 'B', 'P', veya 'L' olarak gelmeli
+    private_key = request.data.get('privateKey')  # Frontend'den güvenli bir şekilde alınmalı
+    price_wei = request.data.get('priceWei')  # Abonelik ücreti (wei cinsinden)
+    
+    if not all([tier, private_key, price_wei]):
+        return Response({
+            'error': 'Missing required parameters: tier, privateKey, priceWei'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Kullanıcının wallet adresini al
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT WalletAddress
+                FROM Users
+                WHERE UserID = %s
+            """, [user_id])
+            
+            result = cursor.fetchone()
+            if not result or not result[0]:
+                return Response({
+                    'error': 'No wallet connected'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            wallet_address = result[0]
+        
+        # BlockchainService ile abonelik satın al
+        blockchain_service = BlockchainService()
+        result = blockchain_service.purchase_subscription(
+            wallet_address,
+            tier,
+            private_key,
+            int(price_wei)
+        )
+        
+        if result["success"]:
+            subscription_id = result.get("subscriptionId")
+            expiry_timestamp = result.get("expiryTimestamp")
+            transaction_hash = result["transactionHash"]
+            
+            # Veritabanında abonelik kaydını oluştur
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    # Önce abonelik planını ID'sini al
+                    tier_name = {"B": "Basic", "P": "Premium", "L": "Pro"}.get(tier)
+                    
+                    cursor.execute("""
+                        SELECT PlanID
+                        FROM SubscriptionPlans
+                        WHERE PlanName = %s
+                    """, [tier_name])
+                    
+                    plan_result = cursor.fetchone()
+                    if not plan_result:
+                        return Response({
+                            'error': f'Subscription plan not found for tier: {tier}'
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    plan_id = plan_result[0]
+                    
+                    # Varsa mevcut aktif aboneliği pasif yap
+                    cursor.execute("""
+                        UPDATE UserSubscriptions
+                        SET IsActive = 0
+                        WHERE UserID = %s AND IsActive = 1
+                    """, [user_id])
+                    
+                    # Yeni abonelik kaydını ekle
+                    from datetime import datetime, timedelta
+                    import time
+                    
+                    start_date = datetime.fromtimestamp(time.time())
+                    end_date = datetime.fromtimestamp(expiry_timestamp)
+                    
+                    cursor.execute("""
+                        INSERT INTO UserSubscriptions
+                        (UserID, PlanID, StartDate, EndDate, IsActive, PaymentTransactionID, PaymentMethod, AutoRenew)
+                        VALUES (%s, %s, %s, %s, 1, %s, 'blockchain', 0)
+                    """, [user_id, plan_id, start_date, end_date, transaction_hash])
+                    
+                    # Etkinlik logu ekle
+                    cursor.execute("""
+                        INSERT INTO ActivityLogs
+                        (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                        VALUES (%s, 'subscription_purchased', %s, GETDATE(), %s, %s)
+                    """, [
+                        user_id,
+                        f"Purchased {tier_name} subscription (BlockchainID: {subscription_id}, Transaction: {transaction_hash})",
+                        request.META.get('REMOTE_ADDR', ''),
+                        request.META.get('HTTP_USER_AGENT', '')
+                    ])
+                    
+                    # Bildirim ekle
+                    cursor.execute("""
+                        INSERT INTO Notifications
+                        (UserID, Title, Message, NotificationType, IsRead, IsDismissed, CreationDate)
+                        VALUES (%s, 'Subscription Activated', %s, 'system', 0, 0, GETDATE())
+                    """, [
+                        user_id,
+                        f"Your {tier_name} subscription has been successfully activated until {end_date.strftime('%Y-%m-%d')}."
+                    ])
+            
+            return Response({
+                'message': 'Subscription purchased successfully',
+                'subscriptionId': subscription_id,
+                'expiryTimestamp': expiry_timestamp,
+                'transactionHash': transaction_hash
+            })
+        else:
+            return Response({
+                'error': f"Failed to purchase subscription: {result.get('error', 'Unknown error')}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    except Exception as e:
+        logger.error(f"Purchase subscription error: {str(e)}", exc_info=True)
+        return Response({
+            'error': f"Failed to purchase subscription: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@throttle_classes([SensitiveOperationsThrottle])
+def trade_nfts_for_subscription(request):
+    """NFTleri aboneliğe dönüştürme (takas) API endpoint'i"""
+    user_id = request.user.id
+    nft_ids = request.data.get('nftIds', [])  # Takas edilecek NFT IDs (blockchain ID'leri)
+    tier = request.data.get('tier')  # Hedeflenen abonelik tipi: 'B', 'P', veya 'L'
+    private_key = request.data.get('privateKey')  # Frontend'den güvenli bir şekilde alınmalı
+    
+    if not all([nft_ids, tier, private_key]) or not isinstance(nft_ids, list) or len(nft_ids) == 0:
+        return Response({
+            'error': 'Missing or invalid parameters: nftIds (array), tier, privateKey'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Kullanıcının wallet adresini al
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT WalletAddress
+                FROM Users
+                WHERE UserID = %s
+            """, [user_id])
+            
+            result = cursor.fetchone()
+            if not result or not result[0]:
+                return Response({
+                    'error': 'No wallet connected'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            wallet_address = result[0]
+            
+            # NFTlerin kullanıcıya ait olduğunu kontrol et
+            for blockchain_nft_id in nft_ids:
+                cursor.execute("""
+                    SELECT COUNT(*)
+                    FROM UserNFTs
+                    WHERE UserID = %s AND BlockchainNFTID = %s AND IsMinted = 1
+                """, [user_id, blockchain_nft_id])
+                
+                count = cursor.fetchone()[0]
+                if count == 0:
+                    return Response({
+                        'error': f'NFT with blockchain ID {blockchain_nft_id} not found or not owned by user'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # BlockchainService ile NFT takası yap
+        blockchain_service = BlockchainService()
+        result = blockchain_service.trade_nfts_for_subscription(
+            wallet_address,
+            nft_ids,
+            tier,
+            private_key
+        )
+        
+        if result["success"]:
+            subscription_id = result.get("subscriptionId")
+            transaction_hash = result["transactionHash"]
+            
+            # Veritabanında takas edilmiş NFT'leri ve yeni aboneliği kaydet
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    # NFT'leri kullanıcı envanterinden kaldır
+                    for blockchain_nft_id in nft_ids:
+                        cursor.execute("""
+                            UPDATE UserNFTs
+                            SET IsTraded = 1, TradeDate = GETDATE(), TradeTransactionHash = %s
+                            WHERE UserID = %s AND BlockchainNFTID = %s
+                        """, [transaction_hash, user_id, blockchain_nft_id])
+                    
+                    # BlockchainService ile abonelik durumunu kontrol et
+                    subscription_details = blockchain_service.check_subscription_status(wallet_address)
+                    
+                    if subscription_details.get("hasSubscription", False):
+                        # Önce abonelik planını ID'sini al
+                        tier_name = subscription_details.get("tier", "Unknown")
+                        end_time = subscription_details.get("endTime")
+                        
+                        cursor.execute("""
+                            SELECT PlanID
+                            FROM SubscriptionPlans
+                            WHERE PlanName = %s
+                        """, [tier_name])
+                        
+                        plan_result = cursor.fetchone()
+                        if plan_result:
+                            plan_id = plan_result[0]
+                            
+                            # Varsa mevcut aktif aboneliği pasif yap
+                            cursor.execute("""
+                                UPDATE UserSubscriptions
+                                SET IsActive = 0
+                                WHERE UserID = %s AND IsActive = 1
+                            """, [user_id])
+                            
+                            # Yeni abonelik kaydını ekle
+                            from datetime import datetime
+                            import time
+                            
+                            start_date = datetime.fromtimestamp(time.time())
+                            end_date = datetime.fromtimestamp(end_time)
+                            
+                            cursor.execute("""
+                                INSERT INTO UserSubscriptions
+                                (UserID, PlanID, StartDate, EndDate, IsActive, PaymentTransactionID, PaymentMethod, AutoRenew)
+                                VALUES (%s, %s, %s, %s, 1, %s, 'nft_trade', 0)
+                            """, [user_id, plan_id, start_date, end_date, transaction_hash])
+                            
+                            # Etkinlik logu ekle
+                            cursor.execute("""
+                                INSERT INTO ActivityLogs
+                                (UserID, ActivityType, Description, Timestamp, IPAddress, UserAgent)
+                                VALUES (%s, 'nft_traded_for_subscription', %s, GETDATE(), %s, %s)
+                            """, [
+                                user_id,
+                                f"Traded {len(nft_ids)} NFTs for {tier_name} subscription (BlockchainID: {subscription_id}, Transaction: {transaction_hash})",
+                                request.META.get('REMOTE_ADDR', ''),
+                                request.META.get('HTTP_USER_AGENT', '')
+                            ])
+                            
+                            # Bildirim ekle
+                            cursor.execute("""
+                                INSERT INTO Notifications
+                                (UserID, Title, Message, NotificationType, IsRead, IsDismissed, CreationDate)
+                                VALUES (%s, 'NFTs Traded for Subscription', %s, 'system', 0, 0, GETDATE())
+                            """, [
+                                user_id,
+                                f"You traded {len(nft_ids)} NFTs for a {tier_name} subscription valid until {end_date.strftime('%Y-%m-%d')}."
+                            ])
+            
+            return Response({
+                'message': 'NFTs traded for subscription successfully',
+                'subscriptionId': subscription_id,
+                'transactionHash': transaction_hash
+            })
+        else:
+            return Response({
+                'error': f"Failed to trade NFTs for subscription: {result.get('error', 'Unknown error')}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    except Exception as e:
+        logger.error(f"Trade NFTs for subscription error: {str(e)}", exc_info=True)
+        return Response({
+            'error': f"Failed to trade NFTs for subscription: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

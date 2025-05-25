@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Box, 
@@ -15,8 +15,8 @@ import {
   Avatar, 
   List, 
   ListItem, 
-  ListItemAvatar, 
   ListItemText, 
+  ListItemIcon,
   LinearProgress, 
   alpha, 
   useTheme,
@@ -24,14 +24,20 @@ import {
   Tooltip,
   Card,
   CardContent,
+  CardActions,
   Stack,
-  Badge
+  Tabs,
+  Tab,
+  Skeleton,
+  Alert,
+  AlertTitle
 } from '@mui/material';
+
+// Icons
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PendingIcon from '@mui/icons-material/Pending';
 import LockIcon from '@mui/icons-material/Lock';
 import StarIcon from '@mui/icons-material/Star';
 import QuizIcon from '@mui/icons-material/Quiz';
@@ -39,15 +45,29 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import OndemandVideoIcon from '@mui/icons-material/OndemandVideo';
 import NoteIcon from '@mui/icons-material/Note';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import SchoolIcon from '@mui/icons-material/School';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import SlideshowIcon from '@mui/icons-material/Slideshow';
+import PeopleOutlineIcon from '@mui/icons-material/PeopleOutline';
+import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import CheckIcon from '@mui/icons-material/Check';
+import InfoIcon from '@mui/icons-material/Info';
+import SubtitlesIcon from '@mui/icons-material/Subtitles';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import CommentIcon from '@mui/icons-material/Comment';
+
 import { useAuth } from '@/contexts/AuthContext';
 import dynamic from 'next/dynamic';
+import { debounce } from 'lodash';
+import { toast } from 'react-hot-toast';
 
 // Animated background
 const AnimatedBackground = () => {
@@ -116,66 +136,146 @@ const AnimatedBackground = () => {
   );
 };
 
-// Simple embedded YouTube video component for improved reliability
-const SimpleVideoPlayer = ({ videoId, onProgress, initialProgress = 0 }) => {
+// VideoPlayer component - handles the YouTube embed with custom behavior
+const VideoPlayer = ({ video, onVideoProgress, userView }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
+  const iframeRef = useRef(null);
+  const progressIntervalRef = useRef(null);
+  const lastReportedProgressRef = useRef(0);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
   
-  // Format time in minutes:seconds
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  // Calculate the start position, ensuring it's a valid integer value
+  const getStartPosition = () => {
+    if (!userView) return 0;
+    
+    let startPosition = 0;
+    if (typeof userView.lastPosition === 'number' && !isNaN(userView.lastPosition) && userView.lastPosition > 0) {
+      startPosition = Math.floor(userView.lastPosition);
+      console.log(`Using lastPosition for video resume: ${startPosition} seconds`);
+    } else if (userView.watchedPercentage && userView.watchedPercentage > 0 && video.Duration) {
+      startPosition = Math.floor((userView.watchedPercentage / 100) * video.Duration);
+      console.log(`Calculated position from percentage (${userView.watchedPercentage}%): ${startPosition} seconds`);
+    }
+    
+    // Don't start from very end of video
+    if (video.Duration && startPosition > (video.Duration - 10)) {
+      startPosition = Math.max(0, video.Duration - 30);
+    }
+    
+    return startPosition;
+  };
+  
+  // Set up YouTube API and message listener to receive player events
+  useEffect(() => {
+    if (!video?.YouTubeVideoID) return;
+    
+    // Set up YouTube API message listener only once
+    const handleYouTubeMessage = (event) => {
+      try {
+        // Only process messages from YouTube
+        if (event.origin !== 'https://www.youtube.com') return;
+        
+        // Try to parse the data
+        const data = JSON.parse(event.data);
+        
+        // Only handle our specific player events
+        if (data.event === 'onStateChange' && data.info === 0) { // Video ended
+          // Report 100% completion
+          if (onVideoProgress && typeof onVideoProgress === 'function') {
+            onVideoProgress(100, true, video.Duration || 0, 0);
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    };
+    
+    // Add message listener when component mounts
+    window.addEventListener('message', handleYouTubeMessage);
+    
+    // Set up simple progress tracking interval
+    if (video.Duration && onVideoProgress && !progressIntervalRef.current) {
+      let currentTime = getStartPosition();
+      const duration = video.Duration;
+      const startTime = Date.now();
+      
+      progressIntervalRef.current = setInterval(() => {
+        // Simple time estimation (this is less accurate than using YouTube API events)
+        currentTime += 1; // Add 1 second every second
+        if (currentTime > duration) currentTime = duration;
+        
+        const percentage = Math.min(Math.round((currentTime / duration) * 100), 100);
+        const isCompleted = percentage >= 95;
+        const viewDuration = Date.now() - startTime;
+        
+        // Only report if percentage has changed by at least 1%
+        if (Math.abs(percentage - lastReportedProgressRef.current) >= 1) {
+          lastReportedProgressRef.current = percentage;
+          onVideoProgress(percentage, isCompleted, currentTime, viewDuration);
+        }
+      }, 1000);
+    }
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('message', handleYouTubeMessage);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    };
+  }, [video?.YouTubeVideoID, video?.Duration]);
+  
+  // Get the complete YouTube URL with all parameters
+  const getYouTubeUrl = () => {
+    const startTime = getStartPosition();
+    const params = new URLSearchParams({
+      autoplay: '1',
+      rel: '0',
+      modestbranding: '1',
+      start: startTime.toString(),
+      enablejsapi: '1',
+      origin: typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : '',
+      showinfo: '0',
+      fs: '1',
+      controls: '1',
+      disablekb: '0',
+      iv_load_policy: '3'
+    });
+    
+    return `https://www.youtube.com/embed/${video.YouTubeVideoID}?${params.toString()}`;
   };
   
   return (
-    <Paper 
-      elevation={4}
-      sx={{ 
+    <Box sx={{ 
         position: 'relative', 
         width: '100%', 
-        paddingTop: '56.25%', // 16:9 aspect ratio
-        backgroundColor: 'black', 
-        borderRadius: 2, 
+      height: 0,
+      pt: '56.25%', 
+      bgcolor: 'black', 
+      borderRadius: { xs: 0, sm: 1 }, 
         overflow: 'hidden',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          transform: 'scale(1.005)',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-        }
-      }}
-    >
+      boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+      maxHeight: '80vh',
+    }}>
       {loading && (
-        <Box 
-          sx={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 10
-          }}
-        >
-          <CircularProgress 
-            size={60} 
-            thickness={5} 
-            sx={{ 
-              color: theme.palette.secondary.main,
-              '& .MuiCircularProgress-circle': {
-                strokeLinecap: 'round',
-              }
-            }} 
-          />
+        <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(0,0,0,0.5)', zIndex: 2 }}>
+          <CircularProgress size={60} sx={{ color: theme.palette.primary.main }} />
         </Box>
       )}
       
       <iframe 
-        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&start=${Math.floor(initialProgress)}&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+        ref={iframeRef}
+        src={getYouTubeUrl()}
         frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
@@ -186,38 +286,12 @@ const SimpleVideoPlayer = ({ videoId, onProgress, initialProgress = 0 }) => {
           left: 0,
           width: '100%',
           height: '100%',
-          zIndex: 5
+          zIndex: 1
         }}
       />
-      
-      {/* Bottom gradient overlay */}
-      <Box 
-        sx={{ 
-          position: 'absolute', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          height: '80px', 
-          background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0))', 
-          pointerEvents: 'none',
-          zIndex: 6
-        }} 
-      />
-    </Paper>
+    </Box>
   );
 };
-
-// Dynamic import of the simple video player
-const VideoPlayer = dynamic(() => Promise.resolve(SimpleVideoPlayer), {
-  ssr: false,
-  loading: () => (
-    <Box sx={{ width: '100%', paddingTop: '56.25%', position: 'relative', bgcolor: 'black', borderRadius: 2 }}>
-      <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <CircularProgress color="secondary" />
-      </Box>
-    </Box>
-  )
-});
 
 // Video list item component
 const VideoListItem = ({ video, index, currentVideo, isCompleted, onVideoClick }) => {
@@ -478,122 +552,380 @@ const ResourceItem = ({ resource }) => {
   );
 };
 
+// VideoQuiz component
+const VideoQuiz = ({ quiz, canAccess }) => {
+  const theme = useTheme();
+  const router = useRouter();
+  
+  const handleTakeQuiz = () => {
+    if (!canAccess) return;
+    router.push(`/quizzes/${quiz.QuizID}`);
+  };
+  
+  return (
+    <Paper
+      elevation={2}
+      sx={{
+        p: 2,
+        mb: 2,
+        border: '1px solid',
+        borderColor: canAccess ? 'primary.main' : 'divider',
+        borderRadius: 2,
+        opacity: canAccess ? 1 : 0.7,
+        transition: 'all 0.2s ease',
+        position: 'relative',
+        overflow: 'hidden',
+        '&:hover': canAccess ? {
+          boxShadow: 3,
+          transform: 'translateY(-2px)'
+        } : {}
+      }}
+    >
+      {!canAccess && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: alpha(theme.palette.background.paper, 0.7),
+            zIndex: 2,
+            backdropFilter: 'blur(3px)'
+          }}
+        >
+          <Box sx={{ textAlign: 'center', p: 2 }}>
+            <LockIcon sx={{ fontSize: 40, color: 'text.secondary', mb: 1 }} />
+            <Typography variant="subtitle1" fontWeight={600}>
+              Watch the video to unlock this quiz
+            </Typography>
+          </Box>
+        </Box>
+      )}
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            {quiz.Title || 'Video Quiz'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {quiz.Description || 'Test your knowledge from this video'}
+          </Typography>
+        </Box>
+        
+        <Chip
+          label={`${quiz.QuestionCount || quiz.questions?.length || 0} questions`}
+          color="primary"
+          variant="outlined"
+          size="small"
+        />
+      </Box>
+      
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 2 }}>
+        <Box>
+          <Chip
+            label={`Passing: ${quiz.PassingScore || 70}%`}
+            color="secondary"
+            variant="outlined"
+            size="small"
+            sx={{ mr: 1 }}
+          />
+          
+          {quiz.CompletionStatus && (
+            <Chip
+              label={quiz.Score ? `Score: ${quiz.Score}%` : 'Completed'}
+              color={quiz.Passed ? 'success' : 'error'}
+              size="small"
+            />
+          )}
+        </Box>
+        
+        <Button
+          variant="contained"
+          disabled={!canAccess}
+          onClick={handleTakeQuiz}
+          startIcon={<QuizIcon />}
+          size="small"
+        >
+          {quiz.CompletionStatus ? 'Retake Quiz' : 'Take Quiz'}
+        </Button>
+      </Box>
+    </Paper>
+  );
+};
+
 // Main Video Page Component
 export default function VideoPage({ params }) {
-  const { courseId, videoId } = params || {};
-  const router = useRouter();
   const theme = useTheme();
-  const { user } = useAuth();
-  
-  // State
-  const [video, setVideo] = useState(null);
-  const [course, setCourse] = useState(null);
-  const [courseVideos, setCourseVideos] = useState([]);
-  const [userView, setUserView] = useState(null);
-  const [quizzes, setQuizzes] = useState([]);
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
+  const [selectedTab, setSelectedTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
   
-  // Player state tracking
+  // Refs for better performance
+  const videoRef = useRef(null);
+  const progressTrackingRef = useRef(null);
+  const userCourseProgressRef = useRef(null);
+  const timerRef = useRef(null);
+  
+  // Video and course data
+  const [video, setVideo] = useState(null);
+  const [courseData, setCourseData] = useState(null);
+  const [courseVideos, setCourseVideos] = useState([]);
+  const [userVideoView, setUserVideoView] = useState(null);
+  const [courseProgress, setCourseProgress] = useState(0);
+  const [userCourseProgress, setUserCourseProgress] = useState(null);
+  const [enrolledStudents, setEnrolledStudents] = useState(0);
+  const [quizzes, setQuizzes] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [videoQuizzes, setVideoQuizzes] = useState([]);
+  const [courseQuizzes, setCourseQuizzes] = useState([]);
+  
+  // UI states
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [playerState, setPlayerState] = useState({
     playing: false,
     currentTime: 0,
     duration: 0,
-    lastTrackedTime: 0,
+    lastTrackedTime: 0
   });
   
-  // Refs
-  const timerRef = useRef(null);
+  // Parse the course and video IDs from params
+  const courseId = params?.courseId;
+  const videoId = params?.videoId;
   
-  // Resources example data - using fixed value to prevent hydration issues
-  const resources = [
-    { id: 1, title: "Course Notes - Blockchain Fundamentals", type: "PDF", size: "1.2 MB" },
-    { id: 2, title: "Code Examples - Demo Repository", type: "ZIP", size: "3.5 MB" },
-    { id: 3, title: "Additional Reading Materials", type: "PDF", size: "2.8 MB" }
-  ];
+  // Function to safely access localStorage
+  const safelyGetLocalStorage = (key) => {
+    try {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem(key);
+      }
+    } catch (e) {
+      console.error('Error accessing localStorage:', e);
+    }
+    return null;
+  };
 
-  // Fetch video details
-  useEffect(() => {
-    let isActive = true;
-    const fetchVideoDetails = async () => {
+  // Helper function to get the authorization token
+  const getToken = async () => {
+    try {
+      // Check if user is authenticated
+      if (!isAuthenticated) {
+        console.warn('User is not authenticated');
+        return null;
+      }
+      
+      // Try to get the token from localStorage
+      let token = safelyGetLocalStorage('access_token');
+      
+      if (!token) {
+        console.warn('No access token found');
+        return null;
+      }
+      
+      // Check if token is expired
       try {
-        setLoading(true);
-        
-        // API call - you can uncomment and use
-        // const response = await fetch(`/api/courses/${courseId}/videos/${videoId}`);
-        // if (!response.ok) throw new Error('Could not retrieve video data');
-        // const data = await response.json();
-        
-        // Mock data
-        setTimeout(() => {
-          if (!isActive) return;
-
-          // Mock video data
-          const mockVideo = {
-            VideoID: parseInt(videoId),
-            Title: "Introduction to Blockchain Technology",
-            Description: "Learn the basics of blockchain technology, including distributed ledgers, blocks, and cryptographic hash operations. This fundamental knowledge will help you understand how blockchain works and why it's considered a revolutionary technology in finance, supply chain, healthcare, and many other sectors.",
-            YouTubeVideoID: "SSo_EIwHSd4", // Replace with an actual YouTube video ID
-            Duration: 785, // 13:05 in seconds
-            OrderInCourse: 1,
-            userView: {
-              watchedPercentage: 45,
-              isCompleted: false,
-              earnedPoints: 0
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(atob(tokenParts[1]));
+          const expiryTime = payload.exp * 1000; // Convert to milliseconds
+          
+          // If token is expired or about to expire in the next minute, refresh it
+          if (Date.now() > expiryTime - 60000) {
+            console.log('Token appears to be expired or about to expire, refreshing...');
+            const refreshed = await refreshToken();
+            if (refreshed) {
+              token = safelyGetLocalStorage('access_token');
             }
-          };
-          
-          // Mock course data
-          const mockCourse = {
-            CourseID: parseInt(courseId),
-            Title: "Blockchain Fundamentals",
-            Description: "A comprehensive introduction to blockchain technology",
-            Instructor: "John Doe",
-            videos: [
-              { VideoID: 1, Title: "Introduction to Blockchain Technology", Duration: 785, OrderInCourse: 1 },
-              { VideoID: 2, Title: "History of Bitcoin", Duration: 950, OrderInCourse: 2 },
-              { VideoID: 3, Title: "How Blockchain Works", Duration: 1100, OrderInCourse: 3 },
-              { VideoID: 4, Title: "Consensus Mechanisms", Duration: 1320, OrderInCourse: 4 },
-              { VideoID: 5, Title: "Types of Blockchains", Duration: 1050, OrderInCourse: 5 },
-              { VideoID: 6, Title: "Blockchain Use Cases", Duration: 1210, OrderInCourse: 6 },
-            ]
-          };
-          
-          // Mock quiz data
-          const mockQuizzes = [
-            { QuizID: 101, Title: "Blockchain Fundamentals Quiz", Description: "Test your understanding of blockchain basics" },
-            { QuizID: 102, Title: "Consensus Mechanisms Quiz", Description: "Verify your knowledge of different consensus algorithms" }
-          ];
-          
-          setVideo(mockVideo);
-          setCourse(mockCourse);
-          setCourseVideos(mockCourse.videos);
-          setQuizzes(mockQuizzes);
-          setUserView(mockVideo.userView);
-          
-          // Set initial player state
-          setPlayerState(prev => ({
-            ...prev,
-            currentTime: mockVideo.userView ? (mockVideo.userView.watchedPercentage * mockVideo.Duration / 100) : 0,
-            duration: mockVideo.Duration
-          }));
-          
-          setLoading(false);
-        }, 1000);
-        
-      } catch (err) {
-        console.error('Error fetching video details:', err);
-        if (isActive) {
-          setError(err.message || 'Failed to load video details');
-          setLoading(false);
+          }
         }
+      } catch (tokenError) {
+        console.warn('Error checking token expiration:', tokenError);
+      }
+      
+      return token ? `Bearer ${token}` : null;
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
+  };
+
+  // Tab change handler
+  const handleTabChange = (event, newValue) => {
+    setSelectedTab(newValue);
+    
+    // Save the selected tab in session storage for persistence
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('videoTabValue', newValue);
+    }
+  };
+
+  // Calculate course progress based on video IDs
+  const calculateProgress = useCallback((videos, currentVideoId, currentIsCompleted = false) => {
+    if (!videos || !Array.isArray(videos) || videos.length === 0) return 0;
+    
+    let completedCount = 0;
+    const totalCount = videos.length;
+    
+    // Count completed videos
+    for (const video of videos) {
+      if (
+        video.VideoID < currentVideoId || 
+        (video.VideoID === parseInt(currentVideoId) && (userVideoView?.isCompleted || currentIsCompleted))
+      ) {
+        completedCount++;
+      }
+    }
+    
+    const percentage = Math.round((completedCount / totalCount) * 100);
+    console.log(`Calculated progress: ${completedCount}/${totalCount} = ${percentage}%`);
+    return percentage;
+  }, [userVideoView]);
+
+  // Fetch course progress
+  const fetchCourseProgress = useCallback(async () => {
+    if (!courseId || !user) return;
+    
+    try {
+      // Get token
+      let token = await getToken();
+      
+      // Cache busting timestamp
+      const timestamp = Date.now();
+      
+      // Fetch updated progress
+      const progressResponse = await fetch(`/api/courses/${courseId}/progress/?t=${timestamp}`, {
+        headers: {
+          'Authorization': token,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
+      });
+      
+      if (progressResponse.ok) {
+        const progressData = await progressResponse.json();
+        if (typeof progressData.percentage === 'number') {
+          console.log('Updated course progress:', progressData.percentage);
+          setCourseProgress(progressData.percentage);
+        } else {
+          // Fallback calculation if API doesn't provide percentage
+          const calculatedProgress = calculateProgress(courseVideos, parseInt(videoId));
+          setCourseProgress(calculatedProgress);
+        }
+      } else {
+        // If API returns error, stop future automatic polling
+        if (progressTrackingRef.current) {
+          console.log(`Progress API returned ${progressResponse.status}, disabling polling`);
+          clearInterval(progressTrackingRef.current);
+          progressTrackingRef.current = null;
+        }
+        
+        // Fallback calculation
+        const calculatedProgress = calculateProgress(courseVideos, parseInt(videoId));
+        setCourseProgress(calculatedProgress);
+      }
+    } catch (progressError) {
+      console.warn('Error fetching course progress:', progressError);
+    }
+  }, [courseId, videoId, courseVideos, user, calculateProgress]);
+
+  // Set up progress refresh interval - disabled by default
+  useEffect(() => {
+    // Clear any existing interval
+    if (progressTrackingRef.current) {
+      clearInterval(progressTrackingRef.current);
+      progressTrackingRef.current = null;
+    }
+    
+    // Don't create a new interval - API endpoints were returning 404s
+    console.log('Progress API polling disabled to avoid 404 errors');
+    
+    return () => {
+      if (progressTrackingRef.current) {
+        clearInterval(progressTrackingRef.current);
+        progressTrackingRef.current = null;
+      }
+    };
+  }, [fetchCourseProgress]);
+
+  // Update progress when user completes a video
+  useEffect(() => {
+    if (userVideoView?.isCompleted) {
+      // Just update progress locally based on calculated value
+      const calculatedProgress = calculateProgress(courseVideos, parseInt(videoId));
+      setCourseProgress(calculatedProgress);
+      console.log('Updated progress after completion:', calculatedProgress);
+    }
+  }, [userVideoView, calculateProgress, courseVideos, videoId]);
+
+  // Get course completion percentage
+  const getCourseCompletionPercentage = () => {
+    return courseProgress;
+  };
+
+  // Fetch initial data and set up course
+  useEffect(() => {
+    // Check if we have a saved course state with next video position
+    if (typeof window !== 'undefined') {
+      const savedCourseState = safelyGetLocalStorage(`course_${courseId}_state`);
+      
+      if (savedCourseState) {
+        try {
+          const parsedState = JSON.parse(savedCourseState);
+          
+          // If user was watching a different video in this course,
+          // show a notification or option to continue
+          if (parsedState.lastVideoId && 
+              parsedState.lastVideoId !== videoId && 
+              parsedState.timestamp && 
+              (Date.now() - parsedState.timestamp < 7 * 24 * 60 * 60 * 1000)) { // Within 7 days
+            
+            console.log(`User has previous progress in video ${parsedState.lastVideoId} of this course`);
+            // We could show a UI notification here to jump to that video
+          }
+        } catch (e) {
+          console.error('Error parsing saved course state:', e);
+        }
+      }
+    }
+    
+    // Only run this effect on the client side
+    if (typeof window === 'undefined') return;
+    
+    let isActive = true;
+    
+    const fetchData = async () => {
+      if (courseId && videoId) {
+        await fetchVideoDetails();
       }
     };
     
-    if (courseId && videoId) {
-      fetchVideoDetails();
-    }
+    fetchData();
+    
+    // Save current video position for course continuation
+    const saveVideoState = () => {
+      if (courseId && videoId && typeof window !== 'undefined') {
+        const stateToSave = {
+          lastVideoId: videoId,
+          timestamp: Date.now(),
+          position: playerState.currentTime || 0
+        };
+        
+        localStorage.setItem(
+          `course_${courseId}_state`, 
+          JSON.stringify(stateToSave)
+        );
+      }
+    };
+    
+    // Save state when user leaves the page
+    window.addEventListener('beforeunload', saveVideoState);
     
     // Cleanup
     return () => {
@@ -601,241 +933,696 @@ export default function VideoPage({ params }) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-    };
-  }, [courseId, videoId, user]);
-  
-  // Progress tracking - optimized
-  const trackProgress = async (watchedPercentage, isCompleted = false) => {
-    if (!user || !video) return;
-    
-    // Check progress info - prevent unnecessary updates
-    if (userView) {
-      // Skip update if no significant change
-      const percentageDiff = Math.abs(userView.watchedPercentage - watchedPercentage);
-      
-      if (percentageDiff < 5 && userView.isCompleted === isCompleted) {
-        return;
+      if (progressTrackingRef.current) {
+        clearInterval(progressTrackingRef.current);
       }
-    }
-    
-    console.log(`Updating progress: ${watchedPercentage.toFixed(1)}%, completed: ${isCompleted}`);
+      
+      // Save state on component unmount
+      saveVideoState();
+      
+      // Remove event listener
+      window.removeEventListener('beforeunload', saveVideoState);
+    };
+  }, [courseId, videoId]);
+
+  // Fetch video details with proper null checking
+  const fetchVideoDetails = async () => {
+    let isActive = true;
+    setLoading(true);
+    setError(null);
     
     try {
-      // Real API call
-      // const response = await fetch(`/api/courses/${courseId}/videos/${videoId}/progress`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     watchedPercentage,
-      //     isCompleted
-      //   }),
-      // });
-      // 
-      // if (!response.ok) throw new Error('Failed to update progress');
-      // const data = await response.json();
-      // setUserView(data);
+      // Get token - use the previously defined userAccessToken
+      let token = await getToken();
       
-      // Mock update (when no real API)
-      setUserView(prevState => {
-        // If previously completed and rewatching, maintain status
-        const newIsCompleted = prevState?.isCompleted ? true : isCompleted;
-        const earnedPoints = newIsCompleted ? (prevState?.earnedPoints || 0) + 10 : prevState?.earnedPoints || 0;
-        
-        return {
-          watchedPercentage,
-          isCompleted: newIsCompleted,
-          earnedPoints: earnedPoints
-        };
-      });
-      
-      // Update player state
-      setPlayerState(prev => ({
-        ...prev,
-        lastTrackedTime: prev.currentTime
-      }));
-      
-      // Show notification if completed and not previously completed
-      if (isCompleted && !userView?.isCompleted) {
-        console.log('Video completed, earned 10 points!');
+      if (!token) {
+        console.warn('No authentication token available');
+        setError('Authentication error. Please log in to access this content.');
+        setLoading(false);
+        return;
       }
       
-    } catch (err) {
-      console.error('Failed to save video progress:', err);
-    }
-  };
-  
-  // Video selection
-  const handleSelectVideo = (newVideoId) => {
-    if (newVideoId === parseInt(videoId)) return;
+      // Cache busting timestamp
+      const timestamp = Date.now();
+      
+      // Fetch video data
+        const videoResponse = await fetch(`/api/courses/videos/${videoId}/?t=${timestamp}`, {
+          headers: {
+            'Authorization': token,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        
+        if (!videoResponse.ok) {
+          if (videoResponse.status === 401 || videoResponse.status === 403) {
+          setError('Authentication error. Please log in again to access this content.');
+            return;
+          }
+          
+        throw new Error(`Failed to load video (${videoResponse.status})`);
+        }
+        
+        const videoData = await videoResponse.json();
+        
+      // Fetch course data
+      console.log(`Fetching course details for courseId: ${courseId}, cache buster: ${timestamp}`);
+        const courseResponse = await fetch(`/api/courses/${courseId}/?t=${timestamp}`, {
+          headers: {
+            'Authorization': token,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        
+        if (!courseResponse.ok) {
+          if (courseResponse.status === 401 || courseResponse.status === 403) {
+          setError('Authentication error. Please log in again to access this content.');
+            return;
+          }
+          
+        throw new Error(`Failed to load course (${courseResponse.status})`);
+        }
+        
+        const courseData = await courseResponse.json();
+      console.log('Raw course data received from backend:', courseData);
+      
+      // Extract enrolled students count - check multiple possible field names
+      const enrolled = parseInt(courseData.EnrolledUsers) || 
+                     parseInt(courseData.EnrolledStudents) || 
+                     parseInt(courseData.Enrollments) || 
+                     parseInt(courseData.StudentCount) || 
+                     parseInt(courseData.enrolled_count) || 
+                     parseInt(courseData.student_count) || 
+                     0;
+      
+      console.log('Processed enrollment count:', enrolled);
+      setEnrolledStudents(enrolled);
+      
+      // Try to fetch course resources if available
+      try {
+        const resourcesResponse = await fetch(`/api/courses/${courseId}/resources/?t=${timestamp}`, {
+          headers: {
+            'Authorization': token,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        
+        if (resourcesResponse.ok) {
+          const resourcesData = await resourcesResponse.json();
+          if (Array.isArray(resourcesData)) {
+            setResources(resourcesData);
+          }
+        } else {
+          console.log(`Resources API returned ${resourcesResponse.status}. Using empty array fallback.`);
+          setResources([]);
+        }
+      } catch (resourcesError) {
+        console.warn('Error fetching course resources:', resourcesError);
+        setResources([]);
+      }
+      
+      // Calculate initial progress from the videos list
+      const initialProgress = calculateProgress(courseData.videos || [], videoData.VideoID, videoData.userView?.isCompleted);
+      setCourseProgress(initialProgress);
+      console.log('Initial calculated progress:', initialProgress);
+      
+      // Initialize userCourseProgress state with data from API or calculated value
+      if (courseData.userProgress) {
+        setUserCourseProgress({
+          completionPercentage: courseData.userProgress.completionPercentage || initialProgress,
+          isCompleted: courseData.userProgress.isCompleted || false,
+          lastVideoId: courseData.userProgress.lastVideoID,
+          lastAccessDate: courseData.userProgress.lastAccessDate
+        });
+        userCourseProgressRef.current = {
+          completionPercentage: courseData.userProgress.completionPercentage || initialProgress,
+          isCompleted: courseData.userProgress.isCompleted || false,
+          lastVideoId: courseData.userProgress.lastVideoID,
+          lastAccessDate: courseData.userProgress.lastAccessDate
+        };
+      } else {
+        setUserCourseProgress({
+          completionPercentage: initialProgress,
+          isCompleted: initialProgress >= 100,
+          lastVideoId: videoData.VideoID,
+          lastAccessDate: new Date().toISOString()
+        });
+      }
+        
+        if (!isActive) return;
+        
+      // Update state with fetched data
+        setVideo(videoData);
+        setCourseData(courseData);
+        setCourseVideos(Array.isArray(courseData.videos) ? courseData.videos : []);
+        setQuizzes(Array.isArray(videoData.quizzes) ? videoData.quizzes : []);
+        
+      // Initialize player state with user progress if available
+        if (videoData.userView) {
+          setUserVideoView(videoData.userView);
+          setPlayerState(prev => ({
+            ...prev,
+            currentTime: videoData.userView.watchedPercentage * (videoData.Duration || 0) / 100,
+            duration: videoData.Duration || 0
+          }));
+        } else {
+          setPlayerState(prev => ({
+            ...prev,
+            currentTime: 0,
+            duration: videoData.Duration || 0
+          }));
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching video details:', err);
+        if (isActive) {
+        setError(err.message || 'Failed to load video content');
+          setLoading(false);
+        }
+      }
+    };
     
-    // Save current progress before transition
-    if (userView) {
-      trackProgress(userView.watchedPercentage, userView.isCompleted);
-    }
+  // İlerleme takibini kaydetme fonksiyonu
+  const trackProgress = async (videoId, watchedPercentage, isCompleted, lastPosition, viewDuration) => {
+    // Generate a unique tracking ID for this request for better debugging
+    const trackingId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     
-    // Navigate to new video
-    router.push(`/courses/${courseId}/videos/${newVideoId}`);
-  };
-  
-  // Navigate to previous video
-  const handlePreviousVideo = () => {
-    const currentIndex = courseVideos.findIndex(v => v.VideoID === parseInt(videoId));
-    if (currentIndex > 0) {
-      handleSelectVideo(courseVideos[currentIndex - 1].VideoID);
+    try {
+      if (!videoId || watchedPercentage === undefined) {
+        console.warn(`[Track:${trackingId}] Track progress için geçersiz parametreler:`, { videoId, watchedPercentage });
+        return;
+      }
+      
+      console.log(`[Track:${trackingId}] Starting progress tracking for video ${videoId}`);
+      
+      // Ensure we have valid data types for all parameters
+      const validatedParams = {
+        watchedPercentage: parseInt(watchedPercentage) || 0,
+        isCompleted: Boolean(isCompleted),
+        lastPosition: parseFloat(lastPosition) || 0,
+        viewDuration: parseInt(viewDuration) || 0
+      };
+      
+      // Validate parameters are within reasonable ranges
+      if (validatedParams.watchedPercentage < 0 || validatedParams.watchedPercentage > 100) {
+        console.warn(`[Track:${trackingId}] Invalid watchedPercentage value:`, validatedParams.watchedPercentage);
+        validatedParams.watchedPercentage = Math.max(0, Math.min(100, validatedParams.watchedPercentage));
+      }
+      
+      if (validatedParams.lastPosition < 0) {
+        console.warn(`[Track:${trackingId}] Invalid lastPosition value:`, validatedParams.lastPosition);
+        validatedParams.lastPosition = 0;
+      }
+      
+      // Önceki state'e göre değişiklik kontrolü
+      if (progressTrackingRef.current && 
+          progressTrackingRef.current.videoId === videoId &&
+          progressTrackingRef.current.percentage === validatedParams.watchedPercentage &&
+          progressTrackingRef.current.lastPosition === validatedParams.lastPosition) {
+        // Aynı veri, tekrar göndermeye gerek yok
+        console.log(`[Track:${trackingId}] Skipping duplicate progress data`);
+        return;
+      }
+      
+      // İlerleme verilerini güncelle
+      progressTrackingRef.current = {
+        videoId,
+        percentage: validatedParams.watchedPercentage,
+        completed: validatedParams.isCompleted,
+        lastPosition: validatedParams.lastPosition,
+        timestamp: new Date()
+      };
+      
+      // Mevcut kullanıcı token'ı
+      console.log(`[Track:${trackingId}] Getting authentication token`);
+      const token = await getToken();
+      if (!token) {
+        console.error(`[Track:${trackingId}] Authentication token not available`);
+        setError('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.');
+        return;
+      }
+      
+      // API isteği yapılandırması
+      const progressData = {
+        watchedPercentage: validatedParams.watchedPercentage,
+        isCompleted: validatedParams.isCompleted,
+        lastPosition: validatedParams.lastPosition, // Position in seconds for resume functionality
+        viewDuration: validatedParams.viewDuration, // Duration of this viewing session in ms
+        timestamp: new Date().toISOString(), // Current timestamp
+        trackingId // Include tracking ID in the request
+      };
+      
+      console.log(`[Track:${trackingId}] Video ilerleme verisi gönderiliyor: Video #${videoId}, İlerleme ${validatedParams.watchedPercentage}%, Tamamlandı: ${validatedParams.isCompleted}, Position: ${validatedParams.lastPosition.toFixed(2)}s`);
+      
+      // API endpoint URL with cache busting
+      const apiUrl = `/api/courses/videos/${videoId}/track?_=${Date.now()}`;
+      console.log(`[Track:${trackingId}] Calling API endpoint: ${apiUrl}`);
+      
+      // API isteğini yap
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+          'X-Tracking-ID': trackingId,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        body: JSON.stringify(progressData),
+        cache: 'no-store' // Ensure we don't cache this request
+      });
+      
+      // Get the response text first to better handle errors
+      const responseText = await response.text();
+      console.log(`[Track:${trackingId}] API response status: ${response.status}`);
+      console.log(`[Track:${trackingId}] API response body: ${responseText.length > 100 ? responseText.substring(0, 100) + '...' : responseText}`);
+      
+      // Try to parse as JSON if possible
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`[Track:${trackingId}] Error parsing response:`, parseError);
+        console.error(`[Track:${trackingId}] Raw response:`, responseText);
+        throw new Error(`Parse error: ${parseError.message}`);
+      }
+      
+      if (!response.ok) {
+        console.error(`[Track:${trackingId}] İlerleme takip hatası:`, data.error || response.statusText);
+        
+        // If we have a 401 error, attempt to refresh the token
+        if (response.status === 401) {
+          console.log(`[Track:${trackingId}] Token expired, attempting to refresh...`);
+          const refreshed = await refreshToken();
+          console.log(`[Track:${trackingId}] Token refresh result:`, refreshed);
+        }
+        
+        throw new Error(`API error ${response.status}: ${data.error || response.statusText}`);
+      }
+      
+      console.log(`[Track:${trackingId}] İlerleme başarıyla kaydedildi:`, data);
+      
+      // Update course progress if received in response
+      if (data.courseCompletionPercentage !== undefined) {
+        console.log(`[Track:${trackingId}] Updating course completion percentage:`, data.courseCompletionPercentage);
+        setCourseProgress(data.courseCompletionPercentage);
+        
+        // Update userCourseProgress state
+        setUserCourseProgress(prev => ({
+          ...prev,
+          completionPercentage: data.courseCompletionPercentage,
+          isCompleted: data.courseCompleted || false,
+          lastVideoId: videoId,
+          lastAccessDate: new Date().toISOString()
+        }));
+      }
+      
+      // İlerlemeyi kullanıcı kurs ilerleme state'ine yansıt
+      if (userCourseProgressRef.current) {
+        const updatedProgress = {
+          ...userCourseProgressRef.current,
+          lastVideoId: videoId,
+          completionPercentage: data.courseCompletionPercentage || userCourseProgressRef.current.completionPercentage,
+          lastAccessDate: new Date().toISOString()
+        };
+        
+        // Update ref for consistency
+        userCourseProgressRef.current = updatedProgress;
+      }
+      
+      return data; // Return the response data for success case
+    } catch (error) {
+      console.error(`[Track:${trackingId}] Video ilerleme takip hatası:`, error);
+      throw error; // Rethrow for retry mechanism
     }
   };
-  
-  // Navigate to next video
-  const handleNextVideo = () => {
-    const currentIndex = courseVideos.findIndex(v => v.VideoID === parseInt(videoId));
-    if (currentIndex < courseVideos.length - 1) {
-      handleSelectVideo(courseVideos[currentIndex + 1].VideoID);
-    }
-  };
-  
-  // Go to quiz
-  const handleTakeQuiz = (quizId) => {
-    router.push(`/quizzes/${quizId}`);
-  };
-  
-  // Return to course
-  const handleBackToCourse = () => {
-    router.push(`/courses/${courseId}`);
-  };
-  
-  // Format time (from seconds to min:sec format)
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-  
-  // Toggle bookmark
+
+  // İlerleme takibini debounce ile optimize et - daha hızlı güncellemeler için süreyi azalt
+  const trackProgressDebounced = useCallback(
+    debounce((videoId, watchedPercentage, isCompleted, lastPosition, viewDuration) => {
+      // Disabled automatic tracking - now using manual completion button
+      console.log("Automatic progress tracking disabled");
+    }, 3000),
+    []
+  );
+
+  // Video izleme ilerleme durumunu işleme
+  const handleVideoProgress = useCallback((watchedPercentage, isCompleted, lastPosition, viewDuration) => {
+    // Disabled automatic progress tracking
+    console.log("Video progress callback disabled");
+  }, []);
+
+  // Bookmark handling
   const toggleBookmark = () => {
     setIsBookmarked(!isBookmarked);
-    // Real API call
-    // fetch(`/api/courses/${courseId}/videos/${videoId}/bookmark`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ isBookmarked: !isBookmarked })
-    // });
+    // Here you would typically call an API to save the bookmark status
+    // For now, we'll just toggle the local state
   };
-  
-  // Is there a previous video?
-  const hasPreviousVideo = courseVideos.findIndex(v => v.VideoID === parseInt(videoId)) > 0;
-  
-  // Is there a next video?
-  const hasNextVideo = courseVideos.findIndex(v => v.VideoID === parseInt(videoId)) < courseVideos.length - 1;
-  
-  if (loading) {
+
+  // Format time function (seconds to MM:SS)
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '00:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Mevcut video değiştiğinde, kullanıcının izleme verilerini getir
+  useEffect(() => {
+    const fetchUserVideoView = async () => {
+      if (!video?.VideoID || !isAuthenticated) return;
+      
+      try {
+        const token = await getToken();
+        if (!token) return;
+        
+        // Add cache busting to prevent redundant calls
+        const timestamp = Date.now();
+        
+        const response = await fetch(`/api/courses/videos/${video.VideoID}/views?_=${timestamp}`, {
+          headers: { 
+            'Authorization': token,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Kullanıcı video izleme verileri:', data);
+          
+          if (data.videoView) {
+            // UserVideoViews tablosundan gelen verileri state'e kaydet
+            const watchedPercentage = data.videoView.WatchedPercentage || 0;
+            const isCompleted = !!data.videoView.IsCompleted;
+            const lastPosition = data.videoView.lastPosition || 0;
+            
+            console.log(`Using video view data from backend:`);
+            console.log(`- Watched Percentage: ${watchedPercentage}%`);
+            console.log(`- Completed: ${isCompleted}`);
+            console.log(`- Last Position: ${lastPosition} seconds`);
+            
+            setUserVideoView({
+              watchedPercentage: watchedPercentage,
+              isCompleted: isCompleted,
+              lastPosition: lastPosition,
+              viewDate: data.videoView.ViewDate
+            });
+          } else {
+            console.log('No existing video view data found for this user and video');
+            // Initialize with default values
+            setUserVideoView({
+              watchedPercentage: 0,
+              isCompleted: false,
+              lastPosition: 0,
+              viewDate: null
+            });
+          }
+        } else {
+          console.warn('Kullanıcı video izleme verilerini getirme hatası:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Kullanıcı video izleme verilerini getirme hatası:', error);
+      }
+    };
+    
+    // Only fetch once when video ID changes
+    fetchUserVideoView();
+    
+    // Clear interval when component unmounts or video changes
+    return () => {
+      if (progressTrackingRef.current) {
+        clearInterval(progressTrackingRef.current);
+        progressTrackingRef.current = null;
+      }
+    };
+  }, [video?.VideoID, isAuthenticated]); // Only re-run when videoID or auth status changes
+
+  // Refresh token function
+  const refreshToken = async () => {
+    try {
+      const refreshToken = safelyGetLocalStorage('refresh_token');
+      if (!refreshToken) {
+        console.warn('No refresh token available');
+        return false;
+      }
+      
+      const response = await fetch('/api/auth/refresh-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refresh_token: refreshToken })
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to refresh token:', response.statusText);
+        return false;
+      }
+      
+      const data = await response.json();
+      if (data && data.access) {
+        console.log('Token refreshed successfully');
+        localStorage.setItem('access_token', data.access);
+        if (data.refresh) {
+          localStorage.setItem('refresh_token', data.refresh);
+        }
+        return true;
+      } else {
+        console.error('Invalid refresh response:', data);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      return false;
+    }
+  };
+
+  // Add global unhandled rejection handler for better error tracking
+  useEffect(() => {
+    // Create handler for unhandled promise rejections
+    const handleUnhandledRejection = (event) => {
+      console.error('Unhandled Promise Rejection:', event.reason);
+      console.error('Promise Stack:', event.promise);
+      
+      // If this is related to video tracking, add more context
+      if (event.reason && event.reason.message && 
+          (event.reason.message.includes('track') || 
+           event.reason.message.includes('video') || 
+           event.reason.message.includes('progress'))) {
+        console.error('This appears to be a video tracking error. Current video:', video?.VideoID);
+        console.error('Current progress tracking state:', progressTrackingRef.current);
+      }
+    };
+    
+    // Add listener
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    // Remove on cleanup
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, [video]);
+
+  // Fetch video quizzes
+  const fetchVideoQuizzes = async () => {
+    if (!video?.VideoID || !isAuthenticated) return;
+    
+    try {
+      const token = await getToken();
+      if (!token) {
+        console.warn("Authentication token not available for video quizzes");
+        return;
+      }
+      
+      // Video ID'sını kullanarak quizleri getir
+      const timestamp = Date.now();
+      const apiUrl = `/api/courses/videos/${video.VideoID}/quizzes?_=${timestamp}`;
+      console.log(`Fetching video quizzes from: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': token,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
+      });
+      
+      console.log(`Video quizzes API response status: ${response.status}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Video quizzes data:', data);
+        
+        // Video-specific quizzes'ları set et
+        if (data.quizzes && Array.isArray(data.quizzes)) {
+          setVideoQuizzes(data.quizzes);
+          console.log(`Found ${data.quizzes.length} video-specific quizzes`);
+        }
+        
+        // Course-level quizzes'ları da dahil et
+        if (data.courseQuizzes && Array.isArray(data.courseQuizzes)) {
+          setCourseQuizzes(data.courseQuizzes);
+          console.log(`Found ${data.courseQuizzes.length} course-level quizzes`);
+        }
+      } else {
+        console.warn('Failed to fetch video quizzes:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching video quizzes:', error);
+    }
+  };
+
+  // Add handler for manual completion
+  const handleMarkVideoComplete = async (videoId) => {
+    if (!videoId || !video) {
+      console.error("Invalid video ID or video object not available");
+      return;
+    }
+    try {
+      const loadingToastId = toast ? toast.loading("Saving your progress...") : null;
+      const token = await getToken();
+      if (!token) {
+        if (toast) toast.error("Authentication error. Please log in again.");
+        setError('Authentication required. Please log in to access this content.');
+        return;
+      }
+      const progressData = {
+        watchedPercentage: 100,
+        isCompleted: true,
+        lastPosition: video.Duration || 0,
+        viewDuration: 0,
+        timestamp: new Date().toISOString(),
+        trackingId: `manual-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+      };
+      const apiUrl = `/api/courses/videos/${videoId}/track?_=${Date.now()}`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+          'X-Tracking-ID': progressData.trackingId,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        body: JSON.stringify(progressData),
+        cache: 'no-store'
+      });
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error(`Error parsing response:`, parseError);
+        throw new Error(`Server response error: ${responseText}`);
+      }
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `Failed to mark video as complete (${response.status})`);
+      }
+      setUserVideoView(prev => ({
+        ...prev,
+        watchedPercentage: 100,
+        isCompleted: true,
+        lastPosition: video.Duration || 0,
+        lastUpdated: new Date().toISOString()
+      }));
+      if (data.courseCompletionPercentage !== undefined) {
+        setCourseProgress(data.courseCompletionPercentage);
+        setUserCourseProgress(prev => ({
+          ...prev,
+          completionPercentage: data.courseCompletionPercentage,
+          isCompleted: data.courseCompleted || false,
+          lastVideoId: videoId,
+          lastAccessDate: new Date().toISOString()
+        }));
+      }
+      if (loadingToastId && toast) toast.dismiss(loadingToastId);
+      if (toast) {
+        toast.success("Video marked as complete!");
+      } else {
+        alert("Video marked as complete!");
+      }
+    } catch (error) {
+      console.error('Error marking video as complete:', error);
+      if (toast) {
+        toast.error(`Failed to mark video as complete: ${error.message}`);
+      } else {
+        alert(`Failed to mark video as complete. Please try again.\nError: ${error.message}`);
+      }
+    }
+  };
+
+  // Fetch quizzes when tab changes to Course Content
+  useEffect(() => {
+    const loadQuizzes = async () => {
+      if (selectedTab === 1 && courseId) {
+        try {
+          const token = await getToken();
+          if (!token) return;
+
+          const response = await fetch(`/api/courses/${courseId}/quizzes?t=${Date.now()}`, {
+            headers: {
+              'Authorization': token,
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            },
+            cache: 'no-store'
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data.quizzes)) {
+              setQuizzes(data.quizzes);
+            }
+          } else {
+            console.warn('Failed to fetch course quizzes:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error loading course quizzes:', error);
+        }
+      }
+    };
+
+    loadQuizzes();
+  }, [selectedTab, courseId]);
+
+  // Main render - video content with modern layout
     return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
+    <Box sx={{ 
+      bgcolor: 'background.default', 
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Header with course title and back button */}
         <Box 
           sx={{ 
             display: 'flex', 
-            justifyContent: 'center', 
+          justifyContent: 'space-between', 
             alignItems: 'center', 
-            height: '70vh', 
-            flexDirection: 'column' 
-          }}
-        >
-          <CircularProgress 
-            size={60} 
-            thickness={5} 
-            sx={{ 
-              color: theme.palette.secondary.main,
-              mb: 3
-            }} 
-          />
-          <Typography variant="h6" sx={{ mb: 1 }}>Loading video...</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Preparing your learning experience
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
-  
-  if (error) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 4, 
-            borderRadius: 2,
-            border: `1px solid ${theme.palette.error.light}`,
-            background: alpha(theme.palette.error.light, 0.05)
-          }}
-        >
-          <Typography variant="h5" color="error" gutterBottom>
-            Error Loading Video
-          </Typography>
-          <Typography variant="body1">
-            {error}
-          </Typography>
-          <Button 
-            variant="outlined" 
-            color="primary" 
-            sx={{ mt: 2 }} 
-            onClick={handleBackToCourse}
-            startIcon={<ArrowBackIcon />}
-          >
-            Back to Course
-          </Button>
-        </Paper>
-      </Container>
-    );
-  }
-  
-  if (!video || !course) {
-    return (
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
-        <Paper 
-          elevation={2} 
-          sx={{ 
-            p: 4, 
-            borderRadius: 2 
-          }}
-        >
-          <Typography variant="h5" color="error" gutterBottom>
-            Video Not Found
-          </Typography>
-          <Typography variant="body1">
-            The requested video could not be found.
-          </Typography>
-          <Button 
-            variant="outlined" 
-            color="primary" 
-            sx={{ mt: 2 }} 
-            onClick={handleBackToCourse}
-            startIcon={<ArrowBackIcon />}
-          >
-            Back to Course
-          </Button>
-        </Paper>
-      </Container>
-    );
-  }
-  
-  return (
-    <>
-      <AnimatedBackground />
-      
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 8, position: 'relative', zIndex: 1 }}>
-        {/* Top title and navigation */}
-        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          pt: { xs: 2, md: 3 },
+          pb: { xs: 1, md: 2 },
+          px: { xs: 2, md: 4 },
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        }}
+      >
           <Button
             variant="text"
             color="primary"
             startIcon={<ArrowBackIcon />}
-            onClick={handleBackToCourse}
+          onClick={() => router.push(`/courses/${courseId}`)}
             sx={{ 
               borderRadius: 2,
               '&:hover': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.05)
+              bgcolor: alpha(theme.palette.primary.main, 0.05)
               }
             }}
           >
@@ -845,7 +1632,6 @@ export default function VideoPage({ params }) {
           <Typography 
             variant="h6" 
             sx={{ 
-              color: theme.palette.mode === 'dark' ? theme.palette.primary.light : theme.palette.primary.main,
               display: { xs: 'none', sm: 'block' },
               fontWeight: 600,
               background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
@@ -853,21 +1639,19 @@ export default function VideoPage({ params }) {
               WebkitTextFillColor: 'transparent'
             }}
           >
-            {course.Title}
+          {courseData?.Title || 'Course'}
           </Typography>
           
-          {userView && userView.earnedPoints > 0 && (
+          {userVideoView && userVideoView.earnedPoints > 0 && (
             <Chip
               icon={<EmojiEventsIcon />}
-              label={`+${userView.earnedPoints} points`}
-              color="primary"
+            label={`+${userVideoView.earnedPoints} XP`}
+            color="secondary"
               variant="outlined"
               sx={{ 
                 fontWeight: 'bold',
                 borderRadius: 2,
-                borderColor: theme.palette.secondary.main,
-                color: theme.palette.secondary.main,
-                animation: userView.isCompleted ? 'pulse 2s infinite' : 'none',
+                animation: userVideoView.isCompleted ? 'pulse 2s infinite' : 'none',
                 '@keyframes pulse': {
                   '0%': { boxShadow: `0 0 0 0 ${alpha(theme.palette.secondary.main, 0.4)}` },
                   '70%': { boxShadow: `0 0 0 10px ${alpha(theme.palette.secondary.main, 0)}` },
@@ -878,566 +1662,758 @@ export default function VideoPage({ params }) {
           )}
         </Box>
         
-        <Grid container spacing={4}>
-          {/* Main Content - Video and Details */}
-          <Grid item xs={12} lg={8}>
-            {/* Video Player and Previous/Next Navigation */}
-            <Box sx={{ position: 'relative', mb: 3 }}>
-              {video && (
+      {/* Loading state */}
+      {loading && (
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+          <CircularProgress size={60} thickness={4} />
+        </Box>
+      )}
+
+      {/* Error state */}
+      {error && !loading && (
+        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+          <Paper elevation={2} sx={{ p: 4, maxWidth: 500, textAlign: 'center' }}>
+            <Typography variant="h5" color="error" gutterBottom>
+              Error Loading Content
+            </Typography>
+            <Typography variant="body1" paragraph>
+              {error}
+            </Typography>
+            <Button variant="contained" onClick={() => router.push(`/courses/${courseId}`)}>
+              Return to Course
+            </Button>
+          </Paper>
+        </Box>
+      )}
+        
+      {/* Main content area - only show if not loading and no error */}
+      {!loading && !error && video && (
+        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Video Player - Full width */}
+          <Box sx={{ 
+            width: '100%', 
+            bgcolor: 'black',
+            position: 'relative',
+            mb: { xs: 2, md: 3 },
+            zIndex: 1
+          }}>
+            <Box sx={{ 
+              width: '100%',
+              maxWidth: '1400px', 
+              mx: 'auto',
+              position: 'relative'
+            }}>
+              {video?.YouTubeVideoID ? (
                 <VideoPlayer 
-                  videoId={video.YouTubeVideoID} 
-                  onProgress={trackProgress} 
-                  initialProgress={(userView?.watchedPercentage || 0) * video.Duration / 100}
+                  video={video} 
+                  onVideoProgress={handleVideoProgress}
+                  userView={userVideoView} 
                 />
+              ) : (
+                <Box sx={{ 
+                  width: '100%',
+                  paddingTop: '56.25%',
+                  bgcolor: 'grey.800',
+                  position: 'relative',
+                  borderRadius: 1 
+                }}>
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0, 
+                    bottom: 0, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center' 
+                  }}>
+                    <Typography variant="body1" color="grey.400">
+                      Video not available
+                    </Typography>
+                  </Box>
+                </Box>
               )}
-              
-              {/* Previous/Next Video Navigation */}
+            </Box>
+          </Box>
+
+          {/* Video Player section ends */}
+
+          {/* Structured Container Layout Below Video */}
+          <Container 
+            maxWidth="xl" 
+            sx={{
+              mb: 5, 
+              position: 'relative',
+              zIndex: 2,
+              px: { xs: 2, md: 4 },
+              width: '100%'
+            }}
+          >
+            {/* Video Title and Actions */}
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center',
+              mb: 3,
+              width: '100%',
+              position: 'relative'
+            }}>
+              {/* Share and Bookmark buttons - top right */}
               <Box 
                 sx={{ 
-                  position: 'absolute', 
-                  bottom: 20, 
-                  left: 0, 
-                  right: 0, 
-                  display: 'flex', 
-                  justifyContent: 'center', 
-                  gap: 2,
-                  zIndex: 2
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  display: 'flex',
+                  gap: 1
                 }}
               >
-                <Tooltip title={hasPreviousVideo ? "Previous Video" : "This is the first video"}>
-                  <span>
-                    <IconButton
-                      disabled={!hasPreviousVideo}
-                      onClick={handlePreviousVideo}
-                      sx={{
-                        bgcolor: alpha(theme.palette.background.paper, 0.8),
-                        '&:hover': {
-                          bgcolor: theme.palette.background.paper,
-                        },
-                        '&.Mui-disabled': {
-                          bgcolor: alpha(theme.palette.background.paper, 0.4),
-                        },
-                        boxShadow: theme.shadows[3]
-                      }}
-                    >
-                      <NavigateBeforeIcon />
-                    </IconButton>
-                  </span>
+                <Tooltip title="Share">
+                  <IconButton 
+                    color="primary"
+                    sx={{ 
+                      '&:hover': {
+                        bgcolor: alpha(theme.palette.primary.main, 0.1)
+                      }
+                    }}
+                  >
+                    <ShareIcon />
+                  </IconButton>
                 </Tooltip>
                 
-                <Tooltip title={hasNextVideo ? "Next Video" : "This is the last video"}>
-                  <span>
-                    <IconButton
-                      disabled={!hasNextVideo}
-                      onClick={handleNextVideo}
-                      sx={{
-                        bgcolor: alpha(theme.palette.background.paper, 0.8),
-                        '&:hover': {
-                          bgcolor: theme.palette.background.paper,
-                        },
-                        '&.Mui-disabled': {
-                          bgcolor: alpha(theme.palette.background.paper, 0.4),
-                        },
-                        boxShadow: theme.shadows[3]
-                      }}
-                    >
-                      <NavigateNextIcon />
-                    </IconButton>
-                  </span>
+                <Tooltip title={isBookmarked ? "Remove Bookmark" : "Add Bookmark"}>
+                  <IconButton 
+                    onClick={toggleBookmark}
+                    color={isBookmarked ? "secondary" : "primary"}
+                    sx={{ 
+                      '&:hover': {
+                        bgcolor: isBookmarked 
+                          ? alpha(theme.palette.secondary.main, 0.1) 
+                          : alpha(theme.palette.primary.main, 0.1)
+                      }
+                    }}
+                  >
+                    {isBookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                  </IconButton>
                 </Tooltip>
               </Box>
-            </Box>
-            
-            {/* Video Title and Controls */}
-            <Paper 
-              elevation={2}
-              sx={{
-                p: 3,
-                borderRadius: 2,
-                mb: 3,
-                position: 'relative',
-                overflow: 'hidden',
-                backgroundColor: theme.palette.background.paper
-              }}
-            >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Typography variant="h5" component="h1" fontWeight="bold">
-                  {video.Title}
+
+              <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+                <Typography 
+                  variant="h4" 
+                  component="h1" 
+                  align="center"
+                  sx={{ 
+                    fontWeight: 'bold',
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+                  }}
+                >
+                  {video?.Title || 'Video Title'}
                 </Typography>
-                
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Tooltip title="Share">
-                    <IconButton 
-                      size="small" 
-                      sx={{ 
-                        color: theme.palette.text.secondary,
-                        '&:hover': {
-                          color: theme.palette.primary.main
-                        }
-                      }}
-                    >
-                      <ShareIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Tooltip title={isBookmarked ? "Remove Bookmark" : "Add Bookmark"}>
-                    <IconButton 
-                      size="small" 
-                      onClick={toggleBookmark}
-                      sx={{ 
-                        color: isBookmarked ? theme.palette.primary.main : theme.palette.text.secondary,
-                        '&:hover': {
-                          color: theme.palette.primary.main
-                        }
-                      }}
-                    >
-                      {isBookmarked ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
-                    </IconButton>
-                  </Tooltip>
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 2, mt: 2 }}>
+                  {/* Previous Video Button */}
+                  {courseVideos && courseVideos.length > 0 && 
+                    courseVideos.findIndex(v => v.VideoID === video.VideoID) > 0 && (
+                      <IconButton
+                        color="primary"
+                        onClick={() => {
+                          const currentIndex = courseVideos.findIndex(v => v.VideoID === video.VideoID);
+                          if (currentIndex > 0) {
+                            router.push(`/courses/${courseId}/videos/${courseVideos[currentIndex - 1].VideoID}`);
+                          }
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.2),
+                          }
+                        }}
+                      >
+                        <ArrowBackIcon />
+                      </IconButton>
+                    )}
+                  {/* Next Video Button (arrow) */}
+                  {courseVideos && courseVideos.length > 0 && 
+                    courseVideos.findIndex(v => v.VideoID === video.VideoID) < courseVideos.length - 1 && (
+                      <IconButton
+                        color="primary"
+                        onClick={() => {
+                          const currentIndex = courseVideos.findIndex(v => v.VideoID === video.VideoID);
+                          if (currentIndex < courseVideos.length - 1) {
+                            router.push(`/courses/${courseId}/videos/${courseVideos[currentIndex + 1].VideoID}`);
+                          }
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.2),
+                          }
+                        }}
+                      >
+                        <ChevronRightIcon />
+                      </IconButton>
+                    )}
                 </Box>
               </Box>
               
-              {/* Progress indicator */}
-              {userView && (
-                <Box sx={{ mb: 3 }}>
-                  {userView.isCompleted ? (
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      color: theme.palette.success.main, 
-                      mb: 1,
-                      p: 1,
-                      borderRadius: 1,
-                      bgcolor: alpha(theme.palette.success.main, 0.1)
-                    }}>
-                      <CheckCircleIcon sx={{ mr: 1 }} />
-                      <Typography variant="body1" fontWeight="medium">
-                        Completed
-                      </Typography>
-                      
-                      {userView.earnedPoints > 0 && (
-                        <Chip 
-                          size="small" 
-                          icon={<EmojiEventsIcon />} 
-                          label={`+${userView.earnedPoints} points`} 
-                          color="primary" 
-                          sx={{ ml: 'auto' }}
-                        />
-                      )}
-                    </Box>
-                  ) : (
-                    <>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        mb: 1 
-                      }}>
-                        <Typography variant="body2">
-                          {Math.round(userView.watchedPercentage)}% completed
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {formatTime(playerState.currentTime)} / {formatTime(video.Duration)}
-                        </Typography>
-                      </Box>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={userView.watchedPercentage} 
-                        sx={{ 
-                          height: 8, 
-                          borderRadius: 4,
-                          mb: 1,
-                          backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                          '& .MuiLinearProgress-bar': {
-                            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+              {/* Completion Button and Next Video Navigation */}
+              <Box sx={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 2,
+                mb: 3,
+                mt: 5,
+                width: '100%'
+              }}>
+                {/* Previous Video Button (far left) */}
+                <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
+                  {courseVideos && courseVideos.length > 0 &&
+                    courseVideos.findIndex(v => v.VideoID === video.VideoID) > 0 && (
+                      <IconButton
+                        color="primary"
+                        onClick={() => {
+                          const currentIndex = courseVideos.findIndex(v => v.VideoID === video.VideoID);
+                          if (currentIndex > 0) {
+                            router.push(`/courses/${courseId}/videos/${courseVideos[currentIndex - 1].VideoID}`);
                           }
-                        }} 
-                      />
-                    </>
+                        }}
+                        sx={{
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.2),
+                          }
+                        }}
+                      >
+                        <ArrowBackIcon />
+                      </IconButton>
+                    )}
+                </Box>
+                {/* Completion Button or Message (centered) */}
+                <Box sx={{ flex: 2, display: 'flex', justifyContent: 'center' }}>
+                  {!userVideoView?.isCompleted ? (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="large"
+                      startIcon={<CheckCircleIcon />}
+                      onClick={() => handleMarkVideoComplete(video.VideoID)}
+                      sx={{
+                        py: 1.5,
+                        px: 4,
+                        borderRadius: 2,
+                        boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        letterSpacing: 1,
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
+                          boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+                          transform: 'translateY(-2px)'
+                        },
+                        transition: 'all 0.3s ease',
+                        width: { xs: '100%', sm: '400px' },
+                        mb: 1
+                      }}
+                    >
+                      Mark Video Complete
+                    </Button>
+                  ) : (
+                    <Paper
+                      elevation={1}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                        width: { xs: '100%', sm: '400px' },
+                        mb: 1
+                      }}
+                    >
+                      <CheckCircleIcon color="success" sx={{ mr: 1 }} />
+                      <Typography variant="body1" color="success.main" fontWeight="500">
+                        Video completed!
+                      </Typography>
+                    </Paper>
                   )}
                 </Box>
-              )}
-              
-              <Divider sx={{ my: 2 }} />
-              
-              {/* Video metadata and info */}
-              <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={6} md={3}>
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      borderRadius: 2, 
-                      textAlign: 'center',
-                      bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Box 
-                      sx={{ 
-                        width: 36, 
-                        height: 36, 
-                        borderRadius: '50%', 
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        color: theme.palette.primary.main,
-                        mx: 'auto',
-                        mb: 1
-                      }}
-                    >
-                      <AccessTimeIcon fontSize="small" />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Duration
-                    </Typography>
-                    <Typography variant="subtitle2" fontWeight="medium">
-                      {formatTime(video.Duration)}
-                    </Typography>
-                  </Box>
-                </Grid>
-                
-                <Grid item xs={6} md={3}>
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      borderRadius: 2, 
-                      textAlign: 'center',
-                      bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Box 
-                      sx={{ 
-                        width: 36, 
-                        height: 36, 
-                        borderRadius: '50%', 
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        color: theme.palette.primary.main,
-                        mx: 'auto',
-                        mb: 1
-                      }}
-                    >
-                      <OndemandVideoIcon fontSize="small" />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Lesson
-                    </Typography>
-                    <Typography variant="subtitle2" fontWeight="medium">
-                      {video.OrderInCourse} / {courseVideos.length}
-                    </Typography>
-                  </Box>
-                </Grid>
-                
-                <Grid item xs={6} md={3}>
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      borderRadius: 2, 
-                      textAlign: 'center',
-                      bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Box 
-                      sx={{ 
-                        width: 36, 
-                        height: 36, 
-                        borderRadius: '50%', 
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        color: theme.palette.primary.main,
-                        mx: 'auto',
-                        mb: 1
-                      }}
-                    >
-                      <QuizIcon fontSize="small" />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Quizzes
-                    </Typography>
-                    <Typography variant="subtitle2" fontWeight="medium">
-                      {quizzes.length}
-                    </Typography>
-                  </Box>
-                </Grid>
-                
-                <Grid item xs={6} md={3}>
-                  <Box 
-                    sx={{ 
-                      p: 1.5, 
-                      borderRadius: 2, 
-                      textAlign: 'center',
-                      bgcolor: alpha(theme.palette.primary.main, 0.05),
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Box 
-                      sx={{ 
-                        width: 36, 
-                        height: 36, 
-                        borderRadius: '50%', 
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        color: theme.palette.primary.main,
-                        mx: 'auto',
-                        mb: 1
-                      }}
-                    >
-                      <NoteIcon fontSize="small" />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Resources
-                    </Typography>
-                    <Typography variant="subtitle2" fontWeight="medium">
-                      {resources.length}
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-              
-              {/* Video Description */}
-              {video.Description && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="h6" gutterBottom fontWeight="medium">
-                    Description
-                  </Typography>
-                  <Typography 
-                    variant="body1" 
-                    sx={{ 
-                      color: theme.palette.text.secondary,
-                      lineHeight: 1.7,
-                      mb: 2
-                    }}
-                  >
-                    {video.Description}
-                  </Typography>
+                {/* Next Video Button (far right) */}
+                <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                  {courseVideos && courseVideos.length > 0 &&
+                    courseVideos.findIndex(v => v.VideoID === video.VideoID) < courseVideos.length - 1 && (
+                      <IconButton
+                        color="primary"
+                        onClick={() => {
+                          const currentIndex = courseVideos.findIndex(v => v.VideoID === video.VideoID);
+                          if (currentIndex < courseVideos.length - 1) {
+                            router.push(`/courses/${courseId}/videos/${courseVideos[currentIndex + 1].VideoID}`);
+                          }
+                        }}
+                        sx={{
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.2),
+                          }
+                        }}
+                      >
+                        <ChevronRightIcon />
+                      </IconButton>
+                    )}
                 </Box>
-              )}
-              
-              {/* Navigation Buttons */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  disabled={!hasPreviousVideo}
-                  onClick={handlePreviousVideo}
-                  startIcon={<NavigateBeforeIcon />}
-                  sx={{ 
-                    borderRadius: 2,
-                    visibility: hasPreviousVideo ? 'visible' : 'hidden',
-                    '&:hover': {
-                      bgcolor: alpha(theme.palette.primary.main, 0.05)
+              </Box>
+            </Box>
+
+            {/* Progress indicator */}
+            {userVideoView && (
+              <Box sx={{ mb: 3, width: '100%' }}>
+                
+                {/* Course progress indicator */}
+                {userCourseProgress && userCourseProgress.completionPercentage > 0 && (
+                  <Box sx={{ width: '100%' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Overall course progress
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium">
+                        {Math.round(userCourseProgress.completionPercentage)}%
+                      </Typography>
+                    </Box>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={userCourseProgress.completionPercentage} 
+                      sx={{ 
+                        height: 8, 
+                        borderRadius: 2,
+                        bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                        '& .MuiLinearProgress-bar': {
+                          borderRadius: 2,
+                          bgcolor: theme.palette.secondary.main
+                        }
+                      }}
+                    />
+                    
+                    {userCourseProgress.completionPercentage === 100 && (
+                      <Alert 
+                        severity="success" 
+                        icon={<EmojiEventsIcon />} 
+                        sx={{ 
+                          mt: 2, 
+                          borderRadius: 2,
+                          animation: 'fadeIn 1s ease-in'
+                        }}
+                      >
+                        <AlertTitle>Course Completed!</AlertTitle>
+                        Congratulations! You've completed this entire course.
+                      </Alert>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            )}
+            
+            {/* Tabs navigation */}
+            <Paper 
+              elevation={0} 
+                    sx={{ 
+                      borderRadius: 2, 
+                overflow: 'hidden',
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                mb: 3,
+                width: '100%'
+              }}
+            >
+              <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '100%' }}>
+                <Tabs 
+                  value={selectedTab} 
+                  onChange={handleTabChange}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                      sx={{ 
+                    width: '100%',
+                    '& .MuiTabs-indicator': {
+                      backgroundColor: theme.palette.secondary.main,
+                      height: 3
+                    },
+                    '& .MuiTab-root': {
+                      fontWeight: 'medium',
+                      fontSize: '1rem',
+                      textTransform: 'none',
+                      minWidth: { xs: 120, sm: 160 },
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        color: theme.palette.primary.main,
+                      },
+                      '&.Mui-selected': {
+                        color: theme.palette.secondary.main,
+                        fontWeight: 'bold',
+                      },
                     }
                   }}
                 >
-                  Previous
-                </Button>
+                  <Tab 
+                    label="Video Information" 
+                    icon={<InfoOutlinedIcon />} 
+                    iconPosition="start"
+                  />
+                  <Tab 
+                    label="Course Content" 
+                    icon={<MenuBookIcon />} 
+                    iconPosition="start"
+                  />
+                  <Tab 
+                    label="Resources" 
+                    icon={<DescriptionIcon />} 
+                    iconPosition="start"
+                  />
+                  {/* Sadece quiz varsa tab'ı göster */}
+                  {((videoQuizzes && videoQuizzes.length > 0) || 
+                    (courseQuizzes && courseQuizzes.length > 0) || 
+                    (quizzes && quizzes.length > 0)) && (
+                    <Tab 
+                      label={`Quizzes (${(videoQuizzes?.length || 0) + (courseQuizzes?.length || 0) + (quizzes?.length || 0)})`}
+                      icon={<QuizIcon />} 
+                      iconPosition="start"
+                    />
+                  )}
+                </Tabs>
+                    </Box>
+              
+              {/* Tab content container */}
+              <Box sx={{ p: 3, width: '100%' }}>
+                {/* Tab 1: Video Information */}
+                {selectedTab === 0 && (
+                  <Box sx={{ width: '100%' }}>
+                    <Box sx={{ width: '100%', mb: 3 }}>
+                      <Box 
+                        elevation={0} 
+                    sx={{ 
+                      borderRadius: 2, 
+                          overflow: 'hidden',
+                          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                          mb: 3,
+                          width: '100%',
+                          p: 3
+                        }}
+                      >
+                        <Box sx={{ mb: 3, width: '100%' }}>
+                          <Typography variant="h6" gutterBottom fontWeight="bold">
+                            About This Course
+                          </Typography>
+                          
+                          <Box sx={{ mb: 3, width: '100%' }}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              Overall Progress
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, width: '100%' }}>
+                              <LinearProgress
+                                variant="determinate"
+                                value={getCourseCompletionPercentage()}
+                      sx={{ 
+                                  flexGrow: 1,
+                                  mr: 2,
+                                  height: 8,
+                                  borderRadius: 4,
+                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                  '& .MuiLinearProgress-bar': {
+                                    bgcolor: theme.palette.success.main
+                                  }
+                                }}
+                              />
+                              <Typography variant="body2" fontWeight="bold">
+                                {getCourseCompletionPercentage()}%
+                              </Typography>
+                    </Box>
+                          </Box>
+                          
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                            <Box sx={{ minWidth: '150px', flex: '1 1 auto' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                  <SlideshowIcon color="primary" fontSize="small" />
+                                </ListItemIcon>
+                                <Typography variant="body2">
+                                  {courseVideos?.length || 0} Videos
+                    </Typography>
+                              </Box>
+                            </Box>
+                            
+                            <Box sx={{ minWidth: '150px', flex: '1 1 auto' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                  <QuizIcon color="primary" fontSize="small" />
+                                </ListItemIcon>
+                                <Typography variant="body2">
+                                  {quizzes?.length || 0} Quizzes
+                    </Typography>
+                  </Box>
+                            </Box>
+                            
+                            <Box sx={{ minWidth: '150px', flex: '1 1 auto' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                  <PeopleOutlineIcon color="primary" fontSize="small" />
+                                </ListItemIcon>
+                                <Typography variant="body2">
+                                  {enrolledStudents > 0 ? enrolledStudents : courseData?.EnrolledUsers || 0} Students Enrolled
+                                </Typography>
+                    </Box>
+                            </Box>
+                            
+                            <Box sx={{ minWidth: '150px', flex: '1 1 auto' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <ListItemIcon sx={{ minWidth: 36 }}>
+                                  <FormatListBulletedIcon color="primary" fontSize="small" />
+                                </ListItemIcon>
+                                <Typography variant="body2">
+                                  {courseData?.ModulesCount || 1} Modules
+                    </Typography>
+                  </Box>
+                            </Box>
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <Button 
+                            variant="contained" 
+                            color="primary"
+                            onClick={() => router.push(`/courses/${courseId}`)}
+                    sx={{ 
+                              py: 1,
+                              px: 3,
+                      borderRadius: 2, 
+                              textTransform: 'none',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            View Full Course
+                          </Button>
+                    </Box>
+                  </Box>
+                    </Box>
+                    
+                    {/* Render the rest of the tab content */}
+                  </Box>
+                )}
                 
+                {/* Tab 2: Course Content */}
+                {selectedTab === 1 && (
+                  <Box sx={{ width: '100%' }}>
+                    {courseData?.userProgress && (
+                      <Paper 
+                        elevation={1}
+                    sx={{ 
+                          p: 3, 
+                          mb: 3, 
+                          borderRadius: 2,
+                          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                          background: `linear-gradient(to right, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.95)})`
+                        }}
+                      >
+                        <Typography variant="h6" gutterBottom fontWeight="bold">
+                          Continue Watching
+                  </Typography>
+                        
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            Course Progress: {courseData.userProgress.completionPercentage || courseProgress}%
+                          </Typography>
+                          <LinearProgress
+                            variant="determinate"
+                            value={courseData.userProgress.completionPercentage || courseProgress}
+                  sx={{ 
+                              height: 6, 
+                              borderRadius: 3, 
+                              mb: 2,
+                              bgcolor: alpha(theme.palette.primary.main, 0.1),
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: theme.palette.success.main
+                              }
+                            }}
+                          />
+                        </Box>
+                        
+                        {courseData.userProgress.lastVideoID && courseData.userProgress.lastVideoID !== parseInt(videoId) && (
                 <Button
                   variant="contained"
                   color="primary"
-                  disabled={!hasNextVideo}
-                  onClick={handleNextVideo}
-                  endIcon={<NavigateNextIcon />}
+                            startIcon={<PlayArrowIcon />}
+                            onClick={() => router.push(`/courses/${courseId}/videos/${courseData.userProgress.lastVideoID}`)}
                   sx={{ 
                     borderRadius: 2,
-                    visibility: hasNextVideo ? 'visible' : 'hidden',
-                    background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                    '&:hover': {
-                      background: `linear-gradient(45deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
-                    },
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Next
+                              textTransform: 'none',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            Continue from Last Video
                 </Button>
-              </Box>
+                        )}
             </Paper>
-            
-            {/* Quizzes and Resources */}
-            <Stack spacing={3}>
-              {/* Quizzes Section */}
-              {quizzes && quizzes.length > 0 && (
-                <Paper 
-                  elevation={2} 
-                  sx={{ 
-                    p: 3, 
-                    borderRadius: 2,
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
+                    )}
+                    
                   <Typography variant="h6" gutterBottom fontWeight="bold">
-                    Quizzes
+                      Course Videos
                   </Typography>
                   
-                  <Typography variant="body2" color="text.secondary" paragraph>
-                    Complete these quizzes to test your knowledge and earn points
-                  </Typography>
-                  
-                  <Box sx={{ mt: 2 }}>
-                    {quizzes.map((quiz) => (
-                      <QuizCard 
-                        key={quiz.QuizID} 
-                        quiz={quiz} 
-                        onTakeQuiz={handleTakeQuiz} 
+                    {Array.isArray(courseVideos) && courseVideos.length > 0 ? (
+                      <Stack spacing={2} sx={{ width: '100%', mb: 3 }}>
+                        {courseVideos.map((courseVideo, index) => (
+                          <VideoListItem
+                            key={courseVideo.VideoID}
+                            video={courseVideo}
+                            index={index}
+                            currentVideo={video}
+                            isCompleted={userVideoView?.isCompleted || false}
+                            onVideoClick={(clickedVideoId) => router.push(`/courses/${courseId}/videos/${clickedVideoId}`)}
                       />
                     ))}
-                  </Box>
-                </Paper>
-              )}
-              
-              {/* Resources Section */}
+                      </Stack>
+                    ) : (
               <Paper 
-                elevation={2} 
+                        elevation={0}
                 sx={{ 
-                  p: 3, 
+                          p: 4, 
+                          textAlign: 'center',
                   borderRadius: 2,
-                  position: 'relative',
-                  overflow: 'hidden'
+                          bgcolor: alpha(theme.palette.background.paper, 0.6)
                 }}
               >
-                <Typography variant="h6" gutterBottom fontWeight="bold">
-                  Resources
+                        <Typography variant="body1" color="text.secondary">
+                          No videos available for this course yet
+                </Typography>
+                      </Paper>
+                    )}
+                  </Box>
+                )}
+
+                {/* Tab 3: Resources */}
+                {selectedTab === 2 && (
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                      Course Resources
                 </Typography>
                 
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  Download additional materials for this lesson
-                </Typography>
-                
-                <Box sx={{ mt: 2 }}>
-                  {resources.map((resource) => (
-                    <ResourceItem key={resource.id} resource={resource} />
-                  ))}
-                </Box>
-              </Paper>
+                    {resources && resources.length > 0 ? (
+                      <Stack spacing={2} sx={{ width: '100%' }}>
+                        {resources.map((resource, index) => (
+                          <ResourceItem key={index} resource={resource} />
+                        ))}
             </Stack>
-          </Grid>
-          
-          {/* Side panel - Course Videos */}
-          <Grid item xs={12} lg={4}>
-            <Box sx={{ position: 'sticky', top: 100 }}>
+                    ) : (
               <Paper 
-                elevation={3} 
+                        elevation={0}
                 sx={{ 
-                  p: 3, 
+                          p: 4, 
+                          textAlign: 'center',
                   borderRadius: 2,
-                  backgroundColor: theme.palette.mode === 'dark' 
-                    ? alpha(theme.palette.background.paper, 0.6)
-                    : theme.palette.background.paper,
-                  backdropFilter: 'blur(8px)',
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}
-              >
-                <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ mb: 2 }}>
-                  Course Content
+                          bgcolor: alpha(theme.palette.background.paper, 0.6)
+                        }}
+                      >
+                        <Typography variant="body1" color="text.secondary">
+                          No resources available for this course yet
                 </Typography>
-                
-                {/* Course Completion */}
-                <Box sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" color="text.secondary">Progress</Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {Math.round((courseVideos.filter(v => v.VideoID < video.VideoID || 
-                                               (v.VideoID === video.VideoID && userView?.isCompleted)).length / 
-                              courseVideos.length) * 100)}%
-                    </Typography>
+                      </Paper>
+                    )}
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={(courseVideos.filter(v => v.VideoID < video.VideoID || 
-                                        (v.VideoID === video.VideoID && userView?.isCompleted)).length / 
-                      courseVideos.length) * 100} 
-                    sx={{ 
-                      height: 8, 
-                      borderRadius: 4,
-                      mb: 1,
-                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                      '& .MuiLinearProgress-bar': {
-                        background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
-                      }
-                    }} 
-                  />
+                )}
+
+                {/* Tab 4: Quizzes */}
+                {selectedTab === 3 && (
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                      Quizzes
+                    </Typography>
+                    
+                    {/* Video-specific quizzes */}
+                    {videoQuizzes && videoQuizzes.length > 0 && (
+                      <Box sx={{ mb: 4 }}>
+                        <Typography variant="subtitle1" gutterBottom fontWeight="medium" color="primary">
+                          Video Quizzes
+                        </Typography>
+                        <Stack spacing={2} sx={{ width: '100%' }}>
+                          {videoQuizzes.map((quiz) => (
+                            <VideoQuiz 
+                              key={`video-quiz-${quiz.QuizID}`} 
+                              quiz={quiz} 
+                              canAccess={userVideoView?.isCompleted || userVideoView?.watchedPercentage >= 90}
+                            />
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                    
+                    {/* Course-level quizzes */}
+                    {courseQuizzes && courseQuizzes.length > 0 && (
+                      <Box sx={{ mb: 4 }}>
+                        <Typography variant="subtitle1" gutterBottom fontWeight="medium" color="secondary">
+                          Course Quizzes
+                        </Typography>
+                        <Stack spacing={2} sx={{ width: '100%' }}>
+                          {courseQuizzes.map((quiz) => (
+                            <VideoQuiz 
+                              key={`course-quiz-${quiz.QuizID}`} 
+                              quiz={quiz} 
+                              canAccess={true} // Course quizzes are always accessible
+                            />
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                    
+                    {/* Legacy quizzes from video object */}
+                    {quizzes && quizzes.length > 0 && (
+                      <Box sx={{ mb: 4 }}>
+                        <Typography variant="subtitle1" gutterBottom fontWeight="medium">
+                          Additional Quizzes
+                        </Typography>
+                        <Stack spacing={2} sx={{ width: '100%' }}>
+                          {quizzes.map((quiz) => (
+                            <VideoQuiz 
+                              key={`legacy-quiz-${quiz.QuizID}`} 
+                              quiz={quiz} 
+                              canAccess={userVideoView?.isCompleted || userVideoView?.watchedPercentage >= 90}
+                            />
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                    
+                    {/* No quizzes message */}
+                    {(!videoQuizzes || videoQuizzes.length === 0) && 
+                     (!courseQuizzes || courseQuizzes.length === 0) && 
+                     (!quizzes || quizzes.length === 0) && (
+                      <Paper 
+                        elevation={0}
+                        sx={{ 
+                          p: 4, 
+                          textAlign: 'center',
+                          borderRadius: 2,
+                          bgcolor: alpha(theme.palette.background.paper, 0.6)
+                        }}
+                      >
+                        <Typography variant="body1" color="text.secondary">
+                          No quizzes available for this video yet
+                        </Typography>
+                      </Paper>
+                    )}
+                  </Box>
+                )}
                 </Box>
-                
-                <Divider sx={{ mb: 2 }} />
-                
-                {/* Video list */}
-                <Box 
-                  sx={{ 
-                    maxHeight: { xs: 'auto', sm: 'calc(100vh - 350px)' }, 
-                    overflow: 'auto',
-                    pr: 1,
-                    mr: -1
-                  }}
-                >
-                  {courseVideos.map((courseVideo, index) => (
-                    <VideoListItem
-                      key={courseVideo.VideoID}
-                      video={courseVideo}
-                      index={index}
-                      currentVideo={video}
-                      isCompleted={courseVideo.VideoID < video.VideoID || (courseVideo.VideoID === video.VideoID && userView?.isCompleted)}
-                      onVideoClick={handleSelectVideo}
-                    />
-                  ))}
-                </Box>
-                
-                {/* Navigation buttons */}
-                <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    color="primary"
-                    sx={{ mt: 2, py: 1.5, borderRadius: 2 }}
-                    startIcon={<ArrowBackIcon />}
-                    onClick={handleBackToCourse}
-                  >
-                    Course Details
-                  </Button>
-                </Box>
-                
-                {/* Background decoration */}
-                <Box 
-                  sx={{ 
-                    position: 'absolute',
-                    top: -50,
-                    right: -50,
-                    width: 150,
-                    height: 150,
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.05)}, transparent 70%)`,
-                    zIndex: 0
-                  }} 
-                />
               </Paper>
-            </Box>
-          </Grid>
-        </Grid>
       </Container>
-    </>
+        </Box>
+      )}
+      {!loading && !error && video && (
+        <Container maxWidth="lg" sx={{ mb: 3 }}>
+          <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 2 }}>
+            {/* Empty box - completion UI moved to top */}
+          </Box>
+        </Container>
+      )}
+    </Box>
   );
 }

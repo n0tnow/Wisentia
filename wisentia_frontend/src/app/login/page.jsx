@@ -158,7 +158,7 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Lütfen email ve şifre girin');
+      setError('Please enter your email and password');
       return;
     }
     try {
@@ -205,11 +205,11 @@ export default function LoginPage() {
           }
         }, 200);
       } else {
-        setError(result.error || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
+        setError(result.error || 'Login failed. Please check your credentials.');
       }
     } catch (err) {
       console.error('Login hatası:', err);
-      setError('Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+      setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -223,7 +223,7 @@ export default function LoginPage() {
     try {
       // MetaMask kontrolü
       if (typeof window !== 'undefined' && typeof window.ethereum === 'undefined') {
-        throw new Error('MetaMask yüklü değil. Lütfen yükleyin ve tekrar deneyin.');
+        throw new Error('MetaMask is not installed. Please install it and try again.');
       }
       
       // Cüzdan bağlantısı
@@ -231,7 +231,7 @@ export default function LoginPage() {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         
         if (accounts.length === 0) {
-          throw new Error('Hesap bulunamadı. Lütfen MetaMask\'ta bir hesap oluşturun.');
+          throw new Error('No accounts found. Please create an account in MetaMask.');
         }
         
         // Bağlantı sonrası yönlendirme
@@ -239,7 +239,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error('MetaMask bağlantı hatası:', err);
-      setError(err.message || 'MetaMask bağlantısı başarısız');
+      setError(err.message || 'MetaMask connection failed');
     } finally {
       setIsWalletConnecting(false);
     }
@@ -279,7 +279,7 @@ export default function LoginPage() {
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column' }}>
         <CircularProgress size={50} />
         <Typography variant="body1" sx={{ mt: 3 }}>
-          {redirectInProgress ? 'Yönlendiriliyor...' : 'Yükleniyor...'}
+          {redirectInProgress ? 'Redirecting...' : 'Loading...'}
         </Typography>
       </Box>
     );

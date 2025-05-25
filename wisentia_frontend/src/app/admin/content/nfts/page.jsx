@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 // MUI components
 import {
@@ -252,7 +253,7 @@ const ExpandableCard = ({ nft, onView, onEdit, onToggleActive, onDelete }) => {
               <Typography variant="caption" color="text.secondary">Owners</Typography>
               <Box>
                 <Chip 
-                  label={nft.OwnedCount || 0} 
+                  label={nft.OwnersCount || 0} 
                   variant="outlined" 
                   size="small"
                   color="primary"
@@ -313,18 +314,6 @@ const ExpandableCard = ({ nft, onView, onEdit, onToggleActive, onDelete }) => {
                   {nft.IsActive ? <DeactivateIcon fontSize="small" /> : <ActivateIcon fontSize="small" />}
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Delete NFT">
-                <IconButton 
-                  size="small" 
-                  color="error"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(nft.NFTID);
-                  }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
             </Box>
           </Box>
         </CardContent>
@@ -355,6 +344,33 @@ export default function NFTsManagementPage() {
   
   const { user } = useAuth();
   const router = useRouter();
+
+  // Add NFT type mapping functions
+  const mapTypeStringToId = (typeString) => {
+    if (!typeString) return 1; // Default to standard type
+    
+    switch (typeString.toLowerCase()) {
+      case 'subscription': return 1;
+      case 'achievement': return 2;
+      case 'quest_reward': case 'reward': return 3;
+      case 'course_completion': return 4;
+      case 'tradable': return 5;
+      default: return 1; // Default to standard type
+    }
+  };
+
+  const mapTypeIdToString = (typeId) => {
+    if (!typeId) return 'standard';
+    
+    switch (Number(typeId)) {
+      case 1: return 'subscription';
+      case 2: return 'achievement';
+      case 3: return 'quest_reward';
+      case 4: return 'course_completion';
+      case 5: return 'tradable';
+      default: return 'standard';
+    }
+  };
 
   // Update page size based on screen size
   useEffect(() => {
@@ -388,117 +404,39 @@ export default function NFTsManagementPage() {
   
         const data = await response.json();
         
-        // Backend yanıtını dönüştür
-        // Bazı sahte veri hazırlayalım (gerçek API entegrasyonu için bunu silebilirsiniz)
-        const mockNFTs = [
-          {
-            NFTID: 1,
-            Title: "Premium Membership NFT",
-            Description: "Grants 30 days of premium access to all courses",
-            NFTType: "subscription",
-            Rarity: "rare", 
-            TradeValue: 500,
-            SubscriptionDays: 30,
-            IsActive: true,
-            OwnedCount: 128,
-            ImageURL: "/images/nfts/premium-membership.png",
-            IsLimited: false
-          },
-          {
-            NFTID: 2,
-            Title: "Master Developer Badge",
-            Description: "Proof of completion of the Master Developer pathway",
-            NFTType: "reward",
-            Rarity: "epic", 
-            TradeValue: 1000,
-            SubscriptionDays: 0,
-            IsActive: true,
-            OwnedCount: 45,
-            ImageURL: "/images/nfts/master-developer.png",
-            IsLimited: true
-          },
-          {
-            NFTID: 3,
-            Title: "Blockchain Pioneer",
-            Description: "Early adopter badge for blockchain courses",
-            NFTType: "reward",
-            Rarity: "legendary", 
-            TradeValue: 2500,
-            SubscriptionDays: 0,
-            IsActive: true,
-            OwnedCount: 12,
-            ImageURL: "/images/nfts/blockchain-pioneer.png",
-            IsLimited: true
-          },
-          {
-            NFTID: 4,
-            Title: "AI Researcher Pass",
-            Description: "Access to AI research tools and courses",
-            NFTType: "subscription",
-            Rarity: "uncommon", 
-            TradeValue: 350,
-            SubscriptionDays: 60,
-            IsActive: false,
-            OwnedCount: 78,
-            ImageURL: "/images/nfts/ai-researcher.png",
-            IsLimited: false
-          },
-          {
-            NFTID: 5,
-            Title: "Cybersecurity Expert",
-            Description: "Advanced certification for cybersecurity experts",
-            NFTType: "reward",
-            Rarity: "rare", 
-            TradeValue: 800,
-            SubscriptionDays: 0,
-            IsActive: true,
-            OwnedCount: 34,
-            ImageURL: "/images/nfts/cybersecurity-expert.png",
-            IsLimited: false
-          },
-        ];
-        
-        // API'den gelen veriye bakarak uygun format yapısını belirleyip kullan
-        // Şu aşamada backend henüz hazır değilse mock verileri kullanabiliriz
-        setNFTs(data.nfts || mockNFTs);
-        setTotalCount(data.totalCount || mockNFTs.length);
-        setLoading(false);
+        if (data && data.nfts) {
+          // Map backend fields to frontend expected format
+          const mappedNFTs = data.nfts.map(nft => ({
+            NFTID: nft.NFTID || nft.nftId,
+            Title: nft.Title || nft.title,
+            Description: nft.Description || nft.description,
+            ImageURI: nft.ImageURI || nft.imageUri,
+            TradeValue: nft.TradeValue || nft.tradeValue || nft.price || 0,
+            SubscriptionDays: nft.SubscriptionDays || nft.subscriptionDays || 0,
+            NFTTypeID: nft.NFTTypeID || nft.nftTypeId || mapTypeStringToId(nft.NFTType || nft.type),
+            NFTType: nft.NFTType || nft.type || mapTypeIdToString(nft.NFTTypeID || nft.nftTypeId),
+            Rarity: nft.Rarity || nft.rarity || 'Common',
+            Collection: nft.Collection || nft.collection || 'General',
+            BlockchainMetadata: nft.BlockchainMetadata || nft.blockchainMetadata || null,
+            CreationDate: nft.CreationDate || nft.creationDate || new Date().toISOString(),
+            // Ensure we correctly map the IsActive field with appropriate fallbacks
+            IsActive: nft.IsActive === undefined
+              ? (nft.isActive === undefined ? true : nft.isActive)
+              : nft.IsActive === 1 || nft.IsActive === true,
+            OwnersCount: nft.OwnedCount || nft.ownedCount || 0
+          }));
+          
+          console.log('Mapped NFTs data:', mappedNFTs);
+          setNFTs(mappedNFTs);
+          setTotalCount(data.totalCount || mappedNFTs.length);
+        } else {
+          console.error('Unexpected API response format:', data);
+          setError('Invalid data format received from API');
+        }
       } catch (err) {
-        console.error("NFT veri çekme hatası:", err);
-        setError(err.message);
-        
-        // Hata durumunda da mock verileri gösterelim (geliştirme aşamasında)
-        const mockNFTs = [
-          {
-            NFTID: 1,
-            Title: "Premium Membership NFT",
-            Description: "Grants 30 days of premium access to all courses",
-            NFTType: "subscription",
-            Rarity: "rare", 
-            TradeValue: 500,
-            SubscriptionDays: 30,
-            IsActive: true,
-            OwnedCount: 128,
-            ImageURL: "/images/nfts/premium-membership.png",
-            IsLimited: false
-          },
-          {
-            NFTID: 2,
-            Title: "Master Developer Badge",
-            Description: "Proof of completion of the Master Developer pathway",
-            NFTType: "reward",
-            Rarity: "epic", 
-            TradeValue: 1000,
-            SubscriptionDays: 0,
-            IsActive: true,
-            OwnedCount: 45,
-            ImageURL: "/images/nfts/master-developer.png",
-            IsLimited: true
-          },
-        ];
-        
-        setNFTs(mockNFTs);
-        setTotalCount(mockNFTs.length);
+        console.error('Failed to fetch NFTs:', err);
+        setError('Failed to fetch NFTs: ' + err.message);
+      } finally {
         setLoading(false);
       }
     };
@@ -509,12 +447,17 @@ export default function NFTsManagementPage() {
   }, [user, router, page, pageSize, searchTerm, typeFilter, rarityFilter, statusFilter]);
   
   const handleCreateNFT = () => {
-    router.push('/admin/nft/create');
+    router.push('/admin/content/nfts/create');
   };
 
   const handleToggleActive = async (id, isActive) => {
     try {
-      const response = await fetch(`/api/nfts/${id}`, {
+      // Show a loading message or indicator
+      setLoading(true);
+      
+      console.log(`Toggling NFT ${id} active status from ${isActive} to ${!isActive}`);
+      
+      const response = await fetch(`/api/admin/nfts/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -525,46 +468,63 @@ export default function NFTsManagementPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update NFT');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update NFT');
       }
 
-      // Update NFT in list
+      // Update NFT in list - ensure we're toggling the correct property
       setNFTs(nfts.map(nft => 
         nft.NFTID === id 
           ? { ...nft, IsActive: !isActive } 
           : nft
       ));
+      
+      setLoading(false);
+      
+      // Show success message
+      toast.success('NFT status updated successfully');
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      console.error('Failed to update NFT status:', err);
+      setError('Failed to update NFT: ' + err.message);
+      setLoading(false);
+      
+      // Show error message
+      toast.error(err.message || 'Failed to update NFT');
     }
   };
 
   const handleViewNFT = (id) => {
-    router.push(`/nfts/${id}`);
+    router.push(`/admin/content/nfts/view/${id}`);
   };
 
   const handleEditNFT = (id) => {
-    router.push(`/admin/nft/edit/${id}`);
+    router.push(`/admin/content/nfts/edit/${id}`);
   };
 
   const handleDeleteNFT = async (id) => {
     if (!confirm('Are you sure you want to delete this NFT?')) return;
     
     try {
-      const response = await fetch(`/api/nfts/${id}`, {
+      setLoading(true);
+      
+      const response = await fetch(`/api/admin/nfts/${id}`, {
         method: 'DELETE'
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete NFT');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete NFT');
       }
 
       // Remove NFT from list
       setNFTs(nfts.filter(nft => nft.NFTID !== id));
       // Update total count
       setTotalCount(prev => Math.max(0, prev - 1));
+      setLoading(false);
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      setLoading(false);
+      setError(err.message || 'Failed to delete NFT');
+      setTimeout(() => setError(null), 5000); // Clear error after 5 seconds
     }
   };
 
@@ -1068,7 +1028,7 @@ export default function NFTsManagementPage() {
                               </TableCell>
                               <TableCell>
                                 <Chip 
-                                  label={nft.OwnedCount || 0} 
+                                  label={nft.OwnersCount || 0} 
                                   variant="outlined" 
                                   size="small"
                                   color="primary"
@@ -1101,15 +1061,6 @@ export default function NFTsManagementPage() {
                                       onClick={() => handleToggleActive(nft.NFTID, nft.IsActive)}
                                     >
                                       {nft.IsActive ? <DeactivateIcon /> : <ActivateIcon />}
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Delete NFT">
-                                    <IconButton 
-                                      size="small" 
-                                      color="error"
-                                      onClick={() => handleDeleteNFT(nft.NFTID)}
-                                    >
-                                      <DeleteIcon />
                                     </IconButton>
                                   </Tooltip>
                                 </Box>

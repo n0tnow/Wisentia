@@ -1,19 +1,39 @@
 // src/components/admin/NFTImageUploader.jsx
 "use client";
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  CircularProgress, 
+  Alert,
+  IconButton,
+  useTheme,
+  alpha
+} from '@mui/material';
+import {
+  CloudUpload as UploadIcon,
+  Clear as ClearIcon,
+  Image as ImageIcon,
+  CheckCircle as CheckCircleIcon
+} from '@mui/icons-material';
 
 export default function NFTImageUploader({ onUploadSuccess }) {
+  const theme = useTheme();
+  const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Reset error
+    // Reset states
     setError(null);
+    setUploadSuccess(false);
     
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -45,30 +65,63 @@ export default function NFTImageUploader({ onUploadSuccess }) {
     setError(null);
     
     try {
+      console.log('Starting image upload process...');
       const formData = new FormData();
       formData.append('image', selectedFile);
+      
+      // Log the file being uploaded
+      console.log('Uploading file:', selectedFile.name, 'Size:', selectedFile.size, 'Type:', selectedFile.type);
       
       const response = await fetch('/api/files/nft-image/upload', {
         method: 'POST',
         body: formData,
       });
       
+      const responseText = await response.text();
+      console.log('Upload response status:', response.status);
+      console.log('Upload response text:', responseText);
+      
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        let errorMessage = 'Failed to upload image';
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error('Upload error details:', errorData);
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+        }
+        throw new Error(errorMessage);
       }
       
-      const data = await response.json();
+      // Parse response data
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Upload successful, received data:', data);
+      } catch (parseError) {
+        console.error('Failed to parse success response:', parseError);
+        throw new Error('Invalid response from server');
+      }
+      
+      // Set success state
+      setUploadSuccess(true);
+      
+      // Check if we have a valid URL in the response
+      if (!data?.url) {
+        console.error('No URL in upload response:', data);
+        throw new Error('Server did not return an image URL');
+      }
       
       // Call callback function with new image URL
-      if (onUploadSuccess && data.url) {
+      console.log('Calling onUploadSuccess with URL:', data.url);
+      if (onUploadSuccess) {
         onUploadSuccess(data.url);
       }
       
-      // Reset states
-      setSelectedFile(null);
-      setPreview(null);
     } catch (err) {
-      setError(err.message);
+      console.error('Image upload error:', err);
+      setError(err.message || 'Failed to upload image');
+      setUploadSuccess(false);
     } finally {
       setUploading(false);
     }
@@ -78,62 +131,169 @@ export default function NFTImageUploader({ onUploadSuccess }) {
     setSelectedFile(null);
     setPreview(null);
     setError(null);
+    setUploadSuccess(false);
+  };
+  
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
   };
 
   return (
-    <div className="space-y-4">
+    <Box className="space-y-4">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/jpeg,image/png,image/gif"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
+      
+      {/* Upload status messages */}
+      {error && (
+        <Alert 
+          severity="error" 
+          variant="outlined"
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => setError(null)}
+            >
+              <ClearIcon fontSize="inherit" />
+            </IconButton>
+          }
+          sx={{ mb: 3 }}
+        >
+          {error}
+        </Alert>
+      )}
+      
+      {uploadSuccess && (
+        <Alert 
+          severity="success"
+          variant="outlined"
+          icon={<CheckCircleIcon />}
+          sx={{ mb: 3 }}
+        >
+          Image uploaded successfully!
+        </Alert>
+      )}
+      
       {/* Preview Image */}
-      {preview && (
-        <div className="w-full mb-4">
+      {preview ? (
+        <Box sx={{ 
+          position: 'relative',
+          width: '100%',
+          mb: 3,
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: theme.shadows[3]
+        }}>
           <img 
             src={preview} 
             alt="Preview" 
-            className="max-h-64 max-w-full object-contain rounded border" 
+            style={{ 
+              width: '100%',
+              maxHeight: '280px',
+              objectFit: 'contain',
+              display: 'block',
+              backgroundColor: alpha(theme.palette.background.paper, 0.8)
+            }} 
           />
-        </div>
+          
+          {/* Cancel button */}
+          <IconButton 
+            sx={{ 
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              backgroundColor: alpha(theme.palette.background.paper, 0.7),
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.background.paper, 0.9),
+              }
+            }}
+            onClick={handleCancel}
+            aria-label="remove image"
+          >
+            <ClearIcon />
+          </IconButton>
+        </Box>
+      ) : (
+        <Box 
+          onClick={triggerFileInput}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '180px',
+            backgroundColor: alpha(theme.palette.primary.main, 0.04),
+            borderRadius: 2,
+            border: '2px dashed',
+            borderColor: alpha(theme.palette.primary.main, 0.2),
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            mb: 3,
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
+              borderColor: alpha(theme.palette.primary.main, 0.3),
+            }
+          }}
+        >
+          <ImageIcon sx={{ fontSize: 48, color: alpha(theme.palette.primary.main, 0.5), mb: 2 }} />
+          <Typography variant="body1" color="textSecondary" align="center">
+            Click to select an image
+          </Typography>
+          <Typography variant="caption" color="textSecondary" align="center" sx={{ mt: 1 }}>
+            JPG, PNG or GIF. Max size: 10MB
+          </Typography>
+        </Box>
       )}
       
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">NFT Image</label>
-        <div className="flex items-center">
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/gif"
-            onChange={handleFileChange}
-            className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded
-                      file:border-0 file:text-sm file:font-semibold file:bg-blue-50
-                      file:text-blue-700 hover:file:bg-blue-100"
-          />
-        </div>
-        <p className="mt-1 text-sm text-gray-500">
-          JPG, PNG or GIF. Max size: 10MB
-        </p>
-      </div>
-      
-      {error && (
-        <div className="text-red-600 text-sm">
-          {error}
-        </div>
-      )}
-      
-      {selectedFile && (
-        <div className="flex space-x-3">
-          <button
+      {/* Action Buttons */}
+      {selectedFile && !uploadSuccess && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+          <Button
             onClick={handleUpload}
             disabled={uploading}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400 text-sm"
+            variant="contained"
+            color="primary"
+            startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <UploadIcon />}
+            sx={{ 
+              minWidth: '140px',
+              borderRadius: '8px',
+              py: 1
+            }}
           >
             {uploading ? 'Uploading...' : 'Upload Image'}
-          </button>
-          <button
+          </Button>
+          
+          <Button
             onClick={handleCancel}
             disabled={uploading}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm"
+            variant="outlined"
+            color="secondary"
+            sx={{ borderRadius: '8px' }}
           >
             Cancel
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
-    </div>
+      
+      {/* Select new file button shown after success */}
+      {uploadSuccess && (
+        <Button
+          onClick={triggerFileInput}
+          variant="outlined"
+          color="primary"
+          startIcon={<ImageIcon />}
+          sx={{ borderRadius: '8px' }}
+        >
+          Select another image
+        </Button>
+      )}
+    </Box>
   );
 }

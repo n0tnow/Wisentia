@@ -4,17 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Dialog, 
   DialogContent, 
-  DialogTitle, 
+  DialogTitle,
   IconButton, 
   Box, 
   TextField, 
-  Button, 
   Typography, 
   Paper, 
-  Divider,
   List,
   ListItem,
-  ListItemText,
   ListItemAvatar,
   Avatar,
   CircularProgress,
@@ -27,23 +24,40 @@ import {
   Menu,
   MenuItem,
   InputAdornment,
-  Chip
+  Chip,
+  Button,
+  keyframes,
+  Zoom,
+  Grow,
+  Fade
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import ForumIcon from '@mui/icons-material/Forum';
 import HistoryIcon from '@mui/icons-material/History';
-import SchoolIcon from '@mui/icons-material/School';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import LockIcon from '@mui/icons-material/Lock';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import ChatMessage from './ChatMessage';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Keyframes for animations
+const pulse = keyframes`
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+`;
 
 // Transition for dialog
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -60,12 +74,44 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [showEndChatConfirm, setShowEndChatConfirm] = useState(false);
   const messagesEndRef = useRef(null);
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();
   
   const chatContentRef = useRef(null);
+  
+  // Generate gradient colors based on theme
+  const getGradient = () => {
+    return theme.palette.mode === 'dark' 
+      ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(20, 30, 70, 0.97))'
+      : 'linear-gradient(135deg, rgba(245, 250, 255, 0.95), rgba(230, 248, 255, 0.97))';
+  };
+  
+  // Get accent colors
+  const getAccentColor = (opacity = 1) => {
+    return theme.palette.mode === 'dark'
+      ? `rgba(56, 189, 248, ${opacity})`
+      : `rgba(6, 182, 212, ${opacity})`;
+  };
+  
+  // Restore session ID from localStorage on load
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('currentChatSessionId');
+    if (savedSessionId) {
+      console.log('Restoring session ID from localStorage:', savedSessionId);
+      setCurrentSessionId(parseInt(savedSessionId));
+    }
+  }, []);
+  
+  // Save session ID to localStorage when it changes
+  useEffect(() => {
+    if (currentSessionId) {
+      console.log('Saving session ID to localStorage:', currentSessionId);
+      localStorage.setItem('currentChatSessionId', currentSessionId.toString());
+    }
+  }, [currentSessionId]);
   
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -76,42 +122,60 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
   
   // Load messages when dialog opens or session changes
   useEffect(() => {
-    if (open && hasSubscription && isAuthenticated && activeTab === 0) {
+    if (open && activeTab === 0) {
       fetchMessages(currentSessionId);
     }
-  }, [open, currentSessionId, hasSubscription, isAuthenticated, activeTab]);
+  }, [open, currentSessionId, activeTab]);
   
   // Load sessions when dialog opens and history tab is selected
   useEffect(() => {
-    if (open && hasSubscription && isAuthenticated && activeTab === 1) {
+    if (open && activeTab === 1) {
       fetchSessions();
     }
-  }, [open, hasSubscription, isAuthenticated, activeTab]);
+  }, [open, activeTab]);
   
   // Fetch messages for current session
   const fetchMessages = async (sessionId) => {
-    if (!isAuthenticated || !hasSubscription) return;
-    
     try {
       setIsLoading(true);
       
-      const endpoint = sessionId 
-        ? `/api/chat/sessions/${sessionId}/` 
-        : '/api/chat/sessions/';
+      // Check authentication
+      if (!user) {
+        setMessages([{
+          messageId: 'login-required',
+          senderType: 'ai',
+          content: "You need to sign in to use Wisentia AI. Please login or create an account to continue.",
+          timestamp: new Date().toISOString()
+        }]);
+        setIsLoading(false);
+        return;
+      }
       
-      const response = await fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      if (!sessionId) {
+        // If no session ID, show welcome message
+        setMessages([
+          {
+            messageId: 'welcome',
+            senderType: 'ai',
+            content: "👋 Welcome to Wisentia AI! I'm here to help with your educational questions and guide you through your learning journey. Feel free to ask me about courses, quests, or any educational content.",
+            timestamp: new Date().toISOString()
+          }
+        ]);
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('Fetching messages for session:', sessionId);
+      
+      let url = `/api/normal-user/chat/sessions/${sessionId}`;
+      const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch messages');
+        throw new Error(`Failed to fetch messages: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('Received messages data:', data);
       
       if (data.messages && Array.isArray(data.messages)) {
         setMessages(data.messages);
@@ -121,15 +185,17 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
-      // If error occurs, show welcome message
-      setMessages([
-        {
-          messageId: 'welcome',
-          senderType: 'ai',
-          content: "👋 Welcome to Wisentia AI! I'm here to help with your learning journey. Feel free to ask me any questions about courses, quests, or educational content.",
-          timestamp: new Date().toISOString()
-        }
-      ]);
+      // If error occurs but we already have messages, preserve them
+      if (messages.length === 0) {
+        setMessages([
+          {
+            messageId: 'welcome',
+            senderType: 'ai',
+            content: "👋 Welcome to Wisentia AI! I'm here to help with your educational questions and guide you through your learning journey. Feel free to ask me about courses, quests, or any educational content.",
+            timestamp: new Date().toISOString()
+          }
+        ]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -137,30 +203,32 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
   
   // Fetch chat sessions
   const fetchSessions = async () => {
-    if (!isAuthenticated || !hasSubscription) return;
-    
     try {
       setLoadingSessions(true);
       
-      const response = await fetch('/api/chat/sessions/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
+      // Check authentication
+      if (!user) {
+        setSessions([]);
+        setLoadingSessions(false);
+        return;
+      }
+      
+      console.log('Fetching chat sessions');
+      const response = await fetch('/api/normal-user/chat/sessions');
       
       if (!response.ok) {
-        throw new Error('Failed to fetch sessions');
+        throw new Error(`Failed to fetch sessions: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('Received sessions data:', data);
       
       if (Array.isArray(data)) {
         setSessions(data);
       }
     } catch (error) {
       console.error('Error fetching sessions:', error);
+      setSessions([]);
     } finally {
       setLoadingSessions(false);
     }
@@ -168,7 +236,30 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
   
   // Send message
   const sendMessage = async () => {
-    if (!message.trim() || !isAuthenticated || !hasSubscription) return;
+    if (!message.trim()) return;
+    
+    // Check authentication
+    if (!user) {
+      setMessages([
+        ...messages,
+        {
+          messageId: 'user-not-auth',
+          senderType: 'user',
+          content: message,
+          timestamp: new Date().toISOString()
+        },
+        {
+          messageId: 'auth-required',
+          senderType: 'ai',
+          content: "You need to sign in to use Wisentia AI. Please login or create an account to continue.",
+          timestamp: new Date().toISOString()
+        }
+      ]);
+      setMessage('');
+      return;
+    }
+    
+    console.log('Using session ID:', currentSessionId);
     
     // Add user message to UI immediately
     const userMessage = {
@@ -178,28 +269,79 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
       timestamp: new Date().toISOString()
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    // Store current messages plus the new user message
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setMessage('');
     setIsTyping(true);
     
     try {
-      const response = await fetch('/api/chat/message/', {
+      // Get authentication token
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        // Handle missing token
+        setTimeout(() => {
+          setIsTyping(false);
+          setMessages([
+            ...updatedMessages, 
+            {
+              messageId: `error-auth-${Date.now()}`,
+              senderType: 'ai',
+              content: "Your session has expired. Please login again to continue using Wisentia AI.",
+              timestamp: new Date().toISOString()
+            }
+          ]);
+        }, 500);
+        return;
+      }
+      
+      // Format sessionId correctly (number instead of string)
+      const sessionIdValue = currentSessionId ? parseInt(currentSessionId) : null;
+      console.log('Sending message with sessionId:', sessionIdValue);
+      
+      const response = await fetch('/api/normal-user/chat/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           message: userMessage.content,
-          sessionId: currentSessionId
-        })
+          sessionId: sessionIdValue
+        }),
+        credentials: 'include'
       });
       
+      // Log response status
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        // Handle authentication errors
+        if (response.status === 401) {
+          setTimeout(() => {
+            setIsTyping(false);
+            setMessages([
+              ...updatedMessages, 
+              {
+                messageId: `error-auth-${Date.now()}`,
+                senderType: 'ai',
+                content: "Your session has expired. Please login again to continue using Wisentia AI.",
+                timestamp: new Date().toISOString()
+              }
+            ]);
+          }, 500);
+          return;
+        }
+        
+        throw new Error(`Failed to send message: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('Response data:', data);
       
       // Add AI response to messages
       if (data.message) {
@@ -213,22 +355,37 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
         // Short delay to simulate typing
         setTimeout(() => {
           setIsTyping(false);
-          setMessages(prev => [...prev, aiMessage]);
+          setMessages([...updatedMessages, aiMessage]);
         }, 500);
         
         // Update session ID if new
-        if (data.sessionId && !currentSessionId) {
+        if (data.sessionId && (!currentSessionId || currentSessionId !== data.sessionId)) {
+          console.log('Setting new session ID from response:', data.sessionId);
           setCurrentSessionId(data.sessionId);
         }
+      } else {
+        // Handle empty message response
+        setTimeout(() => {
+          setIsTyping(false);
+          setMessages([
+            ...updatedMessages, 
+            {
+              messageId: `error-empty-${Date.now()}`,
+              senderType: 'ai',
+              content: "I received an empty response. This might be a temporary issue. Please try again.",
+              timestamp: new Date().toISOString()
+            }
+          ]);
+        }, 500);
       }
     } catch (error) {
       console.error('Error sending message:', error);
       
-      // Add error message
+      // Add error message but preserve existing messages including user's message
       setTimeout(() => {
         setIsTyping(false);
-        setMessages(prev => [
-          ...prev, 
+        setMessages([
+          ...updatedMessages, 
           {
             messageId: `error-${Date.now()}`,
             senderType: 'ai',
@@ -260,42 +417,69 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
   };
   
   // End current session
+  // End current session - Düzeltilmiş fonksiyon
   const endCurrentSession = async () => {
-    if (!currentSessionId) return;
+    // Her durumda UI durumunu güncelle
+    setShowEndChatConfirm(false);
+    setMenuAnchorEl(null);
     
+    // Geçici olarak eski session ID'yi saklayalım
+    const oldSessionId = currentSessionId;
+    
+    // Hemen UI'ı güncelle - yeni oturum başlattığımızı göster
+    setCurrentSessionId(null);
+    localStorage.removeItem('currentChatSessionId');
+    
+    setMessages([
+      {
+        messageId: 'welcome-new',
+        senderType: 'ai',
+        content: "👋 Starting a new conversation. How can I help you today?",
+        timestamp: new Date().toISOString()
+      }
+    ]);
+    
+    // Eğer session ID yoksa daha fazla işlem yapma
+    if (!oldSessionId) return;
+    
+    // Arka planda session'ı sonlandırmaya çalış
     try {
-      const response = await fetch(`/api/chat/sessions/${currentSessionId}/end/`, {
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        console.log('No authentication token found, skipping end session API call');
+        return;
+      }
+      
+      console.log(`Background: Trying to end session ${oldSessionId}...`);
+      
+      // API'ye istek gönder, ancak UI'ı engelleme
+      fetch(`/api/normal-user/chat/sessions/${oldSessionId}/end`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      })
+      .then(response => {
+        if (response.ok) {
+          console.log(`Session ${oldSessionId} successfully ended on server`);
+        } else {
+          console.log(`Server couldn't end session ${oldSessionId} (status: ${response.status}), but new conversation started anyway`);
         }
+        
+        // Başarı durumunda geçmişi güncelle
+        if (activeTab === 1) {
+          fetchSessions();
+        }
+      })
+      .catch(error => {
+        console.log(`Error in background end session request: ${error.message}`);
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to end session');
-      }
-      
-      // Start a new session
-      setCurrentSessionId(null);
-      setMessages([
-        {
-          messageId: 'welcome-new',
-          senderType: 'ai',
-          content: "👋 Starting a new conversation. How can I help you today?",
-          timestamp: new Date().toISOString()
-        }
-      ]);
-      
-      // Refresh sessions list if in history tab
-      if (activeTab === 1) {
-        fetchSessions();
-      }
     } catch (error) {
-      console.error('Error ending session:', error);
+      console.log('Error preparing end session request:', error);
     }
-    
-    setMenuAnchorEl(null);
   };
   
   // Menu handlers
@@ -307,206 +491,121 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
     setMenuAnchorEl(null);
   };
   
-  // Subscription upgrade handler
-  const handleUpgradeClick = () => {
-    onClose();
-    router.push('/nfts?filter=subscription');
+  // Handle end chat button
+  const handleEndChatClick = () => {
+    setShowEndChatConfirm(true);
   };
   
-  // Render subscription prompt for non-subscribers
-  const renderSubscriptionPrompt = () => (
-    <Box sx={{ p: 3, textAlign: 'center' }}>
-      <Box
-        sx={{
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          margin: '0 auto 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: `linear-gradient(135deg, ${theme.palette.primary.light}, ${theme.palette.secondary.light})`,
-          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`
-        }}
-      >
-        <SmartToyIcon sx={{ fontSize: 40, color: 'white' }} />
-      </Box>
-      
-      <Typography variant="h5" gutterBottom fontWeight="bold">
-        Meet Wisentia AI Assistant
+  const handleCancelEndChat = () => {
+    setShowEndChatConfirm(false);
+  };
+  
+  // Handle login redirect
+  const handleLoginRedirect = () => {
+    onClose();
+    router.push('/login');
+  };
+  
+  // Render login required view
+  const renderLoginRequired = () => (
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      textAlign: 'center', 
+      height: '100%',
+      px: 3,
+      py: 6
+    }}>
+      <LockIcon sx={{ 
+        fontSize: 60, 
+        mb: 2, 
+        color: 'primary.main',
+        animation: `${pulse} 2s infinite ease-in-out`,
+      }} />
+      <Typography variant="h6" component="div" gutterBottom>
+        Sign in Required
       </Typography>
-      
-      <Typography variant="body1" color="textSecondary" paragraph sx={{ mb: 3 }}>
-        Get personalized learning support, course recommendations, and instant answers to your questions with our AI assistant.
+      <Typography variant="body2" component="div" color="textSecondary" paragraph sx={{ maxWidth: 300, mb: 3 }}>
+        You need to sign in to use Wisentia AI and access the chat features.
       </Typography>
-      
-      <Box sx={{ mb: 4 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            borderRadius: 2,
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            mb: 2
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <SchoolIcon color="primary" sx={{ mr: 1 }} />
-            <Typography variant="body2" fontWeight="medium">
-              Course Recommendations
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="textSecondary">
-            Get personalized course suggestions based on your interests and progress.
-          </Typography>
-        </Paper>
-        
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            borderRadius: 2,
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-            mb: 2
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <EventNoteIcon color="primary" sx={{ mr: 1 }} />
-            <Typography variant="body2" fontWeight="medium">
-              Quest Guidance
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="textSecondary">
-            Get help with completing quests and earning NFT rewards.
-          </Typography>
-        </Paper>
-        
-        <Paper
-          elevation={0}
-          sx={{
-            p: 2,
-            borderRadius: 2,
-            bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <HelpOutlineIcon color="primary" sx={{ mr: 1 }} />
-            <Typography variant="body2" fontWeight="medium">
-              24/7 Learning Support
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="textSecondary">
-            Ask questions and get instant explanations anytime.
-          </Typography>
-        </Paper>
-      </Box>
-      
-      <Button
-        variant="contained"
-        size="large"
-        onClick={handleUpgradeClick}
+      <Button 
+        variant="contained" 
+        color="primary"
+        onClick={handleLoginRedirect}
         sx={{
-          py: 1.5,
-          px: 4,
-          borderRadius: 2,
-          background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-          boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.4)}`,
-          transition: 'all 0.3s ease',
+          borderRadius: '20px',
+          px: 3,
+          py: 1,
+          fontWeight: 'bold',
+          transform: 'scale(1)',
+          transition: 'all 0.3s',
+          background: `linear-gradient(90deg, ${getAccentColor()}, ${theme.palette.primary.main})`,
+          boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.3)}`,
           '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.6)}`
+            transform: 'translateY(-3px) scale(1.02)',
+            boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
           }
         }}
       >
-        Upgrade to Premium
-      </Button>
-      
-      <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 3 }}>
-        Premium features require an active subscription
-      </Typography>
-    </Box>
-  );
-  
-  // Render login prompt for non-authenticated users
-  const renderLoginPrompt = () => (
-    <Box sx={{ p: 3, textAlign: 'center' }}>
-      <Box
-        sx={{
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          margin: '0 auto 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: `linear-gradient(135deg, ${theme.palette.primary.light}, ${theme.palette.secondary.light})`,
-          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}`
-        }}
-      >
-        <SmartToyIcon sx={{ fontSize: 40, color: 'white' }} />
-      </Box>
-      
-      <Typography variant="h5" gutterBottom fontWeight="bold">
-        Wisentia AI Assistant
-      </Typography>
-      
-      <Typography variant="body1" color="textSecondary" paragraph sx={{ mb: 4 }}>
-        Please log in to access the AI chat assistant and get personalized learning support.
-      </Typography>
-      
-      <Button
-        variant="contained"
-        size="large"
-        onClick={() => {
-          onClose();
-          router.push('/login');
-        }}
-        sx={{
-          py: 1.5,
-          px: 4,
-          borderRadius: 2,
-          background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-          boxShadow: `0 4px 15px ${alpha(theme.palette.primary.main, 0.4)}`,
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.6)}`
-          },
-          mr: 2
-        }}
-      >
-        Log In
-      </Button>
-      
-      <Button
-        variant="outlined"
-        size="large"
-        onClick={() => {
-          onClose();
-          router.push('/register');
-        }}
-        sx={{
-          py: 1.5,
-          px: 4,
-          borderRadius: 2
-        }}
-      >
-        Sign Up
+        Sign In or Register
       </Button>
     </Box>
   );
   
   // Render chat content
-  const renderChatContent = () => (
-    <>
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      TransitionComponent={Transition}
+      sx={{
+        '& .MuiDialog-paper': {
+          borderRadius: 3,
+          boxShadow: `0 8px 32px ${alpha(theme.palette.mode === 'dark' ? '#000' : '#2563eb', 0.2)}`,
+          backgroundImage: getGradient(),
+          backdropFilter: 'blur(10px)',
+          overflow: 'hidden',
+          height: { xs: '100%', sm: '80vh' },
+          border: `1px solid ${alpha(getAccentColor(), theme.palette.mode === 'dark' ? 0.2 : 0.1)}`,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: `linear-gradient(90deg, ${getAccentColor()}, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            zIndex: 1
+          },
+          // Animation pattern for background
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: theme.palette.mode === 'dark' 
+              ? 'radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.05) 0%, transparent 25%), radial-gradient(circle at 80% 50%, rgba(14, 165, 233, 0.05) 0%, transparent 25%), radial-gradient(circle at 20% 80%, rgba(20, 184, 166, 0.05) 0%, transparent 25%)'
+              : 'radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.1) 0%, transparent 25%), radial-gradient(circle at 80% 50%, rgba(14, 165, 233, 0.1) 0%, transparent 25%), radial-gradient(circle at 20% 80%, rgba(20, 184, 166, 0.1) 0%, transparent 25%)',
+            opacity: 0.7,
+            zIndex: -1
+          }
+        },
+      }}
+    >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <DialogTitle sx={{ 
           px: 2, 
           py: 1.5,
           borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           bgcolor: theme.palette.mode === 'dark' 
-            ? alpha(theme.palette.background.paper, 0.6)
-            : alpha(theme.palette.background.paper, 0.8),
+            ? alpha(theme.palette.background.paper, 0.4)
+            : alpha(theme.palette.background.paper, 0.6),
           backdropFilter: 'blur(10px)'
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -516,7 +615,9 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
               sx={{ 
                 minHeight: '40px',
                 '& .MuiTabs-indicator': {
-                  backgroundColor: theme.palette.primary.main,
+                  backgroundColor: getAccentColor(),
+                  height: '3px',
+                  borderRadius: '3px',
                 },
                 '& .MuiTab-root': {
                   minHeight: '40px',
@@ -524,6 +625,10 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
                   px: 2,
                   fontSize: '0.875rem',
                   fontWeight: 500,
+                  transition: 'all 0.2s',
+                  '&.Mui-selected': {
+                    color: getAccentColor(),
+                  }
                 }
               }}
             >
@@ -541,9 +646,21 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
             
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {activeTab === 0 && currentSessionId && (
-                <Tooltip title="Chat options">
-                  <IconButton size="small" onClick={handleMenuOpen}>
-                    <MoreVertIcon fontSize="small" />
+                <Tooltip title="End conversation">
+                  <IconButton 
+                    size="small" 
+                    onClick={handleEndChatClick}
+                    sx={{
+                      mr: 1,
+                      color: theme.palette.error.main,
+                      opacity: 0.7,
+                      '&:hover': {
+                        opacity: 1,
+                        backgroundColor: alpha(theme.palette.error.main, 0.1),
+                      }
+                    }}
+                  >
+                    <ExitToAppIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               )}
@@ -552,7 +669,13 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
                 color="inherit" 
                 onClick={onClose} 
                 size="small"
-                sx={{ ml: 1 }}
+                sx={{ 
+                  ml: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    transform: 'rotate(90deg)',
+                  }
+                }}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
@@ -566,7 +689,12 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
           onClose={handleMenuClose}
           PaperProps={{
             elevation: 3,
-            sx: { minWidth: 180 }
+            sx: { 
+              minWidth: 180,
+              backdropFilter: 'blur(10px)',
+              bgcolor: alpha(theme.palette.background.paper, 0.8),
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            }
           }}
         >
           <MenuItem onClick={endCurrentSession}>
@@ -583,11 +711,30 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
             flex: 1,
             overflowY: 'auto',
             bgcolor: theme.palette.mode === 'dark' 
-              ? alpha(theme.palette.background.paper, 0.4)
-              : alpha(theme.palette.background.paper, 0.6)
+              ? alpha(theme.palette.background.paper, 0.2)
+              : alpha(theme.palette.background.paper, 0.3),
+            // Custom scrollbar
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: alpha(getAccentColor(), 0.3),
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: alpha(getAccentColor(), 0.5),
+              },
+            },
           }}
         >
-          {activeTab === 0 ? (
+          {!user ? (
+            // Login required view
+            <Fade in={true} timeout={800}>
+              {renderLoginRequired()}
+            </Fade>
+          ) : activeTab === 0 ? (
             // Chat tab
             <Box sx={{ 
               flex: 1, 
@@ -598,30 +745,84 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
             }}>
               {isLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                  <CircularProgress size={40} />
+                  <CircularProgress 
+                    size={50} 
+                    sx={{ 
+                      color: getAccentColor(),
+                    }}
+                  />
                 </Box>
               ) : messages.length === 0 ? (
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  textAlign: 'center', 
-                  height: '100%',
-                  px: 3,
-                  opacity: 0.8
-                }}>
-                  <SmartToyIcon sx={{ fontSize: 60, mb: 2, color: 'primary.main' }} />
-                  <Typography variant="h6" gutterBottom>
-                    How can I help you today?
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary" paragraph sx={{ maxWidth: 300 }}>
-                    Ask me about courses, quests, or any learning questions you have.
-                  </Typography>
-                </Box>
+                <Fade in={true} timeout={800}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    textAlign: 'center', 
+                    height: '100%',
+                    px: 3,
+                    opacity: 0.8
+                  }}>
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        mb: 2,
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: alpha(getAccentColor(), 0.1),
+                        boxShadow: `0 0 30px ${alpha(getAccentColor(), 0.2)}`,
+                      }}
+                    >
+                      <AutoAwesomeIcon 
+                        sx={{
+                          position: 'absolute',
+                          top: -5,
+                          right: -5,
+                          fontSize: 24,
+                          color: getAccentColor(),
+                          animation: `${pulse} 2s infinite ease-in-out`,
+                        }}
+                      />
+                      <SmartToyIcon sx={{ 
+                        fontSize: 40, 
+                        color: getAccentColor(),
+                      }} />
+                    </Box>
+                    <Typography 
+                      variant="h5" 
+                      component="div" 
+                      gutterBottom
+                      sx={{
+                        fontWeight: 600,
+                        background: `linear-gradient(90deg, ${getAccentColor()}, ${theme.palette.primary.main})`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      How can I help you today?
+                    </Typography>
+                    <Typography variant="body2" component="div" color="textSecondary" paragraph sx={{ maxWidth: 300 }}>
+                      Ask me about courses, quests, or any learning questions you have.
+                    </Typography>
+                  </Box>
+                </Fade>
               ) : (
                 messages.map((msg, index) => (
-                  <ChatMessage key={msg.messageId || index} message={msg} />
+                  <Fade 
+                    key={msg.messageId || index} 
+                    in={true} 
+                    timeout={300} 
+                    style={{ transitionDelay: `${index * 50}ms` }}
+                  >
+                    <Box>
+                      <ChatMessage message={msg} />
+                    </Box>
+                  </Fade>
                 ))
               )}
               
@@ -634,135 +835,269 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
             <Box sx={{ p: 2 }}>
               {loadingSessions ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                  <CircularProgress size={40} />
+                  <CircularProgress 
+                    size={50}
+                    sx={{ 
+                      color: getAccentColor(),
+                    }}
+                  />
                 </Box>
               ) : sessions.length === 0 ? (
-                <Box sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  textAlign: 'center', 
-                  height: 300,
-                  px: 3,
-                  opacity: 0.8
-                }}>
-                  <HistoryIcon sx={{ fontSize: 60, mb: 2, color: 'primary.main' }} />
-                  <Typography variant="h6" gutterBottom>
-                    No chat history yet
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary" paragraph sx={{ maxWidth: 300 }}>
-                    Your conversations will appear here once you start chatting.
-                  </Typography>
-                </Box>
+                <Fade in={true} timeout={800}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    textAlign: 'center', 
+                    height: 300,
+                    px: 3,
+                    opacity: 0.8
+                  }}>
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        mb: 2,
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        bgcolor: alpha(getAccentColor(), 0.1),
+                        boxShadow: `0 0 30px ${alpha(getAccentColor(), 0.2)}`,
+                      }}
+                    >
+                      <HistoryIcon sx={{ 
+                        fontSize: 40, 
+                        color: getAccentColor(),
+                      }} />
+                    </Box>
+                    <Typography 
+                      variant="h5" 
+                      component="div" 
+                      gutterBottom
+                      sx={{
+                        fontWeight: 600,
+                        background: `linear-gradient(90deg, ${getAccentColor()}, ${theme.palette.primary.main})`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                      }}
+                    >
+                      No chat history yet
+                    </Typography>
+                    <Typography variant="body2" component="div" color="textSecondary" paragraph sx={{ maxWidth: 300 }}>
+                      Your conversations will appear here once you start chatting.
+                    </Typography>
+                  </Box>
+                </Fade>
               ) : (
                 <List sx={{ width: '100%', p: 0 }}>
-                  {sessions.map((session) => (
-                    <Paper
-                      key={session.SessionID}
-                      elevation={0}
-                      sx={{
-                        mb: 2,
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer',
-                        '&:hover': {
-                          backgroundColor: theme.palette.mode === 'dark' 
-                            ? alpha(theme.palette.primary.dark, 0.1)
-                            : alpha(theme.palette.primary.light, 0.1),
-                          transform: 'translateY(-2px)',
-                          boxShadow: `0 4px 8px ${alpha(theme.palette.primary.main, 0.1)}`
-                        }
-                      }}
-                      onClick={() => selectSession(session.SessionID)}
-                    >
-                      <ListItem alignItems="flex-start" sx={{ p: 2 }}>
-                        <ListItemAvatar sx={{ minWidth: 36 }}>
-                          <Avatar 
-                            sx={{ 
-                              width: 36, 
-                              height: 36, 
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
-                              color: theme.palette.primary.main
-                            }}
-                          >
-                            <ForumIcon fontSize="small" />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Typography variant="subtitle2">
-                                Conversation {format(new Date(session.StartTime), 'MMM d, yyyy')}
-                              </Typography>
-                              {session.IsActive && (
-                                <Chip 
-                                  label="Active" 
-                                  size="small" 
-                                  color="primary" 
-                                  variant="outlined"
-                                  sx={{ height: 20, fontSize: '0.7rem' }}
-                                />
-                              )}
-                            </Box>
-                          }
-                          secondary={
-                            <Box>
+                  {sessions.map((session, index) => {
+                    // Ensure SessionID exists and is valid
+                    if (!session.SessionID) return null;
+                    
+                    // Format timestamps with fallback
+                    const startTime = session.StartTime ? new Date(session.StartTime) : new Date();
+                    
+                    return (
+                      <Grow
+                        key={session.SessionID}
+                        in={true}
+                        timeout={300 + (index * 100)}
+                      >
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            mb: 2,
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer',
+                            backgroundColor: theme.palette.mode === 'dark' 
+                              ? alpha(theme.palette.background.paper, 0.4)
+                              : alpha(theme.palette.background.paper, 0.7),
+                            '&:hover': {
+                              backgroundColor: theme.palette.mode === 'dark' 
+                                ? alpha(theme.palette.primary.dark, 0.2)
+                                : alpha(theme.palette.primary.light, 0.2),
+                              transform: 'translateY(-3px)',
+                              boxShadow: `0 6px 15px ${alpha(getAccentColor(), 0.15)}`
+                            }
+                          }}
+                          onClick={() => selectSession(session.SessionID)}
+                        >
+                          <ListItem alignItems="flex-start" sx={{ p: 2 }}>
+                            <ListItemAvatar sx={{ minWidth: 40 }}>
+                              <Avatar 
+                                sx={{ 
+                                  width: 40, 
+                                  height: 40, 
+                                  bgcolor: alpha(getAccentColor(), 0.1),
+                                  color: getAccentColor(),
+                                }}
+                              >
+                                <ForumIcon fontSize="small" />
+                              </Avatar>
+                            </ListItemAvatar>
+                            
+                            {/* Custom content structure */}
+                            <Box sx={{ flex: 1, ml: 1 }}>
+                              {/* Header section */}
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                <Typography 
+                                  component="div" 
+                                  variant="subtitle1" 
+                                  sx={{ 
+                                    fontWeight: 600,
+                                    color: theme.palette.text.primary,
+                                  }}
+                                >
+                                  Conversation {format(startTime, 'MMM d, yyyy')}
+                                </Typography>
+                                {session.IsActive && (
+                                  <Chip 
+                                    label="Active" 
+                                    size="small" 
+                                    color="primary" 
+                                    variant="outlined"
+                                    sx={{ 
+                                      height: 20, 
+                                      fontSize: '0.7rem',
+                                      bgcolor: alpha(getAccentColor(), 0.1),
+                                      borderColor: alpha(getAccentColor(), 0.3),
+                                      color: getAccentColor(),
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                              
+                              {/* Message content */}
                               <Typography
                                 variant="body2"
+                                component="div"
                                 color="text.secondary"
                                 sx={{ 
-                                  display: 'inline',
-                                  mt: 0.5,
+                                  display: 'block',
+                                  mb: 0.5,
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
-                                  display: '-webkit-box',
                                   WebkitLineClamp: 2,
                                   WebkitBoxOrient: 'vertical',
+                                  display: '-webkit-box'
                                 }}
                               >
                                 {session.LastMessage || 'No messages yet'}
                               </Typography>
+                              
+                              {/* Footer info */}
                               <Box sx={{ 
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 justifyContent: 'space-between',
-                                mt: 0.5 
+                                mt: 1
                               }}>
                                 <Typography
                                   variant="caption"
+                                  component="div"
                                   color="text.secondary"
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5,
+                                  }}
                                 >
+                                  <ForumIcon sx={{ fontSize: 14 }} />
                                   {session.MessageCount || 0} messages
                                 </Typography>
                                 <Typography
                                   variant="caption"
+                                  component="div"
                                   color="text.secondary"
+                                  sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 0.5,
+                                  }}
                                 >
-                                  {format(new Date(session.StartTime), 'h:mm a')}
+                                  {format(startTime, 'h:mm a')}
                                 </Typography>
                               </Box>
                             </Box>
-                          }
-                        />
-                      </ListItem>
-                    </Paper>
-                  ))}
+                          </ListItem>
+                        </Paper>
+                      </Grow>
+                    );
+                  })}
                 </List>
               )}
             </Box>
           )}
         </DialogContent>
         
-        {activeTab === 0 && (
+        {/* End chat confirmation */}
+        <Fade in={showEndChatConfirm}>
+          <Box
+            sx={{
+              display: showEndChatConfirm ? 'flex' : 'none',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              bgcolor: theme.palette.mode === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+              backdropFilter: 'blur(8px)',
+              borderRadius: 2,
+              p: 3,
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: `0 4px 20px ${alpha('#000', 0.2)}`,
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              zIndex: 10,
+              maxWidth: '80%',
+            }}
+          >
+            <Typography variant="h6" component="div" gutterBottom sx={{ textAlign: 'center' }}>
+              End current conversation?
+            </Typography>
+            <Typography variant="body2" component="div" color="textSecondary" paragraph sx={{ textAlign: 'center', mb: 3 }}>
+              This will end your current chat session and start a new one.
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button 
+                variant="outlined" 
+                onClick={handleCancelEndChat}
+                sx={{
+                  borderRadius: '20px',
+                  px: 3,
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="contained" 
+                color="error"
+                onClick={endCurrentSession}
+                sx={{
+                  borderRadius: '20px',
+                  px: 3,
+                  boxShadow: `0 4px 15px ${alpha(theme.palette.error.main, 0.3)}`,
+                }}
+              >
+                End Chat
+              </Button>
+            </Box>
+          </Box>
+        </Fade>
+        
+        {activeTab === 0 && user && (
           <Box sx={{ 
             p: 2, 
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             bgcolor: theme.palette.mode === 'dark' 
-              ? alpha(theme.palette.background.paper, 0.6)
-              : alpha(theme.palette.background.paper, 0.8),
+              ? alpha(theme.palette.background.paper, 0.4)
+              : alpha(theme.palette.background.paper, 0.6),
             backdropFilter: 'blur(10px)'
           }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -785,11 +1120,15 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
                         disabled={!message.trim() || isTyping}
                         sx={{ 
                           color: message.trim() && !isTyping
-                            ? theme.palette.primary.main
+                            ? getAccentColor()
                             : 'inherit',
-                          transition: 'transform 0.2s ease',
+                          transition: 'all 0.3s ease',
+                          transform: 'scale(1)',
                           '&:hover': {
-                            transform: message.trim() && !isTyping ? 'scale(1.1)' : 'none',
+                            transform: message.trim() && !isTyping ? 'scale(1.1) rotate(5deg)' : 'scale(1)',
+                            bgcolor: message.trim() && !isTyping 
+                              ? alpha(getAccentColor(), 0.1)
+                              : 'transparent',
                           }
                         }}
                       >
@@ -802,10 +1141,23 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
                   '& .MuiOutlinedInput-root': {
                     borderRadius: 3,
                     backgroundColor: theme.palette.mode === 'dark' 
-                      ? alpha(theme.palette.background.paper, 0.6)
-                      : alpha(theme.palette.background.paper, 0.6),
+                      ? alpha(theme.palette.background.paper, 0.2)
+                      : alpha(theme.palette.background.paper, 0.4),
                     '&.Mui-focused': {
-                      boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.2)}`
+                      boxShadow: `0 0 0 3px ${alpha(getAccentColor(), 0.2)}`
+                    },
+                    '&:hover': {
+                      boxShadow: `0 0 0 1px ${alpha(getAccentColor(), 0.1)}`
+                    },
+                    '& fieldset': {
+                      borderColor: alpha(theme.palette.divider, 0.2),
+                      transition: 'border-color 0.3s ease',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha(getAccentColor(), 0.4),
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: getAccentColor(),
                     },
                   }
                 }}
@@ -813,12 +1165,15 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
             </Box>
             <Typography 
               variant="caption" 
+              component="div"
               color="textSecondary"
               sx={{ 
                 display: 'block', 
                 textAlign: 'center', 
                 mt: 1,
-                opacity: 0.6
+                opacity: 0.7,
+                fontStyle: 'italic',
+                fontSize: '0.7rem',
               }}
             >
               Powered by Wisentia AI • Responses are AI-generated
@@ -826,51 +1181,6 @@ const ChatDialog = ({ open, onClose, hasSubscription, isAuthenticated }) => {
           </Box>
         )}
       </Box>
-    </>
-  );
-  
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-      TransitionComponent={Transition}
-      sx={{
-        '& .MuiDialog-paper': {
-          borderRadius: 3,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-          backgroundImage: theme.palette.mode === 'dark'
-            ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(20, 30, 60, 0.95))'
-            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 252, 255, 0.97))',
-          backdropFilter: 'blur(10px)',
-          overflow: 'hidden',
-          height: { xs: '100%', sm: '80vh' },
-          border: `1px solid ${theme.palette.mode === 'dark' 
-            ? 'rgba(6, 182, 212, 0.2)' 
-            : 'rgba(6, 182, 212, 0.1)'}`,
-          // Subtle gradient border
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '3px',
-            background: 'linear-gradient(90deg, #06b6d4, #0ea5e9, #14b8a6)',
-            zIndex: 1
-          }
-        },
-      }}
-    >
-      {/* Show different content based on authentication and subscription status */}
-      {!isAuthenticated ? (
-        renderLoginPrompt()
-      ) : !hasSubscription ? (
-        renderSubscriptionPrompt()
-      ) : (
-        renderChatContent()
-      )}
     </Dialog>
   );
 };

@@ -30,6 +30,10 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import KeyIcon from '@mui/icons-material/Key';
 import NextLink from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { keyframes } from '@emotion/react';
@@ -124,15 +128,28 @@ export default function RegisterPage() {
   
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const [redirectCompleted, setRedirectCompleted] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  
+  // Yeni eklenen state'ler
+  const [usernameExists, setUsernameExists] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [usernameTimeout, setUsernameTimeout] = useState(null);
+  const [emailTimeout, setEmailTimeout] = useState(null);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   
   const theme = useTheme();
   const router = useRouter();
-  const { register, isAuthenticated } = useAuth();
+  const { register, isAuthenticated, verifyEmailWithCode, resendVerificationCode } = useAuth();
 
   // Cookie ve localStorage temizleme - ÖNEMLİ!
   useEffect(() => {
@@ -191,6 +208,138 @@ export default function RegisterPage() {
       localStorage.removeItem('user');
     }
   }, [redirectCompleted]);
+  
+  // Kullanıcı adı değiştikçe anında kontrol et
+  const handleUsernameChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      username: value
+    }));
+    
+    // Yazarken hatayı temizle
+    if (errors.username) {
+      setErrors(prev => ({
+        ...prev,
+        username: ''
+      }));
+    }
+    
+    // Timeout ile kontrol etme - çok hızlı yazarken her harfte istek göndermeyi önler
+    if (usernameTimeout) clearTimeout(usernameTimeout);
+    
+    // Sadece en az 3 karakter girildiğinde kontrole başla
+    if (value.length >= 3) {
+      setUsernameTimeout(setTimeout(async () => {
+        setCheckingUsername(true);
+        try {
+          // Burada direkt fetch ile kontrol ediyoruz
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/check-username/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: value })
+          });
+          
+          const data = await response.json();
+          setUsernameExists(!data.available);
+          
+          if (!data.available) {
+            setErrors(prev => ({
+              ...prev,
+              username: 'Username already exists'
+            }));
+          }
+        } catch (error) {
+          console.error('Username check error:', error);
+        } finally {
+          setCheckingUsername(false);
+        }
+      }, 500));
+    }
+  };
+  
+  // E-posta değiştikçe anında kontrol et
+  const handleEmailChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      email: value
+    }));
+    
+    // Yazarken hatayı temizle
+    if (errors.email) {
+      setErrors(prev => ({
+        ...prev,
+        email: ''
+      }));
+    }
+    
+    // E-posta validasyonu
+    if (!/\S+@\S+\.\S+/.test(value)) {
+      return; // Geçerli bir e-posta değilse kontrol etme
+    }
+    
+    // Timeout ile kontrol etme
+    if (emailTimeout) clearTimeout(emailTimeout);
+    
+    setEmailTimeout(setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        // Burada direkt fetch ile kontrol ediyoruz
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/check-email/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email: value })
+        });
+        
+        const data = await response.json();
+        setEmailExists(!data.available);
+        
+        if (!data.available) {
+          setErrors(prev => ({
+            ...prev,
+            email: 'Email already exists'
+          }));
+        }
+      } catch (error) {
+        console.error('Email check error:', error);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500));
+  };
+
+  // Form alanlarını değiştirme
+  const handleChange = (e) => {
+    const { name, value, checked, type } = e.target;
+    
+    if (name === 'username') {
+      handleUsernameChange(e);
+      return;
+    }
+    
+    if (name === 'email') {
+      handleEmailChange(e);
+      return;
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    
+    // Yazarken hatayı temizle
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
 
   // Form doğrulama
   const validateStep = (step) => {
@@ -202,12 +351,16 @@ export default function RegisterPage() {
         newErrors.username = 'Username is required';
       } else if (formData.username.length < 3) {
         newErrors.username = 'Username must be at least 3 characters';
+      } else if (usernameExists) {
+        newErrors.username = 'Username already exists';
       }
       
       if (!formData.email) {
         newErrors.email = 'Email is required';
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.email = 'Please enter a valid email address';
+      } else if (emailExists) {
+        newErrors.email = 'Email already exists';
       }
       
       if (!formData.password) {
@@ -239,22 +392,6 @@ export default function RegisterPage() {
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
-
-  const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    
-    // Yazarken hatayı temizle
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
   // MetaMask bağlantısı
@@ -298,6 +435,17 @@ export default function RegisterPage() {
       return;
     }
     
+    // E-posta ve kullanıcı adı kontrolü
+    if (usernameExists) {
+      setSubmitError('Username already exists. Please choose another one.');
+      return;
+    }
+    
+    if (emailExists) {
+      setSubmitError('Email already exists. Please use another email or try to login.');
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitError('');
     
@@ -329,8 +477,8 @@ export default function RegisterPage() {
       
       if (result.success) {
         console.log('Kayıt başarılı!');
-        setRedirectCompleted(true);
-        router.push('/dashboard');
+        setRegistrationComplete(true);
+        setActiveStep(2); // E-posta doğrulama adımına geç
       } else {
         console.error('Kayıt başarısız:', result.error);
         
@@ -342,15 +490,75 @@ export default function RegisterPage() {
           return;
         }
         
-        setSubmitError(result.error || 'Kayıt başarısız. Lütfen tekrar deneyin.');
+        setSubmitError(result.error || 'Registration failed. Please try again.');
         setActiveStep(0); // Hata durumunda ilk adıma dön
       }
     } catch (error) {
       console.error('Register hatası:', error);
-      setSubmitError(error.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+      setSubmitError(error.message || 'An error occurred. Please try again.');
       setActiveStep(0); // Hata durumunda ilk adıma dön
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  
+  // Doğrulama kodu ile e-posta doğrulama
+  const handleVerifyCode = async () => {
+    if (!verificationCode) return;
+    
+    setIsVerifying(true);
+    setSubmitError('');
+    
+    try {
+      // Email doğrulama kodu ile doğrulama işlemi
+      const result = await verifyEmailWithCode(formData.email, verificationCode);
+      
+      if (result.success) {
+        // Başarılı doğrulama
+        setSubmitSuccess(result.message || 'Email verified successfully!');
+        
+        // 3 saniye sonra Login sayfasına yönlendir
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
+      } else {
+        // Doğrulama hatası
+        setSubmitError(result.error || 'Verification failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Email verification error:', error);
+      setSubmitError(error.message || 'An error occurred during verification.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+  
+  // Yeni doğrulama kodu gönderme
+  const handleResendCode = async () => {
+    setIsResending(true);
+    setSubmitError('');
+    
+    try {
+      // Yeni doğrulama kodu gönder
+      const result = await resendVerificationCode(formData.email);
+      
+      if (result.success) {
+        // Yeni kod gönderildi bildirimi
+        setSubmitError('');
+        setSubmitSuccess('A new verification code has been sent to your email.');
+        
+        // 3 saniye sonra mesajı kaldır
+        setTimeout(() => {
+          setSubmitSuccess('');
+        }, 3000);
+      } else {
+        setSubmitError(result.error || 'Failed to resend verification code.');
+      }
+    } catch (error) {
+      console.error('Resend verification code error:', error);
+      setSubmitError(error.message || 'Failed to resend verification code.');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -379,6 +587,19 @@ export default function RegisterPage() {
                     <PersonIcon sx={{ color: 'rgba(255,255,255,0.6)' }} />
                   </InputAdornment>
                 ),
+                endAdornment: checkingUsername ? (
+                  <InputAdornment position="end">
+                    <CircularProgress size={16} sx={{ color: 'rgba(255,255,255,0.6)' }} />
+                  </InputAdornment>
+                ) : usernameExists ? (
+                  <InputAdornment position="end">
+                    <CloseIcon sx={{ color: '#f44336' }} />
+                  </InputAdornment>
+                ) : formData.username.length >= 3 && !usernameExists ? (
+                  <InputAdornment position="end">
+                    <CheckIcon sx={{ color: '#4caf50' }} />
+                  </InputAdornment>
+                ) : null,
               }}
               sx={{
                 mb: 1.5,
@@ -422,6 +643,19 @@ export default function RegisterPage() {
                     <EmailIcon sx={{ color: 'rgba(255,255,255,0.6)' }} />
                   </InputAdornment>
                 ),
+                endAdornment: checkingEmail ? (
+                  <InputAdornment position="end">
+                    <CircularProgress size={16} sx={{ color: 'rgba(255,255,255,0.6)' }} />
+                  </InputAdornment>
+                ) : emailExists ? (
+                  <InputAdornment position="end">
+                    <CloseIcon sx={{ color: '#f44336' }} />
+                  </InputAdornment>
+                ) : formData.email && /\S+@\S+\.\S+/.test(formData.email) && !emailExists ? (
+                  <InputAdornment position="end">
+                    <CheckIcon sx={{ color: '#4caf50' }} />
+                  </InputAdornment>
+                ) : null,
               }}
               sx={{
                 mb: 1.5,
@@ -642,8 +876,220 @@ export default function RegisterPage() {
         </Box>
       </Box>
     ),
-  },
-];
+    },
+    {
+      label: 'Email Verification',
+      content: (
+        <Box>
+          <Typography variant="h6" sx={{ color: 'white', mb: 2, fontWeight: 'normal', textAlign: 'center' }}>
+            Verify Your Email
+          </Typography>
+          
+          <Box 
+            sx={{ 
+              maxWidth: 360, 
+              mx: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 2,
+            }}
+          >
+            <Box 
+              sx={{ 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%', 
+                bgcolor: 'rgba(142, 84, 233, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mb: 3,
+              }}
+            >
+              <MailOutlineIcon 
+                sx={{ 
+                  fontSize: 40, 
+                  color: '#8E54E9',
+                  animation: `${pulseAnimation} 2s infinite ease-in-out`,
+                }}
+              />
+            </Box>
+            
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              sx={{
+                color: 'white',
+                mb: 1,
+                textAlign: 'center',
+              }}
+            >
+              Enter Verification Code
+            </Typography>
+            
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'rgba(255,255,255,0.7)',
+                textAlign: 'center',
+                mb: 3,
+              }}
+            >
+              We've sent a verification code to <span style={{ fontWeight: 'bold', color: '#a3f7ff' }}>{formData.email}</span>. 
+              Please check your inbox and enter the code below to activate your account.
+            </Typography>
+            
+            {/* Hata mesajı */}
+            {submitError && (
+              <Alert
+                severity="error"
+                sx={{
+                  mb: 2,
+                  width: '100%',
+                  borderRadius: 2,
+                  backgroundColor: 'rgba(244,67,54,0.1)',
+                  border: '1px solid rgba(244,67,54,0.2)',
+                  '& .MuiAlert-icon': {
+                    color: '#ff8a80',
+                  },
+                  color: '#ff8a80',
+                }}
+              >
+                {submitError}
+              </Alert>
+            )}
+            
+            {/* Başarı mesajı */}
+            {submitSuccess && (
+              <Alert
+                severity="success"
+                sx={{
+                  mb: 2,
+                  width: '100%',
+                  borderRadius: 2,
+                  backgroundColor: 'rgba(76,175,80,0.1)',
+                  border: '1px solid rgba(76,175,80,0.2)',
+                  '& .MuiAlert-icon': {
+                    color: '#a5d6a7',
+                  },
+                  color: '#a5d6a7',
+                }}
+              >
+                {submitSuccess}
+              </Alert>
+            )}
+            
+            <TextField
+              fullWidth
+              name="verificationCode"
+              placeholder="Enter verification code"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              sx={{
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1,
+                  bgcolor: 'rgba(255,255,255,0.05)',
+                  height: 50,
+                  textAlign: 'center',
+                },
+                '& .MuiInputBase-input': {
+                  color: 'white',
+                  fontSize: '1.2rem',
+                  letterSpacing: '0.2em',
+                  textAlign: 'center',
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255,255,255,0.1)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255,255,255,0.3)',
+                },
+                '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#8E54E9',
+                },
+              }}
+            />
+            
+            <Alert
+              severity="info"
+              sx={{
+                width: '100%',
+                mb: 3,
+                borderRadius: 2,
+                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                border: '1px solid rgba(33, 150, 243, 0.2)',
+                '& .MuiAlert-icon': {
+                  color: '#90caf9',
+                },
+                color: '#90caf9',
+              }}
+            >
+              If you don't see the code, check your spam folder or request a new verification code.
+            </Alert>
+            
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleVerifyCode}
+              disabled={isVerifying || !verificationCode}
+              sx={{
+                py: 1.2,
+                borderRadius: 1,
+                fontSize: '0.9rem',
+                mb: 2,
+                background: 'linear-gradient(90deg, #4776E6, #8E54E9)',
+                '&:hover': {
+                  backgroundImage: 'linear-gradient(90deg, #3f6ad0, #7b46d3)',
+                },
+              }}
+            >
+              {isVerifying ? <CircularProgress size={24} color="inherit" /> : 'Verify Code'}
+            </Button>
+            
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleResendCode}
+              disabled={isResending}
+              sx={{
+                py: 1.2,
+                borderRadius: 1,
+                fontSize: '0.9rem',
+                mb: 2,
+                color: '#a3f7ff',
+                borderColor: 'rgba(163, 247, 255, 0.3)',
+                '&:hover': {
+                  borderColor: '#a3f7ff',
+                  backgroundColor: 'rgba(163, 247, 255, 0.05)',
+                },
+              }}
+            >
+              {isResending ? <CircularProgress size={24} color="inherit" /> : 'Resend Code'}
+            </Button>
+            
+            <Button
+              component={NextLink}
+              href="/login"
+              variant="text"
+              sx={{
+                fontSize: '0.9rem',
+                color: 'rgba(255,255,255,0.6)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: 'white',
+                },
+              }}
+            >
+              Go to Login
+            </Button>
+          </Box>
+        </Box>
+      ),
+    },
+  ];
 
   // Yönlendirme tamamlandıysa, içeriği render etmeyi atla
   if (redirectCompleted) {
@@ -899,7 +1345,9 @@ export default function RegisterPage() {
               Create Account
             </Typography>
             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
-              Fill in the details below to get started
+              {registrationComplete 
+                ? 'Registration completed successfully!' 
+                : 'Fill in the details below to get started'}
             </Typography>
           </Box>
           
@@ -921,6 +1369,24 @@ export default function RegisterPage() {
             </Alert>
           )}
           
+          {/* Başarı mesajı */}
+          {submitSuccess && (
+            <Alert
+              severity="success"
+              sx={{
+                mb: 2,
+                borderRadius: 1,
+                bgcolor: 'rgba(76,175,80,0.1)',
+                color: '#a5d6a7',
+                border: '1px solid rgba(76,175,80,0.2)',
+                py: 0.5,
+                fontSize: '0.8rem'
+              }}
+            >
+              {submitSuccess}
+            </Alert>
+          )}
+          
           {/* Adım göstergesi */}
           <Box sx={{ width: '100%', mb: 2.5, maxWidth: 380, mx: 'auto' }}>
             <Stepper activeStep={activeStep} alternativeLabel={false} 
@@ -936,7 +1402,8 @@ export default function RegisterPage() {
             >
               {[
                 { label: 'Account\nInformation' },
-                { label: 'Confirmation' }
+                { label: 'Confirmation' },
+                { label: 'Email\nVerification' }
               ].map((step, index) => (
                 <Step key={index}>
                   <StepLabel
@@ -994,72 +1461,74 @@ export default function RegisterPage() {
           </Box>
           
           {/* Adım butonları */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between',
-            mx: 'auto',
-            maxWidth: 380
-          }}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              sx={{
-                color: 'white',
-                fontSize: '0.85rem',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                },
-                '&.Mui-disabled': {
-                  color: 'rgba(255,255,255,0.3)',
-                },
-              }}
-            >
-              Back
-            </Button>
-            
-            <Box>
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  endIcon={<ArrowForwardIcon />}
-                  sx={{
-                    bgcolor: '#8E54E9',
-                    color: 'white',
-                    px: 3,
-                    py: 0.8,
-                    borderRadius: 6,
-                    fontSize: '0.85rem',
-                    '&:hover': {
-                      bgcolor: '#7b46d3',
-                    },
-                  }}
-                >
-                  {isSubmitting ? <CircularProgress size={22} color="inherit" /> : 'Create Account'}
-                </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  onClick={handleNext}
-                  endIcon={<ArrowForwardIcon />}
-                  sx={{
-                    bgcolor: '#8E54E9',
-                    color: 'white',
-                    px: 2.5,
-                    py: 0.8,
-                    borderRadius: 6,
-                    fontSize: '0.85rem',
-                    '&:hover': {
-                      bgcolor: '#7b46d3',
-                    },
-                  }}
-                >
-                  Next
-                </Button>
-              )}
+          {activeStep < 2 && (
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              mx: 'auto',
+              maxWidth: 380
+            }}>
+              <Button
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                sx={{
+                  color: 'white',
+                  fontSize: '0.85rem',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                  },
+                  '&.Mui-disabled': {
+                    color: 'rgba(255,255,255,0.3)',
+                  },
+                }}
+              >
+                Back
+              </Button>
+              
+              <Box>
+                {activeStep === steps.length - 2 ? (
+                  <Button
+                    variant="contained"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{
+                      bgcolor: '#8E54E9',
+                      color: 'white',
+                      px: 3,
+                      py: 0.8,
+                      borderRadius: 6,
+                      fontSize: '0.85rem',
+                      '&:hover': {
+                        bgcolor: '#7b46d3',
+                      },
+                    }}
+                  >
+                    {isSubmitting ? <CircularProgress size={22} color="inherit" /> : 'Create Account'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    onClick={handleNext}
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{
+                      bgcolor: '#8E54E9',
+                      color: 'white',
+                      px: 2.5,
+                      py: 0.8,
+                      borderRadius: 6,
+                      fontSize: '0.85rem',
+                      '&:hover': {
+                        bgcolor: '#7b46d3',
+                      },
+                    }}
+                  >
+                    Next
+                  </Button>
+                )}
+              </Box>
             </Box>
-          </Box>
+          )}
           
           {/* Zaten hesabınız var mı? */}
           <Box sx={{ textAlign: 'center', mt: 3 }}>

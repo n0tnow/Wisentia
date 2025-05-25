@@ -27,7 +27,8 @@ import {
   MenuItem,
   Fade,
   Skeleton,
-  Link as MuiLink
+  Link as MuiLink,
+  Breadcrumbs
 } from '@mui/material';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
@@ -136,110 +137,53 @@ export default function PostDetailPage({ params }) {
     const fetchPostDetails = async () => {
       setLoading(true);
       try {
-        // In a real application, fetch from API:
-        // const postResponse = await fetch(`/api/community/posts/${postId}/`);
-        // const postData = await postResponse.json();
-        // const commentsResponse = await fetch(`/api/community/posts/${postId}/comments/`);
-        // const commentsData = await commentsResponse.json();
+        const response = await fetch(`/api/community/posts/${postId}`);
+        const data = await response.json();
         
-        // Mock data for this example
-        const mockPost = {
-          postId: postId,
-          title: 'How to get started with blockchain development?',
-          content: `I'm new to blockchain development and looking for resources to get started. What are some good tutorials or courses for beginners?
-
-I have experience with JavaScript and React, but I've never worked with blockchain technologies before. I'm particularly interested in Ethereum development and smart contracts.
-
-Any recommendations for tutorials, courses, or resources would be greatly appreciated. Also, what development environments and tools do you recommend for a beginner?`,
-          creationDate: '2023-08-20T10:30:00Z',
-          category: 'Blockchain',
-          likes: 15,
-          views: 120,
-          isLiked: false,
-          tags: ['blockchain', 'beginner', 'smart-contracts', 'ethereum', 'development'],
-          user: {
-            userId: 2,
-            username: 'blockchain_enthusiast',
-            profileImage: '/avatar-placeholder.jpg',
-            joinDate: '2023-02-15T00:00:00Z',
-            reputation: 1250,
-            isVerified: true
-          }
-        };
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch post details');
+        }
         
-        const mockComments = [
-          {
-            commentId: 1,
-            content: "I'd recommend starting with the Ethereum documentation and CryptoZombies tutorial. It's a great way to learn Solidity.",
-            creationDate: '2023-08-20T11:15:00Z',
-            likes: 5,
-            isLiked: true,
-            user: {
-              userId: 3,
-              username: 'eth_developer',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 3420,
-              isVerified: true
-            },
-            replies: []
-          },
-          {
-            commentId: 2,
-            content: "Check out the course 'Blockchain Basics' in Wisentia. It covers all the fundamentals and has hands-on projects.",
-            creationDate: '2023-08-20T12:30:00Z',
-            likes: 3,
-            isLiked: false,
-            user: {
-              userId: 5,
-              username: 'tech_teacher',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 1840,
-              isVerified: false
-            },
-            replies: [
-              {
-                commentId: 4,
-                parentCommentId: 2,
-                content: "I second this! The course has really well-structured content that takes you from the basics to actually deploying your first smart contract. The hands-on projects are what make it stand out.",
-                creationDate: '2023-08-20T15:45:00Z',
-                likes: 2,
-                isLiked: false,
-                user: {
-                  userId: 8,
-                  username: 'blockchain_newbie',
-                  profileImage: '/avatar-placeholder.jpg',
-                  reputation: 520,
-                  isVerified: false
+        console.log('Post details:', data);
+        
+        // Debug the comments structure
+        if (data.comments) {
+          console.log('First comment example:', data.comments[0]);
+        }
+        
+        // Set post data
+        setPost(data);
+        
+        // Extract comments from the response if available
+        if (data.comments && Array.isArray(data.comments)) {
+          // Transform comments if necessary to match expected format
+          const transformedComments = data.comments.map(comment => {
+            // Ensure user field exists for backward compatibility
+            if (!comment.Username && comment.UserID) {
+              // Handle case where user data is directly in the comment
+              return {
+                ...comment,
+                // Add a user object if it doesn't exist but we have user data
+                user: { 
+                  username: comment.Username || 'Anonymous',
+                  profileImage: comment.ProfileImage || '/avatar-placeholder.jpg',
+                  isVerified: comment.isVerified || false,
+                  reputation: comment.Reputation || 0,
+                  userId: comment.UserID
                 }
-              }
-            ]
-          },
-          {
-            commentId: 3,
-            content: "I found Hardhat to be the most developer-friendly environment for Ethereum development. Much better than Truffle in my opinion.",
-            creationDate: '2023-08-20T14:45:00Z',
-            likes: 2,
-            isLiked: false,
-            user: {
-              userId: 7,
-              username: 'smart_contract_dev',
-              profileImage: '/avatar-placeholder.jpg',
-              reputation: 2750,
-              isVerified: true
-            },
-            replies: []
-          }
-        ];
-        
-        // Simulate API delay
-        setTimeout(() => {
-          setPost(mockPost);
-          setComments(mockComments);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Failed to fetch post details:', error);
-        setError('Failed to load post details. Please try again later.');
+              };
+            }
+            return comment;
+          });
+          
+          setComments(transformedComments);
+        } else {
+          setComments([]);
+        }
+      } catch (err) {
+        console.error('Error fetching post details:', err);
+        setError(err.message || 'Failed to load post details');
+      } finally {
         setLoading(false);
       }
     };
@@ -254,20 +198,33 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
     }
     
     try {
-      // In a real app, call API to like/unlike post
-      // const response = await fetch(`/api/community/posts/${postId}/like/`, {
-      //   method: 'POST',
-      // });
-      // const data = await response.json();
-      
-      // Update post like status in the UI
-      setPost(prevPost => ({
-        ...prevPost,
-        isLiked: !prevPost.isLiked,
-        likes: prevPost.isLiked ? prevPost.likes - 1 : prevPost.likes + 1
+      // Optimistic update
+      setPost(prev => ({
+        ...prev,
+        Likes: prev.isLiked ? prev.Likes - 1 : prev.Likes + 1,
+        isLiked: !prev.isLiked
       }));
-    } catch (error) {
-      console.error('Failed to like post:', error);
+      
+      // Send API request
+      const response = await fetch(`/api/community/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        // If request fails, revert the optimistic update
+        const originalPost = { ...post };
+        setPost(originalPost);
+        const data = await response.json();
+        console.error('Like failed:', data.error);
+      }
+    } catch (err) {
+      // If request fails, revert the optimistic update
+      const originalPost = { ...post };
+      setPost(originalPost);
+      console.error('Error liking post:', err);
     }
   };
   
@@ -278,45 +235,45 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
     }
     
     try {
-      // In a real app, call API to like/unlike comment
-      // const response = await fetch(`/api/community/comments/${commentId}/like/`, {
-      //   method: 'POST',
-      // });
-      // const data = await response.json();
-      
-      // Update comment like status in the UI (handling both top-level and reply comments)
-      setComments(prevComments => 
-        prevComments.map(comment => {
-          if (comment.commentId === commentId) {
-            // This is the comment to update
-            const newIsLiked = !comment.isLiked;
+      // Optimistic update
+      setPost(prev => {
+        const updatedComments = prev.comments.map(c => {
+          if (c.CommentID === commentId) {
             return {
-              ...comment,
-              isLiked: newIsLiked,
-              likes: newIsLiked ? comment.likes + 1 : comment.likes - 1
-            };
-          } else if (comment.replies?.length > 0) {
-            // Check if it's a reply to this comment
-            return {
-              ...comment,
-              replies: comment.replies.map(reply => {
-                if (reply.commentId === commentId) {
-                  const newIsLiked = !reply.isLiked;
-                  return {
-                    ...reply,
-                    isLiked: newIsLiked,
-                    likes: newIsLiked ? reply.likes + 1 : reply.likes - 1
-                  };
-                }
-                return reply;
-              })
+              ...c,
+              Likes: c.isLiked ? c.Likes - 1 : c.Likes + 1,
+              isLiked: !c.isLiked
             };
           }
-          return comment;
-        })
-      );
-    } catch (error) {
-      console.error('Failed to like comment:', error);
+          return c;
+        });
+        
+        return {
+          ...prev,
+          comments: updatedComments
+        };
+      });
+      
+      // Send API request
+      const response = await fetch(`/api/community/comments/${commentId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        // If request fails, revert the optimistic update
+        const originalPost = { ...post };
+        setPost(originalPost);
+        const data = await response.json();
+        console.error('Like comment failed:', data.error);
+      }
+    } catch (err) {
+      // If request fails, revert the optimistic update
+      const originalPost = { ...post };
+      setPost(originalPost);
+      console.error('Error liking comment:', err);
     }
   };
 
@@ -362,71 +319,51 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
     setCommentError('');
     
     try {
-      // In a real app, call API to create comment
-      // const response = await fetch(`/api/community/posts/${postId}/comment/`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ 
-      //     content: newComment,
-      //     parentCommentId: replyTo ? replyTo.commentId : null
-      //   }),
-      // });
-      // const data = await response.json();
+      console.log('Submitting comment:', {
+        postId,
+        content: newComment.substring(0, 50) + (newComment.length > 50 ? '...' : ''),
+        replyTo: replyTo ? (replyTo.CommentID || replyTo.commentId) : null
+      });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Create new comment object
-      const newCommentObj = {
-        commentId: Date.now(),
-        content: newComment,
-        creationDate: new Date().toISOString(),
-        likes: 0,
-        isLiked: false,
-        parentCommentId: replyTo ? replyTo.commentId : null,
-        user: {
-          userId: user?.id || 1,
-          username: user?.username || 'current_user',
-          profileImage: user?.profileImage || '/avatar-placeholder.jpg',
-          reputation: user?.reputation || 100,
-          isVerified: false
+      const response = await fetch(`/api/community/posts/${postId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         },
-        replies: []
-      };
+        body: JSON.stringify({
+          content: newComment.trim(),
+          parentCommentId: replyTo ? (replyTo.CommentID || replyTo.commentId) : null
+        })
+      });
       
-      // Add as a reply or top-level comment
-      if (replyTo) {
-        // If it's a reply, update the comments array with the new reply
-        setComments(prevComments => 
-          prevComments.map(comment => {
-            if (comment.commentId === replyTo.commentId) {
-              return {
-                ...comment,
-                replies: [...(comment.replies || []), newCommentObj]
-              };
-            }
-            return comment;
-          })
-        );
-      } else {
-        // If it's a top-level comment, add it to the comments array
-        setComments(prevComments => [...prevComments, newCommentObj]);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Comment submission failed:', data);
+        throw new Error(data.error || 'Failed to submit comment');
       }
       
-      // Clear form and replyTo
+      console.log('Comment submitted successfully:', data);
+      
+      // Clear form
       setNewComment('');
       setReplyTo(null);
       
-      // Update post comment count
-      setPost(prevPost => ({
-        ...prevPost,
-        commentCount: (prevPost.commentCount || comments.length) + 1
-      }));
-    } catch (error) {
-      console.error('Failed to submit comment:', error);
-      setCommentError('Failed to submit comment. Please try again.');
+      // Refresh post to get updated comments
+      const refreshResponse = await fetch(`/api/community/posts/${postId}`);
+      const refreshData = await refreshResponse.json();
+      
+      if (refreshResponse.ok) {
+        setPost(refreshData);
+        
+        // Also update comments state
+        if (refreshData.comments && Array.isArray(refreshData.comments)) {
+          setComments(refreshData.comments);
+        }
+      }
+    } catch (err) {
+      console.error('Error submitting comment:', err);
+      setCommentError(err.message || 'Failed to submit comment');
     } finally {
       setCommentSubmitting(false);
     }
@@ -443,14 +380,31 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
   };
   
   const formatDate = (dateString) => {
+    if (!dateString) return '';
+    
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 1) {
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+      if (diffHours < 1) {
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        return diffMinutes < 1 ? 'Just now' : `${diffMinutes} minutes ago`;
+      }
+      return `${diffHours} hours ago`;
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric'
+      });
+    }
   };
   
   if (loading) {
@@ -553,6 +507,16 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          <Breadcrumbs sx={{ mb: 3 }}>
+            <Link href="/" passHref style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Typography color="textSecondary">Home</Typography>
+            </Link>
+            <Link href="/community" passHref style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Typography color="textSecondary">Community</Typography>
+            </Link>
+            <Typography color="textPrimary">{post.Title}</Typography>
+          </Breadcrumbs>
+          
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => router.push('/community')}
@@ -597,12 +561,12 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
             {/* Post Header */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-                {post.title}
+                {post.Title}
               </Typography>
               
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
                 <Chip 
-                  label={post.category}
+                  label={post.Category}
                   color="primary"
                   size="medium"
                   sx={{
@@ -613,7 +577,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                   }}
                 />
                 
-                {post.tags && post.tags.map(tag => (
+                {post.Tags && post.Tags.map(tag => (
                   <Chip 
                     key={tag}
                     label={tag}
@@ -645,15 +609,15 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                   }}
                 >
                   <Avatar 
-                    src={post.user.profileImage} 
-                    alt={post.user.username}
+                    src={post.ProfileImage || '/avatar-placeholder.jpg'} 
+                    alt={post.Username}
                     sx={{
                       width: 56,
                       height: 56,
-                      border: theme => post.user.isVerified 
+                      border: theme => post.isVerified 
                         ? `2px solid ${theme.palette.primary.main}`
                         : `2px solid ${alpha(theme.palette.divider, 0.1)}`,
-                      boxShadow: theme => post.user.isVerified 
+                      boxShadow: theme => post.isVerified 
                         ? `0 0 10px ${alpha(theme.palette.primary.main, 0.3)}`
                         : 'none',
                     }}
@@ -661,9 +625,9 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                   <Box sx={{ ml: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Typography variant="h6" fontWeight="bold">
-                        {post.user.username}
+                        {post.Username}
                       </Typography>
-                      {post.user.isVerified && (
+                      {post.isVerified && (
                         <Tooltip title="Verified Member" arrow>
                           <VerifiedIcon 
                             sx={{ 
@@ -676,7 +640,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Member since {new Date(post.user.joinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
+                        Member since {new Date(post.JoinDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}
                       </Typography>
                       <Tooltip title="User Reputation" arrow>
                         <Box 
@@ -690,7 +654,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                         >
                           <StarIcon sx={{ fontSize: 14, color: 'primary.main', mr: 0.5 }} />
                           <Typography variant="caption" fontWeight="bold" color="primary">
-                            {post.user.reputation}
+                            {post.Reputation}
                           </Typography>
                         </Box>
                       </Tooltip>
@@ -867,7 +831,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                     <Typography variant="subtitle2">
-                      Replying to <Box component="span" fontWeight="bold" color="primary.main">{replyTo.user.username}</Box>
+                      Replying to <Box component="span" fontWeight="bold" color="primary.main">{replyTo.Username || replyTo.user?.username || 'Anonymous'}</Box>
                     </Typography>
                     <Button 
                       size="small" 
@@ -892,7 +856,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                     WebkitLineClamp: 1,
                     WebkitBoxOrient: 'vertical',
                   }}>
-                    "{replyTo.content}"
+                    "{replyTo.Content || replyTo.content}"
                   </Typography>
                 </Box>
               )}
@@ -992,7 +956,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
               <Box>
                 {comments.map((comment, index) => (
                   <motion.div
-                    key={comment.commentId}
+                    key={comment.CommentID || comment.commentId}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -1015,12 +979,12 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Avatar 
-                              src={comment.user.profileImage} 
-                              alt={comment.user.username}
+                              src={(comment.user?.profileImage || comment.ProfileImage || '/avatar-placeholder.jpg')} 
+                              alt={(comment.user?.username || comment.Username || 'User')}
                               sx={{
                                 width: 40,
                                 height: 40,
-                                border: theme => comment.user.isVerified 
+                                border: theme => (comment.user?.isVerified || comment.isVerified) 
                                   ? `2px solid ${theme.palette.primary.main}`
                                   : 'none',
                               }}
@@ -1028,9 +992,9 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                             <Box sx={{ ml: 1.5 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <Typography variant="subtitle2" fontWeight="bold">
-                                  {comment.user.username}
+                                  {comment.user?.username || comment.Username || 'Anonymous'}
                                 </Typography>
-                                {comment.user.isVerified && (
+                                {(comment.user?.isVerified || comment.isVerified) && (
                                   <VerifiedIcon 
                                     sx={{ 
                                       ml: 0.5, 
@@ -1039,7 +1003,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                     }} 
                                   />
                                 )}
-                                {comment.user.reputation > 0 && (
+                                {(comment.user?.reputation > 0 || comment.Reputation > 0) && (
                                   <Box 
                                     sx={{ 
                                       display: 'flex', 
@@ -1052,13 +1016,13 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                   >
                                     <StarIcon fontSize="inherit" sx={{ fontSize: 12, color: 'primary.main', mr: 0.5 }} />
                                     <Typography variant="caption" fontWeight="bold" color="primary.main">
-                                      {comment.user.reputation}
+                                      {comment.user?.reputation || comment.Reputation || 0}
                                     </Typography>
                                   </Box>
                                 )}
                               </Box>
                               <Typography variant="caption" color="text.secondary">
-                                {formatDate(comment.creationDate)}
+                                {formatDate(comment.CreationDate || comment.creationDate)}
                               </Typography>
                             </Box>
                           </Box>
@@ -1078,7 +1042,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                         </Box>
                         
                         <Typography variant="body1" sx={{ mt: 1, mb: 2, pl: 0, ml: 0 }}>
-                          {comment.content}
+                          {comment.Content || comment.content}
                         </Typography>
                         
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1097,14 +1061,14 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                 color: comment.isLiked ? 'primary.dark' : 'primary.main'
                               }
                             }}
-                            onClick={() => handleLikeComment(comment.commentId)}
+                            onClick={() => handleLikeComment(comment.CommentID || comment.commentId)}
                           >
                             {comment.isLiked ? 
                               <ThumbUpIcon fontSize="small" /> : 
                               <ThumbUpOutlinedIcon fontSize="small" />
                             }
                             <Typography variant="body2" sx={{ ml: 0.5, fontWeight: 500 }}>
-                              {comment.likes > 0 ? comment.likes : 'Like'}
+                              {(comment.Likes > 0 || comment.likes > 0) ? (comment.Likes || comment.likes) : 'Like'}
                             </Typography>
                           </Box>
                           
@@ -1137,7 +1101,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                           <Box sx={{ mt: 2, ml: 2, pl: 2, borderLeft: theme => `2px solid ${alpha(theme.palette.primary.main, 0.2)}` }}>
                             {comment.replies.map((reply) => (
                               <Box 
-                                key={reply.commentId} 
+                                key={reply.CommentID || reply.commentId} 
                                 sx={{ 
                                   mt: 2, 
                                   pt: 2,
@@ -1147,8 +1111,8 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <Avatar 
-                                      src={reply.user.profileImage} 
-                                      alt={reply.user.username}
+                                      src={(reply.user?.profileImage || reply.ProfileImage || '/avatar-placeholder.jpg')} 
+                                      alt={(reply.user?.username || reply.Username || 'User')}
                                       sx={{
                                         width: 32,
                                         height: 32,
@@ -1157,9 +1121,9 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                     <Box sx={{ ml: 1 }}>
                                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                         <Typography variant="subtitle2" fontWeight="bold">
-                                          {reply.user.username}
+                                          {reply.user?.username || reply.Username || 'Anonymous'}
                                         </Typography>
-                                        {reply.user.isVerified && (
+                                        {(reply.user?.isVerified || reply.isVerified) && (
                                           <VerifiedIcon 
                                             sx={{ 
                                               ml: 0.5, 
@@ -1170,7 +1134,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                         )}
                                       </Box>
                                       <Typography variant="caption" color="text.secondary">
-                                        {formatDate(reply.creationDate)}
+                                        {formatDate(reply.CreationDate || reply.creationDate)}
                                       </Typography>
                                     </Box>
                                   </Box>
@@ -1190,7 +1154,7 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                 </Box>
                                 
                                 <Typography variant="body2" sx={{ mt: 1, mb: 1.5 }}>
-                                  {reply.content}
+                                  {reply.Content || reply.content}
                                 </Typography>
                                 
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1209,14 +1173,14 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
                                         color: reply.isLiked ? 'primary.dark' : 'primary.main'
                                       }
                                     }}
-                                    onClick={() => handleLikeComment(reply.commentId)}
+                                    onClick={() => handleLikeComment(reply.CommentID || reply.commentId)}
                                   >
                                     {reply.isLiked ? 
                                       <ThumbUpIcon fontSize="small" /> : 
                                       <ThumbUpOutlinedIcon fontSize="small" />
                                     }
                                     <Typography variant="body2" sx={{ ml: 0.5, fontWeight: 500 }}>
-                                      {reply.likes > 0 ? reply.likes : 'Like'}
+                                      {(reply.Likes > 0 || reply.likes > 0) ? (reply.Likes || reply.likes) : 'Like'}
                                     </Typography>
                                   </Box>
                                 </Box>
@@ -1294,7 +1258,9 @@ Any recommendations for tutorials, courses, or resources would be greatly apprec
             </Box>
             Report
           </MenuItem>
-          {selectedComment && selectedComment.user.userId === (user?.id || 0) && (
+          {selectedComment && 
+            ((selectedComment.user?.userId === (user?.id || 0)) || 
+             (selectedComment.UserID === (user?.id || 0))) && (
             <MenuItem onClick={handleMenuClose} sx={{ py: 1.5 }}>
               <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
                 <EditIcon fontSize="small" />

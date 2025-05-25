@@ -26,7 +26,7 @@ export async function GET(request) {
       token = tokenCookie?.value || '';
     }
     
-    console.log('NFT API Proxy: Token bilgisi:', token ? `${token.substring(0, 15)}...` : 'Yok');
+    // Token information available
   } catch (error) {
     console.error('Token erişim hatası:', error);
   }
@@ -45,7 +45,7 @@ export async function GET(request) {
     
     // Backend API URL - Available NFTs endpoint'ini kullanıyoruz
     const backendUrl = `http://localhost:8000/api/nfts/available/?${queryParams.toString()}`;
-    console.log('Backend API isteği yapılıyor:', backendUrl);
+    // Send request to backend API
     
     // Backend'e API isteği
     const response = await fetch(backendUrl, {
@@ -59,7 +59,7 @@ export async function GET(request) {
       cache: 'no-store'
     });
     
-    console.log('Backend yanıt durumu:', response.status);
+    // Response received from backend
     
     if (!response.ok) {
       // Hata durumunu yönet
@@ -91,12 +91,86 @@ export async function GET(request) {
     
     // JSON yanıtı al
     const data = await response.json();
-    console.log('Backend API yanıtı başarılı alındı');
+    // Successfully received response
+    
+    // Process the NFT data to ensure consistent format
+    const processedNfts = Array.isArray(data) ? data : (data.nfts || data.results || []);
+    
+    // Fix image URIs and normalize data structure
+    const normalizedNfts = processedNfts.map(nft => {
+      // Handle image URI paths
+      let imageUri = nft.ImageURI || nft.imageUri || nft.ImageURL || nft.imageUrl;
+      if (imageUri && imageUri.startsWith('/media')) {
+        imageUri = `http://localhost:8000${imageUri}`;
+      }
+      
+      // Extract rarity from blockchain metadata if available
+      let rarity = nft.Rarity || nft.rarity || 'Common';
+      
+      if (nft.BlockchainMetadata) {
+        try {
+          // Parse the blockchain metadata if it's a string
+          const metadata = typeof nft.BlockchainMetadata === 'string' 
+            ? JSON.parse(nft.BlockchainMetadata) 
+            : nft.BlockchainMetadata;
+          
+          // Check for rarity in different possible locations within metadata
+          if (metadata.attributes) {
+            // Look for rarity in attributes array
+            const rarityAttribute = metadata.attributes.find(
+              attr => attr.trait_type?.toLowerCase() === 'rarity' || 
+                     attr.trait_type?.toLowerCase() === 'tier'
+            );
+            
+            if (rarityAttribute) {
+              rarity = rarityAttribute.value;
+            }
+          }
+          
+          // Also check if rarity is directly specified in the metadata
+          if (metadata.rarity) {
+            rarity = metadata.rarity;
+          }
+          
+          // Ensure proper capitalization
+          rarity = rarity.charAt(0).toUpperCase() + rarity.slice(1).toLowerCase();
+        } catch (e) {
+          console.warn('Could not parse BlockchainMetadata:', e);
+        }
+      }
+      
+      // Get proper owners count - fall back through different properties
+      const ownersCount = nft.OwnersCount !== undefined 
+                       ? Number(nft.OwnersCount) 
+                       : (nft.ownersCount !== undefined 
+                          ? Number(nft.ownersCount) 
+                          : (nft.OwnedCount !== undefined 
+                             ? Number(nft.OwnedCount) 
+                             : 0));
+      
+      return {
+        NFTID: nft.NFTID || nft.nftId,
+        Title: nft.Title || nft.title,
+        Description: nft.Description || nft.description,
+        ImageURI: imageUri,
+        TradeValue: nft.TradeValue || nft.tradeValue || nft.price || 0,
+        SubscriptionDays: nft.SubscriptionDays || nft.subscriptionDays || 0,
+        NFTTypeID: nft.NFTTypeID || nft.nftTypeId,
+        NFTType: nft.NFTType || nft.type,
+        Rarity: rarity,
+        Collection: nft.Collection || nft.collection || 'General',
+        CreationDate: nft.CreationDate || nft.creationDate,
+        OwnersCount: ownersCount,
+        IsActive: nft.IsActive === undefined 
+          ? (nft.isActive === undefined ? true : nft.isActive) 
+          : nft.IsActive === 1 || nft.IsActive === true
+      };
+    });
     
     // Yanıtı admin paneline uygun formatta yeniden yapılandır
     const formattedData = {
-      nfts: data.nfts || data.results || data,  // API'nin döndürdüğü veri yapısına göre uyarla
-      totalCount: data.totalCount || data.count || (data.nfts ? data.nfts.length : (Array.isArray(data) ? data.length : 0))
+      nfts: normalizedNfts,
+      totalCount: normalizedNfts.length
     };
     
     // Frontend'e iletilecek yanıtı oluştur
@@ -129,6 +203,14 @@ export async function POST(request) {
       const tokenCookie = request.cookies.get('access_token');
       token = tokenCookie?.value || '';
     }
+    
+    if (!token) {
+      console.error('NFT creation failed: No authentication token found');
+      return NextResponse.json(
+        { error: 'Authentication required. Please log in again.' },
+        { status: 401 }
+      );
+    }
   } catch (error) {
     console.error('Token erişim hatası:', error);
   }
@@ -136,9 +218,23 @@ export async function POST(request) {
   try {
     // Request body'i al
     const requestData = await request.json();
+    console.log('NFT creation request data:', JSON.stringify(requestData, null, 2));
+    
+    // Required fields check
+    const requiredFields = ['title', 'description', 'imageUri', 'nftTypeId'];
+    const missingFields = requiredFields.filter(field => !requestData[field]);
+    
+    if (missingFields.length > 0) {
+      console.error(`NFT creation failed: Missing required fields: ${missingFields.join(', ')}`);
+      return NextResponse.json(
+        { error: `Missing required fields: ${missingFields.join(', ')}` },
+        { status: 400 }
+      );
+    }
     
     // Backend API URL - Mevcut create endpoint'ini kullanıyoruz
     const backendUrl = 'http://localhost:8000/api/nfts/create/';
+    console.log(`Sending NFT creation request to backend: ${backendUrl}`);
     
     // Backend'e API isteği
     const response = await fetch(backendUrl, {
@@ -151,8 +247,11 @@ export async function POST(request) {
       body: JSON.stringify(requestData)
     });
     
+    console.log(`Backend response status: ${response.status}`);
+    
     if (!response.ok) {
       const responseText = await response.text();
+      console.error(`NFT creation failed with status ${response.status}:`, responseText);
       
       try {
         const errorData = JSON.parse(responseText);
@@ -167,6 +266,7 @@ export async function POST(request) {
     
     // JSON yanıtı al
     const data = await response.json();
+    console.log('NFT creation successful:', data);
     
     return NextResponse.json(data, {
       status: 201,
@@ -175,7 +275,7 @@ export async function POST(request) {
       }
     });
   } catch (error) {
-    console.error('API Proxy hatası:', error);
+    console.error('NFT creation API Proxy hatası:', error);
     return NextResponse.json(
       { error: 'Sunucu hatası', message: error.message },
       { status: 500 }
