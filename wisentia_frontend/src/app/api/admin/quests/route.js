@@ -215,10 +215,13 @@ export async function POST(request) {
     // İstek verisini al
     const requestData = await request.json();
     
-    // Use the AI endpoint for quest creation
-    const backendUrl = 'http://localhost:8000/api/ai/admin/generate-quest/';
+    // Backend API URL - use NEXT_PUBLIC_API_URL or default to localhost
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     
-    console.log('AI Quest oluşturma isteği yapılıyor:', backendUrl);
+    // Use the manual quest creation endpoint
+    const backendUrl = `${apiBaseUrl}/api/quests/create/`;
+    
+    console.log('Manuel Quest oluşturma isteği yapılıyor:', backendUrl);
     console.log('İstek verisi:', JSON.stringify(requestData, null, 2));
     
     // Backend'e API isteği

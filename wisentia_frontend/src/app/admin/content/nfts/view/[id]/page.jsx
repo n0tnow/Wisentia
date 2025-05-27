@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@mui/material/styles';
-import { use } from 'react';
-
 import {
   Container,
   Box,
@@ -50,7 +48,7 @@ import {
 } from '@mui/icons-material';
 
 export default function NFTViewPage({ params }) {
-  const nftId = use(params).id;
+  const nftId = params.id;
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();

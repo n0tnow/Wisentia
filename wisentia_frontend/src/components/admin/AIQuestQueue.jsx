@@ -29,8 +29,75 @@ export default function AIQuestQueue() {
   const [openDialog, setOpenDialog] = useState(false);
   const [success, setSuccess] = useState(null);
   const [processing, setProcessing] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(5000); // 5 saniye
+  const [refreshInterval, setRefreshInterval] = useState(2000); // 2 saniye - quiz sistemi gibi
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(-1);
+  
+  // LocalStorage key for quest queue - like quiz system
+  const QUEST_QUEUE_STORAGE_KEY = 'wisentia_quest_queue';
+  
+  // LocalStorage functions - like quiz system
+  const saveQueueToStorage = (queue) => {
+    try {
+      localStorage.setItem(QUEST_QUEUE_STORAGE_KEY, JSON.stringify(queue));
+    } catch (error) {
+      console.error('Error saving quest queue to localStorage:', error);
+    }
+  };
+
+  const loadQueueFromStorage = () => {
+    try {
+      const stored = localStorage.getItem(QUEST_QUEUE_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Error loading quest queue from localStorage:', error);
+      return [];
+    }
+  };
+
+  const checkProcessingItemsStatus = async (currentQueue) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    let updatedQueue = [...currentQueue];
+    let hasUpdates = false;
+
+    for (let i = 0; i < currentQueue.length; i++) {
+      const item = currentQueue[i];
+      
+      if (item.status === 'processing' && item.contentId) {
+        try {
+          const response = await fetch(`/api/admin/quests/status/${item.contentId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (response.ok) {
+            const statusData = await response.json();
+            
+            // Update item status based on backend response
+            if (statusData.status !== item.status) {
+              updatedQueue[i] = {
+                ...item,
+                status: statusData.status,
+                progress: statusData.progress || item.progress,
+                content: statusData.content || item.content,
+                apiCost: statusData.apiCost || item.apiCost,
+                createdQuestId: statusData.createdQuestId || item.createdQuestId
+              };
+              hasUpdates = true;
+            }
+          }
+        } catch (error) {
+          console.error(`Error checking status for item ${item.contentId}:`, error);
+        }
+      }
+    }
+
+    if (hasUpdates) {
+      saveQueueToStorage(updatedQueue);
+      setQueueData(updatedQueue);
+    }
+  };
   
   // Quest formu için state
   const [questFormData, setQuestFormData] = useState({
@@ -44,12 +111,25 @@ export default function AIQuestQueue() {
   useEffect(() => {
     if (!user) return;
     
-    fetchQueueData();
+    // Load queue from localStorage first - like quiz system
+    const storedQueue = loadQueueFromStorage();
+    setQueueData(storedQueue);
+    setLoading(false);
     
-    // Otomatik yenileme
+    // Otomatik yenileme - sadece processing olan itemlar için
     let intervalId = null;
     if (autoRefresh) {
-      intervalId = setInterval(fetchQueueData, refreshInterval);
+      intervalId = setInterval(() => {
+        const currentQueue = loadQueueFromStorage();
+        const hasProcessingItems = currentQueue.some(item => 
+          item.status === 'processing' || item.status === 'queued'
+        );
+        
+        if (hasProcessingItems) {
+          // Check status of processing items from backend
+          checkProcessingItemsStatus(currentQueue);
+        }
+      }, refreshInterval);
     }
     
     return () => {
@@ -57,79 +137,30 @@ export default function AIQuestQueue() {
     };
   }, [user, autoRefresh, refreshInterval]);
 
-  const fetchQueueData = async () => {
-    try {
-      setError(null);
-      
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        setError('Authentication required');
-        setLoading(false);
-        return;
-      }
-      
-      const response = await fetch('/api/admin/quests/queue', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch quest queue');
-      }
-      
-      const data = await response.json();
-      
-      // Tarih formatını düzelt ve sırala
-      const formattedData = data.queue?.map(item => ({
-        ...item,
-        creationDate: new Date(item.creationDate)
-      })) || [];
-      
-      // Tarihe göre sırala - eskiden yeniye
-      formattedData.sort((a, b) => a.creationDate - b.creationDate);
-      
-      setQueueData(formattedData);
-    } catch (err) {
-      console.error('Error fetching queue data:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleAddToQueue = async () => {
     try {
       setError(null);
       setProcessing(true);
       
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        setError('Authentication required');
-        return;
-      }
+      // Create quest item for localStorage - like quiz system
+      const questItem = {
+        id: Date.now(), // Unique ID
+        ...questFormData,
+        status: 'waiting',
+        creationDate: new Date().toISOString(),
+        progress: { status: 'waiting', percentage: 0, current_step: 'Waiting to be processed...' }
+      };
       
-      const response = await fetch('/api/admin/quests/queue', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(questFormData)
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add quest to queue');
-      }
-      
-      const data = await response.json();
+      // Add to localStorage queue
+      const currentQueue = loadQueueFromStorage();
+      const updatedQueue = [questItem, ...currentQueue];
+      saveQueueToStorage(updatedQueue);
+      setQueueData(updatedQueue);
       
       setSuccess('Quest successfully added to queue');
       setOpenDialog(false);
-      fetchQueueData(); // Refresh data
       
       // Form datayı sıfırla
       setQuestFormData({
@@ -149,45 +180,181 @@ export default function AIQuestQueue() {
   };
 
   const handleProcessNext = async () => {
+    if (processing) return;
+
+    const currentQueue = loadQueueFromStorage();
+    const waitingQuests = currentQueue.filter(q => q.status === 'waiting');
+    
+    if (waitingQuests.length === 0) {
+      setError('No waiting quests in queue');
+      return;
+    }
+    
+    setProcessing(true);
+    
+    // Find first waiting quest
+    const questIndex = currentQueue.findIndex(q => q.status === 'waiting');
+    if (questIndex === -1) {
+      setProcessing(false);
+      return;
+    }
+    
+    const questToProcess = currentQueue[questIndex];
+    setCurrentProcessingIndex(questIndex);
+    
     try {
-      setError(null);
-      setProcessing(true);
+      // Update status to processing
+      let updatedQueue = [...currentQueue];
+      updatedQueue[questIndex] = {
+        ...questToProcess,
+        status: 'processing',
+        progress: { 
+          status: 'processing', 
+          percentage: 5, 
+          current_step: 'Starting quest generation...' 
+        }
+      };
+      saveQueueToStorage(updatedQueue);
+      setQueueData(updatedQueue);
       
+      // Call backend API to start generation
       const token = localStorage.getItem('access_token');
-      if (!token) {
-        setError('Authentication required');
-        return;
-      }
-      
-      const response = await fetch('/api/admin/quests/queue/process', {
+      const response = await fetch('/api/admin/quests/auto-generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({
+          difficulty: questToProcess.difficulty,
+          category: questToProcess.category,
+          pointsRequired: questToProcess.pointsRequired,
+          pointsReward: questToProcess.pointsReward,
+          autoCreate: questToProcess.autoCreate,
+          enableDatabaseAnalysis: true,
+          includeNFTRewards: true,
+          questComplexity: 'medium'
+        })
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to process quest queue');
+        throw new Error('Failed to start quest generation');
       }
       
       const data = await response.json();
       
-      setSuccess('Processing started for the next quest in queue');
-      fetchQueueData(); // Refresh data
+      // Update with contentId from backend
+      updatedQueue[questIndex] = {
+        ...updatedQueue[questIndex],
+        contentId: data.contentId,
+        progress: { 
+          status: 'processing', 
+          percentage: 10, 
+          current_step: 'Quest generation started in backend...' 
+        }
+      };
+      saveQueueToStorage(updatedQueue);
+      setQueueData(updatedQueue);
       
-      // İşlem başladıysa ve content ID varsa durumu görüntüleme sayfasına yönlendir
-      if (data.contentId) {
-        router.push(`/admin/quests/status/${data.contentId}`);
-      }
+      setSuccess('Processing started for the next quest in queue');
+      
+      // Start progress monitoring
+      monitorQuestProgress(questIndex, data.contentId);
       
     } catch (err) {
       console.error('Error processing queue:', err);
       setError(err.message);
+      
+      // Reset quest status to waiting on error
+      let updatedQueue = [...currentQueue];
+      updatedQueue[questIndex] = {
+        ...questToProcess,
+        status: 'waiting',
+        progress: { 
+          status: 'waiting', 
+          percentage: 0, 
+          current_step: 'Waiting to be processed...' 
+        }
+      };
+      saveQueueToStorage(updatedQueue);
+      setQueueData(updatedQueue);
     } finally {
       setProcessing(false);
+      setCurrentProcessingIndex(-1);
     }
+  };
+
+  const monitorQuestProgress = async (questIndex, contentId) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    let progressCounter = 10;
+    const progressInterval = setInterval(async () => {
+      try {
+        // Check backend status
+        const response = await fetch(`/api/admin/quests/status/${contentId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const statusData = await response.json();
+          const currentQueue = loadQueueFromStorage();
+          
+          if (questIndex < currentQueue.length) {
+            let updatedQueue = [...currentQueue];
+            
+            // Update progress based on backend status
+            if (statusData.status === 'completed' || statusData.status === 'approved') {
+              updatedQueue[questIndex] = {
+                ...updatedQueue[questIndex],
+                status: statusData.status,
+                progress: { 
+                  status: 'completed', 
+                  percentage: 100, 
+                  current_step: 'Quest generation completed!' 
+                },
+                content: statusData.content,
+                apiCost: statusData.apiCost,
+                createdQuestId: statusData.createdQuestId
+              };
+              clearInterval(progressInterval);
+            } else if (statusData.status === 'failed') {
+              updatedQueue[questIndex] = {
+                ...updatedQueue[questIndex],
+                status: 'failed',
+                progress: { 
+                  status: 'failed', 
+                  percentage: 0, 
+                  current_step: 'Quest generation failed' 
+                }
+              };
+              clearInterval(progressInterval);
+            } else {
+              // Still processing - update progress
+              progressCounter = Math.min(progressCounter + 2, 95);
+              updatedQueue[questIndex] = {
+                ...updatedQueue[questIndex],
+                progress: { 
+                  status: 'processing', 
+                  percentage: progressCounter, 
+                  current_step: statusData.progress?.current_step || 'AI generating quest...' 
+                }
+              };
+            }
+            
+            saveQueueToStorage(updatedQueue);
+            setQueueData(updatedQueue);
+          }
+        }
+      } catch (error) {
+        console.error('Error monitoring quest progress:', error);
+      }
+    }, 3000); // Check every 3 seconds
+
+    // Stop monitoring after 10 minutes
+    setTimeout(() => {
+      clearInterval(progressInterval);
+    }, 600000);
   };
 
   const handleSettingChange = (e) => {
@@ -200,6 +367,13 @@ export default function AIQuestQueue() {
 
   const getStatusChip = (status) => {
     switch (status?.toLowerCase()) {
+      case 'queued':
+        return <Chip 
+          icon={<ScheduleIcon />} 
+          label="Queued" 
+          color="default" 
+          size="small" 
+        />;
       case 'pending':
         return <Chip 
           icon={<ScheduleIcon />} 
@@ -210,7 +384,7 @@ export default function AIQuestQueue() {
       case 'processing':
         return <Chip 
           icon={<AutoAwesomeIcon />} 
-          label="Processing" 
+          label="AI Processing" 
           color="info" 
           size="small" 
         />;
@@ -221,11 +395,25 @@ export default function AIQuestQueue() {
           color="success" 
           size="small" 
         />;
+      case 'approved':
+        return <Chip 
+          icon={<CheckCircleIcon />} 
+          label="Approved" 
+          color="success" 
+          size="small" 
+        />;
       case 'failed':
         return <Chip 
           icon={<ErrorOutlineIcon />} 
           label="Failed" 
           color="error" 
+          size="small" 
+        />;
+      case 'duplicate_found':
+        return <Chip 
+          icon={<ErrorOutlineIcon />} 
+          label="Duplicate Found" 
+          color="warning" 
           size="small" 
         />;
       default:
@@ -341,7 +529,10 @@ export default function AIQuestQueue() {
         
         <Button 
           startIcon={<RefreshIcon />} 
-          onClick={fetchQueueData}
+          onClick={() => {
+            const storedQueue = loadQueueFromStorage();
+            setQueueData(storedQueue);
+          }}
           disabled={processing}
         >
           Refresh Now
@@ -355,10 +546,12 @@ export default function AIQuestQueue() {
             <TableHead>
               <TableRow>
                 <TableCell>Status</TableCell>
+                <TableCell>Quest ID</TableCell>
                 <TableCell>Category</TableCell>
                 <TableCell>Difficulty</TableCell>
                 <TableCell>Points Required</TableCell>
                 <TableCell>Points Reward</TableCell>
+                <TableCell>API Cost</TableCell>
                 <TableCell>Created At</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -366,14 +559,73 @@ export default function AIQuestQueue() {
             <TableBody>
               {queueData.map((item) => (
                 <TableRow key={item.contentId || item.id}>
-                  <TableCell>{getStatusChip(item.status)}</TableCell>
+                  <TableCell>
+                    <Box>
+                      {getStatusChip(item.status)}
+                      {item.status === 'processing' && item.progress && (
+                        <Box sx={{ mt: 1, width: '100%' }}>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={item.progress.percentage || 0} 
+                            sx={{ height: 6, borderRadius: 3 }}
+                          />
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                            {item.progress.current_step || 'Processing...'}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    {item.createdQuestId || item.content?.createdQuestId ? (
+                      <Typography variant="body2" color="primary" fontWeight="bold">
+                        #{item.createdQuestId || item.content.createdQuestId}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        {(item.status === 'completed' || item.status === 'approved') ? 'No ID' : 'Pending'}
+                      </Typography>
+                    )}
+                  </TableCell>
                   <TableCell>{item.category || 'N/A'}</TableCell>
                   <TableCell>{item.difficulty || 'N/A'}</TableCell>
                   <TableCell>{item.pointsRequired || 0}</TableCell>
                   <TableCell>{item.pointsReward || 0}</TableCell>
+                  <TableCell>
+                    {item.apiCost && item.apiCost.total_cost ? (
+                      <Box>
+                        <Typography variant="body2" color="primary" fontWeight="bold">
+                          ${item.apiCost.total_cost.toFixed(4)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.apiCost.input_tokens || 0} in / {item.apiCost.output_tokens || 0} out
+                        </Typography>
+                      </Box>
+                    ) : item.status === 'completed' || item.status === 'approved' ? (
+                      <Typography variant="body2" color="text.secondary">
+                        No cost data
+                      </Typography>
+                    ) : item.status === 'duplicate_found' ? (
+                      <Typography variant="body2" color="text.secondary">
+                        No cost (duplicate)
+                      </Typography>
+                    ) : item.status === 'failed' ? (
+                      <Typography variant="body2" color="error.main">
+                        Failed
+                      </Typography>
+                    ) : item.status === 'processing' ? (
+                      <Typography variant="body2" color="info.main">
+                        Processing...
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        Pending
+                      </Typography>
+                    )}
+                  </TableCell>
                   <TableCell>{formatDate(item.creationDate)}</TableCell>
                   <TableCell>
-                    {item.status === 'completed' && (
+                    {(item.status === 'completed' || item.status === 'approved') && (
                       <Button 
                         size="small" 
                         variant="outlined"
@@ -389,6 +641,36 @@ export default function AIQuestQueue() {
                         onClick={() => router.push(`/admin/quests/status/${item.contentId}`)}
                       >
                         Check Status
+                      </Button>
+                    )}
+                    {item.status === 'duplicate_found' && (
+                      <Button 
+                        size="small" 
+                        variant="outlined"
+                        color="warning"
+                        onClick={() => router.push(`/admin/quests/status/${item.contentId}`)}
+                      >
+                        View Duplicate
+                      </Button>
+                    )}
+                    {item.status === 'failed' && (
+                      <Button 
+                        size="small" 
+                        variant="outlined"
+                        color="error"
+                        onClick={() => router.push(`/admin/quests/status/${item.contentId}`)}
+                      >
+                        View Error
+                      </Button>
+                    )}
+                    {item.status === 'pending' && (
+                      <Button 
+                        size="small" 
+                        variant="outlined"
+                        color="warning"
+                        onClick={() => router.push(`/admin/quests/status/${item.contentId}`)}
+                      >
+                        Review
                       </Button>
                     )}
                   </TableCell>

@@ -41,7 +41,7 @@ export default function AIQuestSuggestor({ onSuggestionsApply, currentFormData }
       // Extract parameters from current form data
       const requestData = {
         difficulty: currentFormData.difficultyLevel || 'intermediate',
-        category: 'Learning', // Default category
+        category: currentFormData.category || 'General Learning', // Use selected category
         requiredPoints: currentFormData.requiredPoints || 0,
         rewardPoints: currentFormData.rewardPoints || 50
       };
@@ -74,24 +74,46 @@ export default function AIQuestSuggestor({ onSuggestionsApply, currentFormData }
   const handleApplySuggestion = () => {
     if (!suggestion) return;
     
+    console.log('=== APPLYING AI SUGGESTIONS ===');
+    console.log('Original suggestion object:', suggestion);
+    console.log('Suggestion conditions:', suggestion.conditions);
+    
     // Map AI suggestion format to form data format
-    const mappedConditions = suggestion.conditions.map(condition => {
+    const mappedConditions = suggestion.conditions.map((condition, index) => {
+      console.log(`\n--- Mapping condition ${index + 1} ---`);
+      console.log('Original condition:', condition);
+      
       // Convert AI condition format to form condition format
       const conditionType = mapAIConditionType(condition.type);
+      console.log('Mapped condition type:', conditionType);
       
-      return {
+      // Ensure targetId is properly converted to number if it exists
+      let targetId = null;
+      if (condition.targetId !== null && condition.targetId !== undefined) {
+        targetId = parseInt(condition.targetId);
+        console.log('Parsed targetId:', targetId);
+      }
+      
+      const mappedCondition = {
         conditionType,
-        targetId: null, // Will need to be selected by user
-        targetValue: condition.points || 1,
-        description: condition.description || ''
+        targetId: targetId,
+        targetValue: condition.targetValue || condition.points || 1,
+        description: condition.description || condition.name || ''
       };
+      
+      console.log('Final mapped condition:', mappedCondition);
+      return mappedCondition;
     });
+    
+    console.log('\n=== ALL MAPPED CONDITIONS ===');
+    console.log(mappedConditions);
     
     // Create updated form data
     const updatedData = {
-      title: suggestion.title,
-      description: suggestion.description,
+      title: suggestion.title || currentFormData.title,
+      description: suggestion.description || currentFormData.description,
       // Keep other form fields the same
+      category: currentFormData.category,
       difficultyLevel: currentFormData.difficultyLevel,
       requiredPoints: currentFormData.requiredPoints,
       rewardPoints: currentFormData.rewardPoints,
@@ -100,6 +122,9 @@ export default function AIQuestSuggestor({ onSuggestionsApply, currentFormData }
       // Add the new conditions
       conditions: mappedConditions
     };
+    
+    console.log('\n=== FINAL FORM DATA ===');
+    console.log(updatedData);
     
     // Pass the updated data to parent component
     onSuggestionsApply(updatedData);
@@ -110,16 +135,24 @@ export default function AIQuestSuggestor({ onSuggestionsApply, currentFormData }
   const mapAIConditionType = (aiType) => {
     const typeMap = {
       'course': 'course_completion',
+      'course_completion': 'course_completion',
       'quiz': 'quiz_score',
+      'quiz_score': 'quiz_score',
       'video': 'watch_videos',
+      'watch_videos': 'watch_videos',
+      'watch_video': 'watch_videos',
+      'video_watch': 'watch_videos',
       'discussion': 'start_discussion',
+      'start_discussion': 'start_discussion',
       'points': 'total_points',
+      'total_points': 'total_points',
       'complete': 'course_completion',
       'score': 'quiz_score',
       'watch': 'watch_videos',
       'take_quiz': 'take_quiz'
     };
     
+    console.log(`Mapping AI type "${aiType}" to form type "${typeMap[aiType] || 'course_completion'}"`);
     return typeMap[aiType] || 'course_completion';
   };
   

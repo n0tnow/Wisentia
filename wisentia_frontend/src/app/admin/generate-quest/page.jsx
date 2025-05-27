@@ -1,1273 +1,823 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
+import { 
+  Button, Stack, Box, Typography, Container, Paper, Divider,
+  Card, CardContent, CardActions, Grid, FormControl, InputLabel,
+  Select, MenuItem, TextField, Chip, List, ListItem, ListItemText,
+  ListItemSecondaryAction, IconButton, Alert, CircularProgress,
+  LinearProgress, useTheme, alpha, Badge, Tooltip
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import QueueIcon from '@mui/icons-material/Queue';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import PsychologyIcon from '@mui/icons-material/Psychology';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
-import { useAuth } from '@/contexts/AuthContext';
 
-// MUI components
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  MenuItem,
-  FormControl,
-  Select,
-  InputLabel,
-  CircularProgress,
-  Alert,
-  Paper,
-  Grid,
-  useTheme,
-  Chip,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  alpha,
-  Container,
-  Stack,
-  LinearProgress,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-  Menu,
-  Card,
-  CardContent,
-  Fade,
-  Grow,
-  Badge,
-  Divider,
-  Switch,
-  Collapse,
-  Snackbar,
-  useMediaQuery,
-  Slider
-} from '@mui/material';
+// Quest queue storage key
+const QUEST_QUEUE_STORAGE_KEY = 'wisentia_quest_queue';
 
-// MUI icons
-import {
-  EmojiEvents as QuestIcon,
-  Category as CategoryIcon,
-  Timer as TimerIcon,
-  ArrowBack as BackIcon,
-  Campaign as RewardIcon,
-  AutoAwesome as SparkleIcon,
-  PointOfSale as PointIcon,
-  Add as AddIcon,
-  Queue as QueueIcon,
-  PlayArrow as PlayArrowIcon,
-  HourglassEmpty as HourglassEmptyIcon,
-  Delete as DeleteIcon,
-  Sort as SortIcon,
-  FilterList as FilterIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  Visibility as VisibilityIcon,
-  Psychology as AIIcon,
-  ExpandMore as ExpandMoreIcon,
-  StarRate as StarIcon,
-  Code as CodeIcon,
-  Gamepad as GamepadIcon,
-  BubbleChart as BubbleIcon,
-  Speed as SpeedIcon,
-  Public as PublicIcon,
-  LocalOffer as OfferIcon,
-  Construction as ConstructionIcon,
-  CloudQueue as CloudQueueIcon,
-  TrendingUp as TrendingIcon,
-  Lock as LockIcon
-} from '@mui/icons-material';
+// Stat Card component
+const StatCard = ({ value, label, color, gradient }) => (
+  <Box
+    sx={{
+      flex: 1,
+      minWidth: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      p: 2,
+      borderRadius: 2,
+      background: gradient,
+      color: '#fff',
+      boxShadow: 1,
+      m: 0.5,
+      height: 64,
+      fontWeight: 700,
+      textShadow: '0 1px 4px rgba(0,0,0,0.25)',
+    }}
+  >
+    <Typography variant="h4" fontWeight={700} sx={{ lineHeight: 1 }}>{value}</Typography>
+    <Typography variant="body2" sx={{ opacity: 0.95 }}>{label}</Typography>
+  </Box>
+);
 
-// LocalStorage keys for persistence
-const STORAGE_KEYS = {
-  QUEUE: 'wisentia_quest_queue',
-  FILTERS: 'wisentia_quest_filters',
-  SORT: 'wisentia_quest_sort',
-  EXPANDED: 'wisentia_quest_expanded'
+// Quest Card component
+const QuestCard = ({ quest, onDelete, onRetry }) => {
+  const theme = useTheme();
+  
+  const getStatusIcon = () => {
+    switch (quest.status) {
+      case 'waiting': return <HourglassEmptyIcon fontSize="small" color="action" />;
+      case 'processing': return <CircularProgress size={20} />;
+      case 'completed': return <CheckCircleIcon fontSize="small" color="success" />;
+      case 'failed': return <CancelIcon fontSize="small" color="error" />;
+      default: return <HourglassEmptyIcon fontSize="small" color="action" />;
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (quest.status) {
+      case 'processing': return 'primary.main';
+      case 'completed': return 'success.main';
+      case 'failed': return 'error.main';
+      default: return 'divider';
+    }
+  };
+
+  return (
+    <Card
+      sx={{
+        height: 250,
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        border: '1px solid',
+        borderColor: getStatusColor(),
+        boxShadow: quest.status === 'processing' ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}` : 1,
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: 3,
+          transform: 'translateY(-2px)'
+        }
+      }}
+    >
+      <CardContent sx={{ flex: 1, pb: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+            {getStatusIcon()}
+            <Typography variant="subtitle2" fontWeight={600} sx={{ 
+              wordWrap: 'break-word',
+              overflow: 'hidden',
+              maxHeight: '2.4em',
+              lineHeight: '1.2em',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical'
+            }}>
+              Quest #{quest.id}
+            </Typography>
+          </Box>
+          <IconButton
+            size="small"
+            onClick={() => onDelete(quest.id)}
+            sx={{ ml: 1 }}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        
+        <Stack spacing={0.5} sx={{ mb: 1 }}>
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            <Chip
+              size="small"
+              label={quest.difficulty}
+              color={
+                quest.difficulty === 'easy' ? 'success' :
+                quest.difficulty === 'intermediate' ? 'warning' :
+                quest.difficulty === 'hard' ? 'error' : 'default'
+              }
+            />
+            <Chip
+              size="small"
+              label={quest.category}
+              variant="outlined"
+            />
+            {quest.questComplexity && (
+              <Chip
+                size="small"
+                label={quest.questComplexity}
+                color="secondary"
+                variant="outlined"
+              />
+            )}
+          </Box>
+          
+          <Typography variant="body2" color="text.secondary" sx={{ 
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical'
+          }}>
+            Reward: {quest.rewardPoints} points
+            {quest.requiredPoints > 0 && ` • Required: ${quest.requiredPoints} points`}
+          </Typography>
+
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+            {quest.enableDatabaseAnalysis && (
+              <Chip
+                size="small"
+                label="DB Analysis"
+                color="primary"
+                variant="outlined"
+                sx={{ fontSize: '0.65rem', height: 20 }}
+              />
+            )}
+            {quest.includeNFTRewards && (
+              <Chip
+                size="small"
+                label="NFT Rewards"
+                color="secondary"
+                variant="outlined"
+                sx={{ fontSize: '0.65rem', height: 20 }}
+              />
+            )}
+            {quest.autoCreate && (
+              <Chip
+                size="small"
+                label="Auto-Create"
+                color="success"
+                variant="outlined"
+                sx={{ fontSize: '0.65rem', height: 20 }}
+              />
+            )}
+          </Box>
+          
+          <Typography variant="caption" color="text.secondary">
+            Created: {new Date(quest.createdAt).toLocaleString()}
+          </Typography>
+        </Stack>
+      </CardContent>
+      
+      {quest.status === 'failed' && (
+        <CardActions sx={{ pt: 0 }}>
+          <Button
+            size="small"
+            startIcon={<RefreshIcon />}
+            onClick={() => onRetry(quest.id)}
+            color="primary"
+          >
+            Retry
+          </Button>
+        </CardActions>
+      )}
+    </Card>
+  );
 };
 
-export default function GenerateQuestPage() {
-  const theme = useTheme();
-  const router = useRouter();
-  const { user } = useAuth();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-  
-  // Form states
-  const [difficulty, setDifficulty] = useState('intermediate');
-  const [category, setCategory] = useState('Blockchain');
-  const [pointsRequired, setPointsRequired] = useState(100);
-  const [pointsReward, setPointsReward] = useState(50);
-  const [questType, setQuestType] = useState('educational');
-  const [completionTime, setCompletionTime] = useState('medium');
-  const [rewardType, setRewardType] = useState('points');
-  const [language, setLanguage] = useState('en');
-  const [priorityLevel, setPriorityLevel] = useState('normal');
-  const [targetAudience, setTargetAudience] = useState('all');
-  const [skillLevel, setSkillLevel] = useState(5);
-  const [isRepeatable, setIsRepeatable] = useState(false);
-  const [hasDeadline, setHasDeadline] = useState(false);
-  const [maxAttempts, setMaxAttempts] = useState(1);
-  
-  // Queue states - Initialize from localStorage
-  const [questQueue, setQuestQueue] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.QUEUE);
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
-  
+export default function QuestGeneratorPage() {
+  const [questQueue, setQuestQueue] = useState([]);
   const [processingQueue, setProcessingQueue] = useState(false);
-  const [currentQueueIndex, setCurrentQueueIndex] = useState(-1);
-  const [filterMenu, setFilterMenu] = useState(null);
-  const [sortMenu, setSortMenu] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
   
-  // Initialize filter options from localStorage
-  const [filterOptions, setFilterOptions] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.FILTERS);
-      return saved ? JSON.parse(saved) : {
-        showCompleted: true,
-        showFailed: true,
-        showWaiting: true,
-        showProcessing: true
-      };
-    }
-    return {
-      showCompleted: true,
-      showFailed: true,
-      showWaiting: true,
-      showProcessing: true
-    };
+  // Quest settings
+  const [settings, setSettings] = useState({
+    difficulty: 'intermediate',
+    category: 'Learning',
+    requiredPoints: 0,
+    rewardPoints: 50,
+    autoCreate: true,
+    enableDatabaseAnalysis: true,
+    includeNFTRewards: true,
+    questComplexity: 'medium' // simple, medium, complex
   });
-  
-  // Initialize sort from localStorage
-  const [sortBy, setSortBy] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(STORAGE_KEYS.SORT) || 'date';
-    }
-    return 'date';
-  });
-  
-  // Initialize expanded state from localStorage
-  const [expandedParams, setExpandedParams] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.EXPANDED);
-      return saved === 'true';
-    }
-    return false;
-  });
-  
-  // Request states
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-  
-  // Save queue to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.QUEUE, JSON.stringify(questQueue));
-    }
-  }, [questQueue]);
-  
-  // Save filters to localStorage whenever they change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.FILTERS, JSON.stringify(filterOptions));
-    }
-  }, [filterOptions]);
-  
-  // Save sort to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.SORT, sortBy);
-    }
-  }, [sortBy]);
-  
-  // Save expanded state to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.EXPANDED, expandedParams.toString());
-    }
-  }, [expandedParams]);
-  
-  // Data options
-  const categories = [
-    { value: 'Blockchain', icon: <PublicIcon />, color: '#2196f3' },
-    { value: 'Web3', icon: <BubbleIcon />, color: '#673ab7' },
-    { value: 'DeFi', icon: <TrendingIcon />, color: '#4caf50' },
-    { value: 'NFTs', icon: <OfferIcon />, color: '#ff9800' },
-    { value: 'Cryptocurrencies', icon: <LockIcon />, color: '#f44336' },
-    { value: 'Smart Contracts', icon: <CodeIcon />, color: '#00bcd4' },
-    { value: 'Artificial Intelligence', icon: <AIIcon />, color: '#9c27b0' },
-    { value: 'Machine Learning', icon: <ConstructionIcon />, color: '#3f51b5' },
-    { value: 'Data Science', icon: <CloudQueueIcon />, color: '#607d8b' },
-    { value: 'Programming', icon: <CodeIcon />, color: '#795548' },
-    { value: 'Cybersecurity', icon: <LockIcon />, color: '#e91e63' },
-    { value: 'Game Development', icon: <GamepadIcon />, color: '#ff5722' }
-  ];
-  
+
+  const router = useRouter();
+  const theme = useTheme();
+
+  // Difficulty options
   const difficulties = [
-    { value: 'beginner', label: 'Beginner', color: 'success', icon: <StarIcon />, description: 'For newcomers' },
-    { value: 'intermediate', label: 'Intermediate', color: 'warning', icon: <StarIcon />, description: 'Some experience required' },
-    { value: 'advanced', label: 'Advanced', color: 'error', icon: <StarIcon />, description: 'Expert level' }
-  ];
-  
-  const questTypes = [
-    { value: 'educational', label: 'Educational', icon: <StarIcon />, color: '#4caf50' },
-    { value: 'challenge', label: 'Challenge', icon: <SpeedIcon />, color: '#f44336' },
-    { value: 'achievement', label: 'Achievement', icon: <QuestIcon />, color: '#ff9800' },
-    { value: 'community', label: 'Community', icon: <CategoryIcon />, color: '#2196f3' },
-    { value: 'practice', label: 'Practice', icon: <ConstructionIcon />, color: '#9c27b0' },
-    { value: 'research', label: 'Research', icon: <AIIcon />, color: '#00bcd4' }
-  ];
-  
-  const completionTimes = [
-    { value: 'quick', label: 'Quick (<15 min)', icon: '⚡' },
-    { value: 'short', label: 'Short (15-30 min)', icon: '⏱️' },
-    { value: 'medium', label: 'Medium (30-60 min)', icon: '⏰' },
-    { value: 'long', label: 'Long (1-2 hours)', icon: '⌛' },
-    { value: 'extensive', label: 'Extensive (2+ hours)', icon: '📅' }
-  ];
-  
-  const rewardTypes = [
-    { value: 'points', label: 'Points Only', icon: '💎' },
-    { value: 'badge', label: 'Badge & Points', icon: '🏅' },
-    { value: 'nft', label: 'NFT & Points', icon: '🖼️' },
-    { value: 'certificate', label: 'Certificate', icon: '📜' },
-    { value: 'subscription', label: 'Subscription Days', icon: '📆' }
-  ];
-  
-  const languages = [
-    { value: 'en', label: 'English', flag: '🇺🇸' },
-    { value: 'tr', label: 'Türkçe', flag: '🇹🇷' },
-    { value: 'es', label: 'Español', flag: '🇪🇸' },
-    { value: 'fr', label: 'Français', flag: '🇫🇷' },
-    { value: 'de', label: 'Deutsch', flag: '🇩🇪' }
-  ];
-  
-  const priorityLevels = [
-    { value: 'low', label: 'Low', color: 'default' },
-    { value: 'normal', label: 'Normal', color: 'primary' },
-    { value: 'high', label: 'High', color: 'warning' },
-    { value: 'critical', label: 'Critical', color: 'error' }
-  ];
-  
-  const audiences = [
-    { value: 'all', label: 'All Users' },
-    { value: 'beginners', label: 'Beginners' },
-    { value: 'intermediate', label: 'Intermediate' },
-    { value: 'experts', label: 'Experts' },
-    { value: 'developers', label: 'Developers' },
-    { value: 'traders', label: 'Traders' },
-    { value: 'researchers', label: 'Researchers' }
+    { value: 'easy', label: 'Easy', color: 'success' },
+    { value: 'intermediate', label: 'Intermediate', color: 'warning' },
+    { value: 'hard', label: 'Hard', color: 'error' }
   ];
 
-  // Check admin
+  // Category options
+  const categories = [
+    { value: 'Learning', label: 'Learning & Education' },
+    { value: 'Programming', label: 'Programming & Development' },
+    { value: 'Science', label: 'Science & Research' },
+    { value: 'Math', label: 'Mathematics' },
+    { value: 'Language', label: 'Language Learning' },
+    { value: 'Creative', label: 'Creative Arts' },
+    { value: 'Business', label: 'Business & Finance' },
+    { value: 'General', label: 'General Knowledge' }
+  ];
+
+  // Quest complexity options
+  const complexityOptions = [
+    { value: 'simple', label: 'Simple (1-2 conditions)', description: 'Basic quests with minimal requirements' },
+    { value: 'medium', label: 'Medium (3-4 conditions)', description: 'Balanced quests with multiple objectives' },
+    { value: 'complex', label: 'Complex (5+ conditions)', description: 'Advanced quests with multiple interconnected goals' }
+  ];
+
   useEffect(() => {
-    if (user && user.role !== 'admin') {
-      router.push('/');
+    // Load queue from localStorage on mount
+    const stored = localStorage.getItem(QUEST_QUEUE_STORAGE_KEY);
+    if (stored) {
+      try {
+        setQuestQueue(JSON.parse(stored));
+      } catch (error) {
+        console.error('Error loading quest queue:', error);
+      }
     }
-  }, [user, router]);
+  }, []);
 
-  const showSnackbar = (message, severity = 'success') => {
-    setSnackbar({ open: true, message, severity });
+  useEffect(() => {
+    // Save queue to localStorage whenever it changes
+    localStorage.setItem(QUEST_QUEUE_STORAGE_KEY, JSON.stringify(questQueue));
+  }, [questQueue]);
+
+  const handleGoBack = () => {
+    router.push('/admin/content/quests');
   };
 
   const addToQueue = () => {
-    const newQuestParams = {
+    const newQuest = {
       id: Date.now(),
-      difficulty,
-      category,
-      pointsRequired,
-      pointsReward,
-      questType,
-      completionTime,
-      rewardType,
-      language,
-      priorityLevel,
-      targetAudience,
-      skillLevel,
-      isRepeatable,
-      hasDeadline,
-      maxAttempts,
+      difficulty: settings.difficulty,
+      category: settings.category,
+      requiredPoints: settings.requiredPoints,
+      rewardPoints: settings.rewardPoints,
+      autoCreate: settings.autoCreate,
+      enableDatabaseAnalysis: settings.enableDatabaseAnalysis,
+      includeNFTRewards: settings.includeNFTRewards,
+      questComplexity: settings.questComplexity,
       status: 'waiting',
       createdAt: new Date().toISOString(),
-      result: null
     };
-    
-    setQuestQueue(prev => [...prev, newQuestParams]);
-    showSnackbar('Quest added to queue successfully!');
+
+    setQuestQueue(prev => [...prev, newQuest]);
   };
 
   const processQueue = async () => {
     const waitingQuests = questQueue.filter(q => q.status === 'waiting');
-    if (waitingQuests.length === 0) {
-      showSnackbar('No waiting quests in queue', 'warning');
-      return;
-    }
-    
+    if (waitingQuests.length === 0) return;
+
     setProcessingQueue(true);
-    let successCount = 0;
-    let failCount = 0;
-    
-    for (let i = 0; i < questQueue.length; i++) {
-      const questParams = questQueue[i];
-      
-      if (questParams.status !== 'waiting') continue;
-      
+    setCurrentQueueIndex(0);
+
+    for (let i = 0; i < waitingQuests.length; i++) {
+      const quest = waitingQuests[i];
       setCurrentQueueIndex(i);
-      
+
       // Update status to processing
-      setQuestQueue(prev => prev.map((item, idx) => 
-        idx === i ? { ...item, status: 'processing' } : item
+      setQuestQueue(prev => prev.map(q => 
+        q.id === quest.id ? { ...q, status: 'processing' } : q
       ));
-      
+
       try {
-        console.log(`Processing quest ${i + 1}/${waitingQuests.length}`);
-        
-        const response = await fetch('/api/admin/generate-quest', {
+        // Make API call to generate quest
+        const response = await fetch('/api/admin/quests/auto-generate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
           },
           body: JSON.stringify({
-            difficulty: questParams.difficulty,
-            category: questParams.category,
-            pointsRequired: questParams.pointsRequired,
-            pointsReward: questParams.pointsReward,
-            questType: questParams.questType,
-            completionTime: questParams.completionTime,
-            rewardType: questParams.rewardType,
-            language: questParams.language,
-            priorityLevel: questParams.priorityLevel,
-            targetAudience: questParams.targetAudience
-          }),
+            difficulty: quest.difficulty,
+            category: quest.category,
+            pointsRequired: quest.requiredPoints,
+            pointsReward: quest.rewardPoints,
+            autoCreate: quest.autoCreate,
+            enableDatabaseAnalysis: quest.enableDatabaseAnalysis,
+            includeNFTRewards: quest.includeNFTRewards,
+            questComplexity: quest.questComplexity
+          })
         });
-        
-        // Önce response'un content-type'ını kontrol et
-        const contentType = response.headers.get('content-type');
-        
-        if (!contentType || !contentType.includes('application/json')) {
-          const text = await response.text();
-          throw new Error(`Invalid response format. Expected JSON but got: ${text.substring(0, 100)}...`);
+
+        if (response.ok) {
+          const result = await response.json();
+          setQuestQueue(prev => prev.map(q => 
+            q.id === quest.id ? { 
+              ...q, 
+              status: 'completed',
+              resultId: result.contentId || result.questId 
+            } : q
+          ));
+        } else {
+          throw new Error('Failed to generate quest');
         }
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || data.message || `HTTP Error: ${response.status}`);
-        }
-        
-        // Backend'den gelen uyarıları kontrol et
-        if (data.warning) {
-          console.warn(`Quest generation warning: ${data.warning}`);
-        }
-        
-        // Başarılı sonucu kaydet
-        setQuestQueue(prev => prev.map((item, idx) => 
-          idx === i ? { 
-            ...item, 
-            status: 'completed', 
-            completedAt: new Date().toISOString(),
-            result: data,
-            contentId: data.contentId || data.ContentID || data.id,
-            warning: data.warning
-          } : item
-        ));
-        
-        successCount++;
-        
       } catch (error) {
-        console.error(`Error processing quest ${i}:`, error);
-        
-        // Daha detaylı hata mesajı
-        let errorMessage = error.message;
-        if (error.message.includes('JSON')) {
-          errorMessage = 'AI generated invalid JSON format. Please try again.';
-        } else if (error.message.includes('network') || error.message.includes('fetch')) {
-          errorMessage = 'Network error. Please check your connection.';
-        }
-        
-        setQuestQueue(prev => prev.map((item, idx) => 
-          idx === i ? { 
-            ...item, 
-            status: 'failed', 
-            error: errorMessage,
-            rawError: error.message 
-          } : item
+        console.error('Error processing quest:', error);
+        setQuestQueue(prev => prev.map(q => 
+          q.id === quest.id ? { ...q, status: 'failed', error: error.message } : q
         ));
-        
-        failCount++;
       }
-      
-      // Rate limiting için kısa bir bekleme
-      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    
+
     setProcessingQueue(false);
-    setCurrentQueueIndex(-1);
-    
-    // Sonuç özeti göster
-    if (failCount === 0) {
-      showSnackbar(`All ${successCount} quests processed successfully!`, 'success');
-    } else if (successCount === 0) {
-      showSnackbar(`All ${failCount} quests failed to process.`, 'error');
-    } else {
-      showSnackbar(`${successCount} quests succeeded, ${failCount} failed.`, 'warning');
-    }
   };
 
   const getFilteredQueue = () => {
-    let filtered = questQueue.filter(item => {
-      if (!filterOptions.showCompleted && item.status === 'completed') return false;
-      if (!filterOptions.showFailed && item.status === 'failed') return false;
-      if (!filterOptions.showWaiting && item.status === 'waiting') return false;
-      if (!filterOptions.showProcessing && item.status === 'processing') return false;
-      return true;
-    });
-
+    let filtered = questQueue;
+    
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(q => q.status === statusFilter);
+    }
+    
+    // Sort
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'date':
           return new Date(b.createdAt) - new Date(a.createdAt);
         case 'status':
-          const statusOrder = { waiting: 0, processing: 1, completed: 2, failed: 3 };
-          return statusOrder[a.status] - statusOrder[b.status];
+          return a.status.localeCompare(b.status);
         case 'difficulty':
-          const difficultyOrder = { beginner: 0, intermediate: 1, advanced: 2 };
-          return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
-        case 'priority':
-          const priorityOrder = { low: 0, normal: 1, high: 2, critical: 3 };
-          return priorityOrder[b.priorityLevel] - priorityOrder[a.priorityLevel];
+          return a.difficulty.localeCompare(b.difficulty);
         default:
           return 0;
       }
     });
-
+    
     return filtered;
   };
 
-  // Handle saving quest
-  const handleSaveQuest = async () => {
-    console.log("Save quest initiated with:", {
-      generatedQuest,
-      contentId,
-      conditions: generatedQuest?.conditions
-    });
-    
-    if (!generatedQuest) {
-      setError("No quest data available to save");
-      return;
-    }
-    
-    // Conditions kontrolü
-    if (!generatedQuest.conditions || !Array.isArray(generatedQuest.conditions)) {
-      setError("Quest conditions are invalid. Please regenerate the quest.");
-      return;
-    }
-    
-    if (generatedQuest.conditions.length === 0) {
-      console.warn("No conditions found, but proceeding with save");
-    }
-    
-    setLoading(true);
-    setSaving(true);
-    setError(null);
-    
-    try {
-      if (contentId) {
-        // ContentId varsa, onay sürecini kullan
-        const requestBody = {
-          contentId,
-          rewardPoints: pointsReward,
-          requiredPoints: pointsRequired,
-          difficultyLevel: difficulty,
-          conditionType: 'total_points',
-          generateWithAI: true
-        };
-        
-        console.log("Approving quest with contentId:", requestBody);
-        
-        const response = await fetch('/api/admin/quests', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        });
-        
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || data.message || 'Failed to approve quest');
-        }
-        
-        setActiveStep(2);
-      } else {
-        // ContentId yoksa, doğrudan quest oluştur
-        const conditionsData = generatedQuest.conditions.map(condition => ({
-          conditionType: condition.type || 'total_points',
-          targetId: null,
-          targetValue: condition.score_required || condition.target_value || condition.targetValue || 1,
-          description: condition.topic || condition.description || 'Complete task'
-        }));
-        
-        const requestBody = {
-          title: generatedQuest.title,
-          description: generatedQuest.description,
-          rewardPoints: pointsReward,
-          requiredPoints: pointsRequired,
-          difficultyLevel: difficulty,
-          conditions: conditionsData,
-          questType: questType,
-          completionTime: completionTime,
-          rewardType: rewardType,
-          isActive: true,
-          generateWithAI: false
-        };
-        
-        console.log("Creating quest directly without contentId:", requestBody);
-        
-        const response = await fetch('/api/admin/quests', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        });
-        
-        let data;
-        try {
-          data = await response.json();
-        } catch (parseError) {
-          console.error("JSON parse error:", parseError);
-          const responseText = await response.text();
-          console.error("Raw response:", responseText);
-          
-          if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
-            throw new Error('Authentication error. Please login again.');
-          }
-          throw new Error('Invalid response from server. Please try again.');
-        }
-        
-        console.log("API create response:", data);
-        
-        if (!response.ok) {
-          throw new Error(data.error || data.message || 'Failed to create quest');
-        }
-        
-        setActiveStep(2);
-      }
-    } catch (err) {
-      console.error("Save quest error:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setSaving(false);
-    }
+  const handleDeleteQuest = (id) => {
+    setQuestQueue(prev => prev.filter(q => q.id !== id));
+  };
+
+  const handleRetryQuest = (id) => {
+    setQuestQueue(prev => prev.map(q => 
+      q.id === id ? { ...q, status: 'waiting', error: undefined } : q
+    ));
+  };
+
+  const handleClearAll = () => {
+    setQuestQueue([]);
   };
 
   return (
     <MainLayout>
-      <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 } }}>
-        {/* Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between',
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          mb: 4,
-          gap: 2
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton 
-              onClick={() => router.push('/admin/content/quests')}
-              sx={{ 
-                mr: 1.5,
-                bgcolor: 'background.paper',
-                border: `1px solid ${theme.palette.divider}`,
-                '&:hover': { 
-                  bgcolor: 'action.hover',
-                  borderColor: theme.palette.primary.main
-                }
-              }}
-            >
-              <BackIcon />
-            </IconButton>
-            <Box>
-              <Typography 
-                variant={isMobile ? 'h5' : 'h4'}
-                component="h1"
-                fontWeight="800"
-                sx={{ 
-                  background: 'linear-gradient(135deg, #7b1fa2 0%, #e91e63 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  mb: 0.5
-                }}
-              >
-                AI Quest Generator
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Create and manage AI-powered quests
-              </Typography>
-            </Box>
-          </Box>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center' }}>
+          <Button 
+            startIcon={<ArrowBackIcon />} 
+            onClick={handleGoBack}
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              mb: 2
+            }}
+          >
+            Back to Quest Management
+          </Button>
         </Box>
 
-        {/* Parameters section */}
-        <Stack spacing={3}>
-          {/* Core parameters */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 2, md: 3 },
-              border: `1px solid ${theme.palette.divider}`,
-              borderRadius: 2,
-              bgcolor: 'background.paper'
-            }}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            <EmojiEventsIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+            Quest Generation
+          </Typography>
+          
+          <Typography variant="body1" color="text.secondary" paragraph>
+            Create and manage AI-generated quests for your platform.
+          </Typography>
+          
+          <Stack 
+            direction={{ xs: 'column', sm: 'row' }} 
+            spacing={2} 
+            sx={{ mb: 4, mt: 3 }}
           >
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-              Core Parameters
-            </Typography>
-            
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    label="Category"
-                  >
-                    {categories.map((cat) => (
-                      <MenuItem key={cat.value} value={cat.value}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {React.cloneElement(cat.icon, { sx: { color: cat.color } })}
-                          {cat.value}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Difficulty</InputLabel>
-                  <Select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value)}
-                    label="Difficulty"
-                  >
-                    {difficulties.map((d) => (
-                      <MenuItem key={d.value} value={d.value}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Chip
-                            size="small"
-                            label={d.label}
-                            color={d.color}
-                            icon={d.icon}
-                          />
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Quest Type</InputLabel>
-                  <Select
-                    value={questType}
-                    onChange={(e) => setQuestType(e.target.value)}
-                    label="Quest Type"
-                  >
-                    {questTypes.map((type) => (
-                      <MenuItem key={type.value} value={type.value}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {React.cloneElement(type.icon, { sx: { color: type.color } })}
-                          {type.label}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Completion Time</InputLabel>
-                  <Select
-                    value={completionTime}
-                    onChange={(e) => setCompletionTime(e.target.value)}
-                    label="Completion Time"
-                  >
-                    {completionTimes.map((time) => (
-                      <MenuItem key={time.value} value={time.value}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box>{time.icon}</Box>
-                          {time.label}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Reward Type</InputLabel>
-                  <Select
-                    value={rewardType}
-                    onChange={(e) => setRewardType(e.target.value)}
-                    label="Reward Type"
-                  >
-                    {rewardTypes.map((type) => (
-                      <MenuItem key={type.value} value={type.value}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box>{type.icon}</Box>
-                          {type.label}
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <TextField
-                  fullWidth
-                  label="Required Points"
-                  type="number"
-                  value={pointsRequired}
-                  onChange={(e) => setPointsRequired(Number(e.target.value))}
-                  InputProps={{
-                    startAdornment: <TimerIcon sx={{ mr: 1, color: 'action.active' }} />
-                  }}
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <TextField
-                  fullWidth
-                  label="Reward Points"
-                  type="number"
-                  value={pointsReward}
-                  onChange={(e) => setPointsReward(Number(e.target.value))}
-                  InputProps={{
-                    startAdornment: <RewardIcon sx={{ mr: 1, color: 'action.active' }} />
-                  }}
-                />
-              </Grid>
-              
-              <Grid item xs={12} sm={6} md={4} lg={3}>
-                <Button
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  onClick={addToQueue}
-                  startIcon={<AddIcon />}
-                  sx={{ 
-                    height: 56,
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, #7b1fa2 0%, #e91e63 100%)',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #6a1b9a 0%, #d81b60 100%)',
-                    }
-                  }}
-                >
-                  Add to Queue
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          {/* Advanced parameters */}
-          <Paper
-            elevation={0}
-            sx={{
-              border: `1px solid ${theme.palette.divider}`,
-              borderRadius: 2,
-              bgcolor: 'background.paper',
-              overflow: 'hidden'
-            }}
-          >
-            <Box
-              sx={{
-                p: { xs: 2, md: 3 },
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                bgcolor: 'action.hover',
-                cursor: 'pointer'
-              }}
-              onClick={() => setExpandedParams(!expandedParams)}
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              component={Link}
+              href="/admin/content/quests/create"
+              sx={{ fontWeight: 'bold' }}
             >
-              <Typography variant="h6" fontWeight={600}>
-                Advanced Parameters
-              </Typography>
-              <IconButton size="small">
-                <ExpandMoreIcon
-                  sx={{
-                    transform: expandedParams ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.3s'
-                  }}
-                />
-              </IconButton>
-            </Box>
+              Create Quest Manually
+            </Button>
             
-            <Collapse in={expandedParams}>
-              <Box sx={{ p: { xs: 2, md: 3 }, pt: 0 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={4} lg={3}>
-                    <FormControl fullWidth>
-                      <InputLabel>Language</InputLabel>
-                      <Select
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        label="Language"
-                      >
-                        {languages.map(lang => (
-                          <MenuItem key={lang.value} value={lang.value}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {lang.flag} {lang.label}
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={4} lg={3}>
-                    <FormControl fullWidth>
-                      <InputLabel>Priority Level</InputLabel>
-                      <Select
-                        value={priorityLevel}
-                        onChange={(e) => setPriorityLevel(e.target.value)}
-                        label="Priority Level"
-                      >
-                        {priorityLevels.map(level => (
-                          <MenuItem key={level.value} value={level.value}>
-                            <Chip size="small" label={level.label} color={level.color} />
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={4} lg={3}>
-                    <FormControl fullWidth>
-                      <InputLabel>Target Audience</InputLabel>
-                      <Select
-                        value={targetAudience}
-                        onChange={(e) => setTargetAudience(e.target.value)}
-                        label="Target Audience"
-                      >
-                        {audiences.map(audience => (
-                          <MenuItem key={audience.value} value={audience.value}>
-                            {audience.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={4} lg={3}>
-                    <TextField
-                      fullWidth
-                      label="Max Attempts"
-                      type="number"
-                      value={maxAttempts}
-                      onChange={(e) => setMaxAttempts(Number(e.target.value))}
-                      InputProps={{ inputProps: { min: 1 } }}
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <Box sx={{ px: 1 }}>
-                      <Typography gutterBottom>Skill Level: {skillLevel}/10</Typography>
-                      <Slider
-                        value={skillLevel}
-                        onChange={(e, newValue) => setSkillLevel(newValue)}
-                        min={1}
-                        max={10}
-                        marks
-                        valueLabelDisplay="auto"
-                      />
-                    </Box>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={3}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={isRepeatable}
-                          onChange={(e) => setIsRepeatable(e.target.checked)}
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<ListAltIcon />}
+              component={Link}
+              href="/admin/content/quests"
+              sx={{ fontWeight: 'bold' }}
+            >
+              View All Quests
+            </Button>
+          </Stack>
+        </Box>
+        
+        {/* Quest Generator Form */}
+        <Paper elevation={0} sx={{ p: 3, mb: 4, border: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="h6" gutterBottom>
+            <AutoAwesomeIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+            AI Quest Generator
+          </Typography>
+          
+          <Typography variant="body2" paragraph color="text.secondary">
+            Configure quest parameters and add to generation queue.
+          </Typography>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined" size="small">
+                <InputLabel>Difficulty Level</InputLabel>
+                <Select
+                  value={settings.difficulty}
+                  onChange={(e) => setSettings(prev => ({ ...prev, difficulty: e.target.value }))}
+                  label="Difficulty Level"
+                >
+                  {difficulties.map(d => (
+                    <MenuItem key={d.value} value={d.value}>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Chip
+                          size="small"
+                          label={d.label}
+                          color={d.color}
+                          sx={{ mr: 1, minWidth: 90 }} 
                         />
-                      }
-                      label="Repeatable Quest"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={6} md={3}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={hasDeadline}
-                          onChange={(e) => setHasDeadline(e.target.checked)}
-                        />
-                      }
-                      label="Has Deadline"
-                    />
-                  </Grid>
-                </Grid>
-              </Box>
-            </Collapse>
-          </Paper>
-
-          {/* Queue section - Full width */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 2, md: 3 },
-              border: `1px solid ${theme.palette.divider}`,
-              borderRadius: 2,
-              bgcolor: 'background.paper'
-            }}
-          >
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'space-between', 
-              alignItems: { xs: 'flex-start', sm: 'center' },
-              mb: 3,
-              gap: 2
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <QueueIcon sx={{ fontSize: 28, color: 'primary.main', mr: 1.5 }} />
-                <Box>
-                  <Typography variant="h6" fontWeight={600}>
-                    Quest Queue
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {questQueue.length} total items ({questQueue.filter(q => q.status === 'waiting').length} waiting)
-                  </Typography>
-                </Box>
-              </Box>
-              
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <IconButton 
-                  onClick={(e) => setFilterMenu(e.currentTarget)}
-                  sx={{ 
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }
-                  }}
-                >
-                  <FilterIcon />
-                </IconButton>
-                <IconButton 
-                  onClick={(e) => setSortMenu(e.currentTarget)}
-                  sx={{ 
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.12) }
-                  }}
-                >
-                  <SortIcon />
-                </IconButton>
-                <Button
-                  variant="outlined"
-                  onClick={() => setQuestQueue(prev => prev.filter(q => q.status !== 'completed'))}
-                  disabled={questQueue.filter(q => q.status === 'completed').length === 0}
-                  sx={{ borderRadius: 2 }}
-                >
-                  Clear Completed
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={processQueue}
-                  disabled={processingQueue || questQueue.filter(q => q.status === 'waiting').length === 0}
-                  startIcon={processingQueue ? <CircularProgress size={20} /> : <PlayArrowIcon />}
-                  sx={{ 
-                    borderRadius: 2,
-                    background: 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
-                  }}
-                >
-                  {processingQueue ? 'Processing...' : 'Process Queue'}
-                </Button>
-              </Stack>
-            </Box>
-            
-            {/* Queue stats */}
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ 
-                  textAlign: 'center', 
-                  p: 2, 
-                  bgcolor: alpha(theme.palette.info.main, 0.08),
-                  border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`
-                }}>
-                  <Typography variant="h4" fontWeight={600} color="info.main">
-                    {questQueue.filter(q => q.status === 'waiting').length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">Waiting</Typography>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ 
-                  textAlign: 'center', 
-                  p: 2, 
-                  bgcolor: alpha(theme.palette.warning.main, 0.08),
-                  border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`
-                }}>
-                  <Typography variant="h4" fontWeight={600} color="warning.main">
-                    {questQueue.filter(q => q.status === 'processing').length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">Processing</Typography>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ 
-                  textAlign: 'center', 
-                  p: 2, 
-                  bgcolor: alpha(theme.palette.success.main, 0.08),
-                  border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`
-                }}>
-                  <Typography variant="h4" fontWeight={600} color="success.main">
-                    {questQueue.filter(q => q.status === 'completed').length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">Completed</Typography>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ 
-                  textAlign: 'center', 
-                  p: 2, 
-                  bgcolor: alpha(theme.palette.error.main, 0.08),
-                  border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`
-                }}>
-                  <Typography variant="h4" fontWeight={600} color="error.main">
-                    {questQueue.filter(q => q.status === 'failed').length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">Failed</Typography>
-                </Card>
-              </Grid>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             
-            {/* Queue list */}
-            {getFilteredQueue().length === 0 ? (
-              <Box sx={{ textAlign: 'center', py: 8 }}>
-                <QueueIcon sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }} />
-                <Typography variant="h6" color="text.secondary" gutterBottom>
-                  No quests in queue
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth variant="outlined" size="small">
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={settings.category}
+                  onChange={(e) => setSettings(prev => ({ ...prev, category: e.target.value }))}
+                  label="Category"
+                >
+                  {categories.map(c => (
+                    <MenuItem key={c.value} value={c.value}>
+                      {c.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="Required Points"
+                type="number"
+                variant="outlined"
+                size="small"
+                value={settings.requiredPoints}
+                onChange={(e) => setSettings(prev => ({ ...prev, requiredPoints: parseInt(e.target.value) || 0 }))}
+                InputProps={{
+                  inputProps: { min: 0, max: 1000 }
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="Reward Points"
+                type="number"
+                variant="outlined"
+                size="small"
+                value={settings.rewardPoints}
+                onChange={(e) => setSettings(prev => ({ ...prev, rewardPoints: parseInt(e.target.value) || 50 }))}
+                InputProps={{
+                  inputProps: { min: 1, max: 1000 }
+                }}
+              />
+            </Grid>
+
+            {/* Advanced Options */}
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  <PsychologyIcon sx={{ verticalAlign: 'middle', mr: 1, fontSize: 18 }} />
+                  AI Advanced Options
+                </Typography>
+              </Divider>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <FormControl fullWidth variant="outlined" size="small">
+                <InputLabel>Quest Complexity</InputLabel>
+                <Select
+                  value={settings.questComplexity}
+                  onChange={(e) => setSettings(prev => ({ ...prev, questComplexity: e.target.value }))}
+                  label="Quest Complexity"
+                >
+                  {complexityOptions.map(c => (
+                    <MenuItem key={c.value} value={c.value}>
+                      <Box>
+                        <Typography variant="body2" fontWeight={500}>{c.label}</Typography>
+                        <Typography variant="caption" color="text.secondary">{c.description}</Typography>
+                      </Box>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <FormControl component="fieldset">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <input
+                      type="checkbox"
+                      id="enableDatabaseAnalysis"
+                      checked={settings.enableDatabaseAnalysis}
+                      onChange={(e) => setSettings(prev => ({ ...prev, enableDatabaseAnalysis: e.target.checked }))}
+                    />
+                    <Typography variant="body2">
+                      <strong>Database Analysis</strong>
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                    AI analyzes courses, videos, and quizzes to create realistic quest conditions
+                  </Typography>
+                </FormControl>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={4}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <FormControl component="fieldset">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <input
+                      type="checkbox"
+                      id="includeNFTRewards"
+                      checked={settings.includeNFTRewards}
+                      onChange={(e) => setSettings(prev => ({ ...prev, includeNFTRewards: e.target.checked }))}
+                    />
+                    <Typography variant="body2">
+                      <strong>NFT Rewards</strong>
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                    AI suggests appropriate NFT rewards based on quest difficulty and theme
+                  </Typography>
+                </FormControl>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Alert severity="info" sx={{ mt: 1 }}>
+                <Typography variant="body2">
+                  <strong>AI Database Integration:</strong> When enabled, the AI will analyze your platform's courses, videos, quizzes, and NFT collection to create intelligent quest conditions using real content IDs and logical progression paths.
+                </Typography>
+              </Alert>
+            </Grid>
+          </Grid>
+          
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={addToQueue}
+              sx={{ px: 3 }}
+            >
+              Add to Queue
+            </Button>
+          </Box>
+        </Paper>
+
+        {/* Quest Queue */}
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 0, md: 0 },
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Queue header with controls */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            p: 2,
+            backgroundColor: theme.palette.mode === 'dark' 
+              ? alpha(theme.palette.primary.main, 0.15) 
+              : alpha(theme.palette.primary.main, 0.05)
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <QueueIcon sx={{ fontSize: 24, color: 'primary.main', mr: 1.5 }} />
+              <Box>
+                <Typography variant="h6" fontWeight={600}>
+                  Quest Queue
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Add quests using the parameters above
+                  {questQueue.length} total quests ({questQueue.filter(q => q.status === 'waiting').length} waiting)
                 </Typography>
               </Box>
-            ) : (
-              <Grid container spacing={2}>
-                {getFilteredQueue().map((quest, index) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={quest.id}>
-                    <Grow in={true} timeout={300 + index * 100}>
-                      <Card
-                        sx={{
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          border: '1px solid',
-                          borderColor: quest.status === 'processing' ? 'primary.main' : 'divider',
-                          boxShadow: quest.status === 'processing' ? `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}` : 1,
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            boxShadow: 3,
-                            transform: 'translateY(-2px)'
-                          }
-                        }}
-                      >
-                        <CardContent sx={{ flex: 1, pb: 1 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {quest.status === 'waiting' && <HourglassEmptyIcon fontSize="small" color="action" />}
-                              {quest.status === 'processing' && <CircularProgress size={20} />}
-                              {quest.status === 'completed' && <CheckCircleIcon fontSize="small" color="success" />}
-                              {quest.status === 'failed' && <CancelIcon fontSize="small" color="error" />}
-                              <Typography variant="subtitle2" fontWeight={600}>
-                                {quest.category}
-                              </Typography>
-                            </Box>
-                            <IconButton
-                              size="small"
-                              onClick={() => setQuestQueue(prev => prev.filter(q => q.id !== quest.id))}
-                              sx={{ ml: 1 }}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Box>
-                          
-                          <Stack spacing={0.5} sx={{ mb: 1 }}>
-                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                              <Chip
-                                size="small"
-                                label={quest.difficulty}
-                                color={difficulties.find(d => d.value === quest.difficulty)?.color}
-                              />
-                              <Chip
-                                size="small"
-                                label={`${quest.pointsReward} pts`}
-                                variant="outlined"
-                              />
-                              <Chip
-                                size="small"
-                                label={quest.priorityLevel}
-                                color={priorityLevels.find(p => p.value === quest.priorityLevel)?.color}
-                              />
-                            </Box>
-                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                              <Chip
-                                size="small"
-                                label={questTypes.find(t => t.value === quest.questType)?.label}
-                                variant="outlined"
-                              />
-                              <Chip
-                                size="small"
-                                label={completionTimes.find(t => t.value === quest.completionTime)?.label}
-                                variant="outlined"
-                              />
-                            </Box>
-                          </Stack>
-                          
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            Created: {new Date(quest.createdAt).toLocaleDateString()}
-                          </Typography>
-                          
-                          {quest.status === 'completed' && (
-                            <Typography variant="caption" color="success.main" sx={{ display: 'block' }}>
-                              Completed: {new Date(quest.completedAt).toLocaleDateString()}
-                            </Typography>
-                          )}
-                          
-                          {quest.status === 'failed' && (
-                            <Typography variant="caption" color="error" sx={{ display: 'block' }}>
-                              Error: {quest.error}
-                            </Typography>
-                          )}
-                        </CardContent>
-                        
-                        {quest.status === 'completed' && (
-                          <Box sx={{ p: 2, pt: 0 }}>
-                            <Button
-                              fullWidth
-                              size="small"
-                              startIcon={<VisibilityIcon />}
-                              onClick={() => router.push('/admin/pending-content')}
-                              sx={{ borderRadius: 1 }}
-                            >
-                              View in Pending
-                            </Button>
-                          </Box>
-                        )}
-                      </Card>
-                    </Grow>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
+            </Box>
             
-            {processingQueue && (
-              <Box sx={{ mt: 3 }}>
-                <LinearProgress
-                  variant="determinate"
-                  value={(currentQueueIndex + 1) / questQueue.filter(q => q.status === 'waiting').length * 100}
-                  sx={{ borderRadius: 1, height: 8 }}
-                />
-                <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-                  Processing {currentQueueIndex + 1} of {questQueue.filter(q => q.status === 'waiting').length}
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Stack>
-
-        {/* Menus */}
-        <Menu
-          anchorEl={filterMenu}
-          open={Boolean(filterMenu)}
-          onClose={() => setFilterMenu(null)}
-        >
-          <Box sx={{ p: 2, minWidth: 200 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Filter by Status</Typography>
-            <FormGroup>
-              {Object.entries(filterOptions).map(([key, value]) => (
-                <FormControlLabel
-                  key={key}
-                  control={
-                    <Checkbox
-                      checked={value}
-                      onChange={(e) => setFilterOptions({ ...filterOptions, [key]: e.target.checked })}
-                      size="small"
-                    />
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: { xs: 2, sm: 0 } }}>
+              <Button
+                variant="outlined"
+                size="medium"
+                startIcon={<PlayArrowIcon />}
+                onClick={processQueue}
+                disabled={processingQueue || questQueue.filter(q => q.status === 'waiting').length === 0}
+                color="success"
+                sx={{ 
+                  borderColor: 'success.main',
+                  '&:hover': {
+                    backgroundColor: alpha(theme.palette.success.main, 0.08),
+                    borderColor: 'success.dark'
                   }
-                  label={key.replace('show', '')}
+                }}
+              >
+                Process Queue
+              </Button>
+              
+              {questQueue.length > 0 && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                  onClick={handleClearAll}
+                  startIcon={<DeleteIcon fontSize="small" />}
+                >
+                  Clear All
+                </Button>
+              )}
+              
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <FormControl size="small" sx={{ width: { xs: '100%', sm: 'auto', minWidth: 100 } }}>
+                  <InputLabel>Filter</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    label="Filter"
+                    fullWidth
+                  >
+                    <MenuItem value="all">All</MenuItem>
+                    <MenuItem value="waiting">Waiting</MenuItem>
+                    <MenuItem value="processing">Processing</MenuItem>
+                    <MenuItem value="completed">Completed</MenuItem>
+                    <MenuItem value="failed">Failed</MenuItem>
+                  </Select>
+                </FormControl>
+                
+                <FormControl size="small" sx={{ width: { xs: '100%', sm: 'auto', minWidth: 100 } }}>
+                  <InputLabel>Sort By</InputLabel>
+                  <Select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    label="Sort By"
+                    fullWidth
+                  >
+                    <MenuItem value="date">Date</MenuItem>
+                    <MenuItem value="status">Status</MenuItem>
+                    <MenuItem value="difficulty">Difficulty</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </Box>
+          </Box>
+          
+          {/* Queue stats */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: {
+              xs: '1fr 1fr',
+              sm: '1fr 1fr 1fr',
+              md: '1fr 1fr 1fr 1fr 1fr',
+            },
+            gap: 1,
+            mb: 0,
+            p: 2,
+            borderBottom: `1px solid ${theme.palette.divider}`,
+          }}>
+            <StatCard value={questQueue.filter(q => q.status === 'waiting').length} label="Waiting" color="#1976d2" gradient="linear-gradient(90deg, #1976d2 0%, #21cbf3 100%)" />
+            <StatCard value={questQueue.filter(q => q.status === 'processing').length} label="Processing" color="#ff9800" gradient="linear-gradient(90deg, #ff9800 0%, #ffe082 100%)" />
+            <StatCard value={questQueue.filter(q => q.status === 'completed').length} label="Completed" color="#43a047" gradient="linear-gradient(90deg, #43a047 0%, #38f9d7 100%)" />
+            <StatCard value={questQueue.filter(q => q.status === 'failed').length} label="Failed" color="#e53935" gradient="linear-gradient(90deg, #e53935 0%, #ffb199 100%)" />
+            <StatCard value={questQueue.length} label="Total" color="#607d8b" gradient="linear-gradient(90deg, #607d8b 0%, #bdbdbd 100%)" />
+          </Box>
+          
+          {/* Queue list */}
+          {getFilteredQueue().length === 0 ? (
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              px: 2
+            }}>
+              <QueueIcon sx={{ fontSize: 64, color: 'action.disabled', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                No quests in queue
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400, mb: 3 }}>
+                Add quests using the configuration above to start generating AI-powered quest content
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+              >
+                Add Quest
+              </Button>
+            </Box>
+          ) : (
+            <Box sx={{
+              p: 2,
+              width: '100%',
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: '1fr 1fr',
+                md: '1fr 1fr 1fr 1fr'
+              },
+              gap: 2,
+            }}>
+              {getFilteredQueue().map((quest) => (
+                <QuestCard 
+                  key={quest.id}
+                  quest={quest} 
+                  onDelete={handleDeleteQuest}
+                  onRetry={handleRetryQuest}
                 />
               ))}
-            </FormGroup>
-          </Box>
-        </Menu>
-        
-        <Menu
-          anchorEl={sortMenu}
-          open={Boolean(sortMenu)}
-          onClose={() => setSortMenu(null)}
-        >
-          <MenuItem 
-            selected={sortBy === 'date'}
-            onClick={() => { setSortBy('date'); setSortMenu(null); }}
-          >
-            Sort by Date
-          </MenuItem>
-          <MenuItem 
-            selected={sortBy === 'status'}
-            onClick={() => { setSortBy('status'); setSortMenu(null); }}
-          >
-            Sort by Status
-          </MenuItem>
-          <MenuItem 
-            selected={sortBy === 'difficulty'}
-            onClick={() => { setSortBy('difficulty'); setSortMenu(null); }}
-          >
-            Sort by Difficulty
-          </MenuItem>
-          <MenuItem 
-            selected={sortBy === 'priority'}
-            onClick={() => { setSortBy('priority'); setSortMenu(null); }}
-          >
-            Sort by Priority
-          </MenuItem>
-        </Menu>
-
-        {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={3000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        >
-          <Alert
-            onClose={() => setSnackbar({ ...snackbar, open: false })}
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
+            </Box>
+          )}
+          
+          {/* Processing progress indicator */}
+          {processingQueue && (
+            <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <CircularProgress size={16} sx={{ mr: 1 }} />
+                <Typography variant="body2" fontWeight={500}>
+                  Processing Queue: {currentQueueIndex + 1} of {questQueue.filter(q => q.status === 'waiting').length}
+                </Typography>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={(currentQueueIndex + 1) / questQueue.filter(q => q.status === 'waiting').length * 100}
+                sx={{ borderRadius: 1, height: 6 }}
+              />
+            </Box>
+          )}
+        </Paper>
       </Container>
     </MainLayout>
   );
-}
+} 

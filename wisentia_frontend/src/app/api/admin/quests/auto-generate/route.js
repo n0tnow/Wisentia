@@ -24,9 +24,12 @@ export async function POST(request) {
     // Extract parameters for AI auto-generation
     const difficulty = requestData.difficulty || 'intermediate';
     const category = requestData.category || 'General Learning';
-    const pointsRequired = requestData.requiredPoints || 0;
-    const pointsReward = requestData.rewardPoints || 50;
+    const pointsRequired = requestData.pointsRequired || 0;
+    const pointsReward = requestData.pointsReward || 50;
     const autoCreate = requestData.autoCreate || false;
+    const enableDatabaseAnalysis = requestData.enableDatabaseAnalysis !== undefined ? requestData.enableDatabaseAnalysis : true;
+    const includeNFTRewards = requestData.includeNFTRewards !== undefined ? requestData.includeNFTRewards : true;
+    const questComplexity = requestData.questComplexity || 'medium';
     
     // Backend API URL - use NEXT_PUBLIC_API_URL or default to localhost
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -38,7 +41,10 @@ export async function POST(request) {
       category,
       pointsRequired,
       pointsReward,
-      autoCreate
+      autoCreate,
+      enableDatabaseAnalysis,
+      includeNFTRewards,
+      questComplexity
     }, null, 2));
     
     // Set a timeout to avoid hanging requests
@@ -59,7 +65,10 @@ export async function POST(request) {
           category,
           pointsRequired,
           pointsReward,
-          autoCreate
+          autoCreate,
+          enableDatabaseAnalysis,
+          includeNFTRewards,
+          questComplexity
         }),
         signal: controller.signal
       });

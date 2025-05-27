@@ -30189,3 +30189,581 @@ INFO 2025-05-22 15:15:46,139 basehttp 61620 65544 "GET /api/ai/admin/quest-statu
 INFO 2025-05-22 15:15:46,286 basehttp 61620 65544 "GET /api/ai/admin/quest-status/99/ HTTP/1.1" 200 4273
 INFO 2025-05-22 15:15:49,145 basehttp 61620 65544 "GET /api/ai/admin/quest-status/99/ HTTP/1.1" 200 5621
 INFO 2025-05-22 15:15:49,295 basehttp 61620 65544 "GET /api/ai/admin/quest-status/99/ HTTP/1.1" 200 5621
+INFO 2025-05-26 02:10:15,461 autoreload 5212 32244 Watching for file changes with StatReloader
+INFO 2025-05-26 13:03:41,477 basehttp 5212 25692 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 14:24:50,679 basehttp 5212 25708 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-05-26 14:24:51,021 basehttp 5212 32792 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-05-26 14:25:47,026 basehttp 5212 12024 "GET /api/admin/dashboard/ HTTP/1.1" 200 4540
+INFO 2025-05-26 14:26:29,778 basehttp 5212 38480 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:26:29,795 basehttp 5212 39396 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:26:34,294 basehttp 5212 38480 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:26:34,300 basehttp 5212 39396 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:26:39,287 basehttp 5212 36552 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:26:39,295 basehttp 5212 32612 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:26:44,303 basehttp 5212 36552 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:26:44,315 basehttp 5212 32612 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:26:49,300 basehttp 5212 14308 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:26:49,310 basehttp 5212 32612 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:26:54,290 basehttp 5212 23100 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:26:54,300 basehttp 5212 21856 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:26:59,294 basehttp 5212 23100 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:26:59,298 basehttp 5212 21856 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:04,299 basehttp 5212 33976 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:04,308 basehttp 5212 23092 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:09,296 basehttp 5212 33976 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:09,301 basehttp 5212 23092 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:14,304 basehttp 5212 38628 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:14,313 basehttp 5212 36036 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:19,290 basehttp 5212 38628 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:19,296 basehttp 5212 36036 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:24,292 basehttp 5212 33576 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:24,300 basehttp 5212 38016 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:29,289 basehttp 5212 33576 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:29,294 basehttp 5212 38016 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:34,301 basehttp 5212 37840 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:34,311 basehttp 5212 27832 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:39,296 basehttp 5212 37840 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:39,301 basehttp 5212 27832 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:44,304 basehttp 5212 26780 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:44,312 basehttp 5212 39748 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:49,300 basehttp 5212 26780 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:49,307 basehttp 5212 39748 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:56,420 basehttp 5212 38584 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:27:56,431 basehttp 5212 14024 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:27:57,314 basehttp 5212 38584 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:28:28,975 basehttp 5212 38280 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:28:43,543 basehttp 5212 29628 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:38:06,424 basehttp 5212 22168 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:40:39,782 basehttp 5212 15420 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:41:15,029 basehttp 5212 32372 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:41:34,167 basehttp 5212 34832 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:34,180 basehttp 5212 38500 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:41:35,727 basehttp 5212 34832 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:41:52,736 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:52,745 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:41:54,834 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:54,840 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:41:56,105 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:56,111 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:41:57,002 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:57,007 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:41:58,338 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:58,343 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:41:59,084 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:59,091 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:41:59,785 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:41:59,789 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:42:00,558 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:42:00,565 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:42:01,472 basehttp 5212 12448 "POST /api/auth/verify-token/ HTTP/1.1" 200 43
+INFO 2025-05-26 14:42:01,480 basehttp 5212 38788 "GET /api/ai/quest-queue/ HTTP/1.1" 200 2797
+INFO 2025-05-26 14:50:46,826 basehttp 5212 14900 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 18040
+INFO 2025-05-26 14:53:28,648 basehttp 5212 34348 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 15:00:19,168 basehttp 5212 38860 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 15:54:51,083 basehttp 5212 39816 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-26 16:27:21,677 basehttp 5212 24060 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 19013
+INFO 2025-05-26 16:27:34,871 basehttp 5212 22168 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 19013
+INFO 2025-05-26 16:27:45,099 basehttp 5212 32592 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 17:00:58,903 autoreload 5212 32244 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:01:00,708 autoreload 37012 8788 Watching for file changes with StatReloader
+INFO 2025-05-26 17:01:35,948 autoreload 37012 8788 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:01:37,389 autoreload 4716 39012 Watching for file changes with StatReloader
+INFO 2025-05-26 17:02:11,768 autoreload 4716 39012 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:02:13,179 autoreload 6432 33004 Watching for file changes with StatReloader
+INFO 2025-05-26 17:10:52,677 autoreload 19480 3916 Watching for file changes with StatReloader
+INFO 2025-05-26 17:13:15,531 autoreload 19480 3916 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:13:17,407 autoreload 16804 22900 Watching for file changes with StatReloader
+INFO 2025-05-26 17:13:26,724 autoreload 16804 22900 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:13:28,248 autoreload 22568 36868 Watching for file changes with StatReloader
+INFO 2025-05-26 17:13:44,191 autoreload 22568 36868 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:13:45,613 autoreload 30384 37768 Watching for file changes with StatReloader
+INFO 2025-05-26 17:14:17,645 autoreload 30384 37768 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:14:19,023 autoreload 31572 29636 Watching for file changes with StatReloader
+INFO 2025-05-26 17:14:40,307 autoreload 31572 29636 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:14:41,699 autoreload 22024 5392 Watching for file changes with StatReloader
+INFO 2025-05-26 17:15:21,672 basehttp 22024 22260 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 17:24:25,816 autoreload 22024 5392 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\anthropic.py changed, reloading.
+INFO 2025-05-26 17:24:27,161 autoreload 39728 28868 Watching for file changes with StatReloader
+INFO 2025-05-26 17:24:37,204 autoreload 39728 28868 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:24:38,662 autoreload 32356 10604 Watching for file changes with StatReloader
+INFO 2025-05-26 17:26:42,508 autoreload 32356 10604 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:26:43,846 autoreload 4264 14388 Watching for file changes with StatReloader
+INFO 2025-05-26 17:27:21,766 autoreload 4264 14388 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:27:23,151 autoreload 39680 13356 Watching for file changes with StatReloader
+INFO 2025-05-26 17:27:56,250 autoreload 39680 13356 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:27:57,643 autoreload 8472 22088 Watching for file changes with StatReloader
+INFO 2025-05-26 17:28:06,164 autoreload 8472 22088 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:28:07,564 autoreload 34496 14180 Watching for file changes with StatReloader
+INFO 2025-05-26 17:28:38,729 autoreload 34496 14180 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 17:28:40,079 autoreload 27924 33728 Watching for file changes with StatReloader
+INFO 2025-05-26 17:28:59,854 autoreload 27924 33728 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\anthropic.py changed, reloading.
+INFO 2025-05-26 17:29:01,460 autoreload 38904 37344 Watching for file changes with StatReloader
+INFO 2025-05-26 17:29:14,723 basehttp 38904 21700 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 18:19:24,885 basehttp 38904 23520 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 18:19:25,948 basehttp 38904 23520 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 18:23:07,772 autoreload 38904 37344 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:23:09,189 autoreload 35936 14620 Watching for file changes with StatReloader
+INFO 2025-05-26 18:23:35,460 autoreload 35936 14620 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:23:36,479 autoreload 11636 38616 Watching for file changes with StatReloader
+INFO 2025-05-26 18:23:44,605 autoreload 11636 38616 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:23:45,932 autoreload 37412 5124 Watching for file changes with StatReloader
+INFO 2025-05-26 18:24:50,687 autoreload 37412 5124 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:24:52,148 autoreload 5488 37616 Watching for file changes with StatReloader
+INFO 2025-05-26 18:27:33,359 autoreload 5488 37616 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:27:34,903 autoreload 29708 25664 Watching for file changes with StatReloader
+INFO 2025-05-26 18:27:53,972 autoreload 29708 25664 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:27:58,153 autoreload 42448 42452 Watching for file changes with StatReloader
+INFO 2025-05-26 18:28:12,608 autoreload 42448 42452 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:28:14,082 autoreload 43236 43240 Watching for file changes with StatReloader
+INFO 2025-05-26 18:29:07,474 basehttp 43236 43668 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 19972
+INFO 2025-05-26 18:29:16,061 basehttp 43236 36032 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 18:32:42,502 autoreload 43236 43240 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:32:43,837 autoreload 24180 26192 Watching for file changes with StatReloader
+INFO 2025-05-26 18:33:25,348 autoreload 24180 26192 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:33:26,734 autoreload 40484 18828 Watching for file changes with StatReloader
+INFO 2025-05-26 18:33:53,064 autoreload 40484 18828 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:33:54,389 autoreload 34532 42724 Watching for file changes with StatReloader
+INFO 2025-05-26 18:34:56,707 autoreload 34532 42724 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:34:58,165 autoreload 40668 43972 Watching for file changes with StatReloader
+INFO 2025-05-26 18:35:42,464 autoreload 40668 43972 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:35:43,856 autoreload 38116 22660 Watching for file changes with StatReloader
+INFO 2025-05-26 18:35:56,973 autoreload 38116 22660 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:35:58,461 autoreload 43540 31740 Watching for file changes with StatReloader
+INFO 2025-05-26 18:36:19,212 autoreload 43540 31740 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:36:20,640 autoreload 42520 37532 Watching for file changes with StatReloader
+INFO 2025-05-26 18:36:30,028 autoreload 42520 37532 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:36:31,465 autoreload 42724 15568 Watching for file changes with StatReloader
+INFO 2025-05-26 18:37:14,726 basehttp 42724 33308 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 18:43:33,192 autoreload 42724 15568 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:43:34,637 autoreload 42512 40364 Watching for file changes with StatReloader
+INFO 2025-05-26 18:43:45,004 autoreload 42512 40364 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:43:46,097 autoreload 33240 6056 Watching for file changes with StatReloader
+INFO 2025-05-26 18:43:54,244 autoreload 33240 6056 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:43:55,717 autoreload 43992 34052 Watching for file changes with StatReloader
+INFO 2025-05-26 18:44:18,837 autoreload 43992 34052 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:44:20,318 autoreload 32784 42688 Watching for file changes with StatReloader
+INFO 2025-05-26 18:45:17,827 autoreload 32784 42688 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:45:19,311 autoreload 21264 41348 Watching for file changes with StatReloader
+INFO 2025-05-26 18:45:51,298 autoreload 21264 41348 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:45:52,766 autoreload 2388 42804 Watching for file changes with StatReloader
+INFO 2025-05-26 18:46:40,813 basehttp 2388 43548 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 18:49:26,967 autoreload 2388 42804 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:49:28,370 autoreload 43056 37892 Watching for file changes with StatReloader
+INFO 2025-05-26 18:49:52,161 autoreload 43056 37892 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:49:53,849 autoreload 38452 42644 Watching for file changes with StatReloader
+INFO 2025-05-26 18:50:13,457 autoreload 38452 42644 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:50:14,824 autoreload 40372 42340 Watching for file changes with StatReloader
+INFO 2025-05-26 18:50:30,234 autoreload 40372 42340 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:50:31,667 autoreload 26504 37892 Watching for file changes with StatReloader
+INFO 2025-05-26 18:51:08,542 autoreload 26504 37892 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:51:09,842 autoreload 42520 42704 Watching for file changes with StatReloader
+INFO 2025-05-26 18:52:16,613 basehttp 42520 2832 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 18:57:16,801 autoreload 42520 42704 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:57:18,299 autoreload 40372 42420 Watching for file changes with StatReloader
+INFO 2025-05-26 18:57:29,115 autoreload 40372 42420 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:57:30,694 autoreload 20620 28928 Watching for file changes with StatReloader
+INFO 2025-05-26 18:57:57,285 autoreload 20620 28928 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:57:58,627 autoreload 36820 36204 Watching for file changes with StatReloader
+INFO 2025-05-26 18:58:21,280 autoreload 36820 36204 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 18:58:23,042 autoreload 16828 15324 Watching for file changes with StatReloader
+INFO 2025-05-26 18:59:24,691 basehttp 16828 16588 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 19:03:06,092 autoreload 16828 15324 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 19:03:07,557 autoreload 44256 44260 Watching for file changes with StatReloader
+INFO 2025-05-26 19:05:29,500 basehttp 44256 22260 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 19:12:54,561 basehttp 44256 37992 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 19:15:27,272 autoreload 44256 44260 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 19:15:28,713 autoreload 19924 43464 Watching for file changes with StatReloader
+INFO 2025-05-26 19:16:10,494 autoreload 19924 43464 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 19:16:11,908 autoreload 25828 8068 Watching for file changes with StatReloader
+INFO 2025-05-26 19:16:24,522 autoreload 25828 8068 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 19:16:25,864 autoreload 44860 43684 Watching for file changes with StatReloader
+INFO 2025-05-26 19:16:34,031 autoreload 44860 43684 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 19:16:35,335 autoreload 40344 29188 Watching for file changes with StatReloader
+INFO 2025-05-26 19:19:10,124 basehttp 40344 33404 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 19:24:57,405 basehttp 40344 14236 "POST /api/ai/admin/generate-complete-quest/ HTTP/1.1" 200 72
+INFO 2025-05-26 19:27:28,553 autoreload 40344 29188 C:\WISENTIA_Q\wisentia\wisentia_backend\courses\views.py changed, reloading.
+INFO 2025-05-26 19:27:30,031 autoreload 44344 32220 Watching for file changes with StatReloader
+INFO 2025-05-26 19:27:46,143 autoreload 44344 32220 C:\WISENTIA_Q\wisentia\wisentia_backend\courses\urls.py changed, reloading.
+INFO 2025-05-26 19:27:47,489 autoreload 44308 45040 Watching for file changes with StatReloader
+INFO 2025-05-26 19:30:24,142 autoreload 44308 45040 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 19:30:25,540 autoreload 46144 46164 Watching for file changes with StatReloader
+INFO 2025-05-26 19:31:00,281 autoreload 46144 46164 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 19:31:01,811 autoreload 45464 46140 Watching for file changes with StatReloader
+INFO 2025-05-26 21:13:34,761 basehttp 45464 40436 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 9702
+INFO 2025-05-26 21:14:11,652 basehttp 45464 44832 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 9702
+INFO 2025-05-26 21:17:03,692 basehttp 45464 24832 "GET /api/courses/categories/ HTTP/1.1" 200 461
+INFO 2025-05-26 21:17:03,704 basehttp 45464 5368 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 21:17:15,227 basehttp 45464 43376 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:17:18,849 basehttp 45464 43376 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:17:26,153 basehttp 45464 47604 "GET /media/uploads/nft_images/198e11c13085471a83da46a6836a1718.jpg HTTP/1.1" 200 35748
+INFO 2025-05-26 21:17:26,167 basehttp 45464 4052 "GET /media/uploads/nft_images/181c5428d8264ef98ecfeb97355959d2.jpg HTTP/1.1" 200 121044
+INFO 2025-05-26 21:17:26,185 basehttp 45464 47604 "GET /media/uploads/nft_images/9b369fb62ac049c2923511baf81e7380.png HTTP/1.1" 200 772619
+INFO 2025-05-26 21:17:26,191 basehttp 45464 47604 "GET /media/uploads/nft_images/3c5bef8d2534456cb1d589cf18d890b4.jpg HTTP/1.1" 200 35748
+INFO 2025-05-26 21:17:26,191 basehttp 45464 45824 "GET /media/uploads/nft_images/f70b6b8ae9db4763ab2b2972b99d7eb8.png HTTP/1.1" 200 1536321
+INFO 2025-05-26 21:17:26,199 basehttp 45464 47604 "GET /media/uploads/nft_images/b6f1974e91614578b2b9e908c3417821.jpg HTTP/1.1" 200 48710
+INFO 2025-05-26 21:17:26,204 basehttp 45464 45824 "GET /media/uploads/nft_images/dceec991f7bc415da959285bd3158a97.png HTTP/1.1" 200 235792
+INFO 2025-05-26 21:17:26,206 basehttp 45464 15596 "GET /media/uploads/nft_images/21baa3ce1c1643fcb2717ee8efcc6b15.png HTTP/1.1" 200 1169407
+INFO 2025-05-26 21:17:26,207 basehttp 45464 47604 "GET /media/uploads/nft_images/4d3a00fea0414a5b99617275429fdef5.jpg HTTP/1.1" 200 44243
+INFO 2025-05-26 21:17:26,212 basehttp 45464 15596 "GET /media/uploads/nft_images/d5936932aa3c4e62a825c05e02054a4e.jpg HTTP/1.1" 200 31941
+INFO 2025-05-26 21:17:26,226 basehttp 45464 11500 "GET /media/uploads/nft_images/8dbd3bd99bbe4bce8b038651cc3f228f.png HTTP/1.1" 200 2043662
+INFO 2025-05-26 21:17:26,226 basehttp 45464 47260 "GET /media/uploads/nft_images/f5cecf95fff74b1189090f72a54fd4d5.png HTTP/1.1" 200 1999153
+INFO 2025-05-26 21:17:26,230 basehttp 45464 4052 "GET /media/uploads/nft_images/test-1747278340583.png HTTP/1.1" 200 2043662
+ERROR 2025-05-26 21:18:58,328 middleware 45464 50708 API Error: string indices must be integers, not 'str'
+ERROR 2025-05-26 21:18:58,328 middleware 45464 50708 Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py", line 578, in ai_generate_quest
+    result = generate_quest(difficulty, category, points_required, points_reward)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\ai\llm.py", line 389, in generate_quest
+    if result['success']:
+       ~~~~~~^^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+
+ERROR 2025-05-26 21:18:58,331 log 45464 50708 Internal Server Error: /api/ai/admin/generate-quest/
+INFO 2025-05-26 21:18:58,331 basehttp 45464 50708 - Broken pipe from ('127.0.0.1', 50073)
+INFO 2025-05-26 21:20:09,402 autoreload 45464 46140 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 21:20:11,343 autoreload 45008 48672 Watching for file changes with StatReloader
+INFO 2025-05-26 21:20:34,141 autoreload 45008 48672 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\llm.py changed, reloading.
+INFO 2025-05-26 21:20:35,581 autoreload 47872 47260 Watching for file changes with StatReloader
+INFO 2025-05-26 21:22:05,055 autoreload 47872 47260 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 21:22:06,647 autoreload 50856 44980 Watching for file changes with StatReloader
+INFO 2025-05-26 21:23:13,686 autoreload 50856 44980 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\llm.py changed, reloading.
+INFO 2025-05-26 21:23:15,256 autoreload 49952 45780 Watching for file changes with StatReloader
+INFO 2025-05-26 21:23:52,539 autoreload 49952 45780 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 21:23:53,634 autoreload 47348 47260 Watching for file changes with StatReloader
+INFO 2025-05-26 21:25:54,720 autoreload 47348 47260 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\llm.py changed, reloading.
+INFO 2025-05-26 21:25:55,642 autoreload 46664 43948 Watching for file changes with StatReloader
+INFO 2025-05-26 21:29:15,415 autoreload 46664 43948 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 21:29:16,416 autoreload 22344 44416 Watching for file changes with StatReloader
+INFO 2025-05-26 21:29:41,488 autoreload 22344 44416 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\llm.py changed, reloading.
+INFO 2025-05-26 21:29:42,960 autoreload 37052 42100 Watching for file changes with StatReloader
+INFO 2025-05-26 21:30:08,029 autoreload 37052 42100 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 21:30:09,520 autoreload 40436 50784 Watching for file changes with StatReloader
+INFO 2025-05-26 21:34:12,258 basehttp 40436 42960 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 21:34:26,819 basehttp 40436 26872 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:34:41,923 basehttp 40436 26872 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 959
+INFO 2025-05-26 21:35:32,832 basehttp 40436 48684 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 788
+INFO 2025-05-26 21:37:46,859 basehttp 40436 34956 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:37:49,015 basehttp 40436 34956 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+ERROR 2025-05-26 21:38:00,795 log 40436 45300 Internal Server Error: /api/quests/create/
+ERROR 2025-05-26 21:38:00,795 basehttp 40436 45300 "POST /api/quests/create/ HTTP/1.1" 500 45
+INFO 2025-05-26 21:39:46,728 autoreload 43240 45100 Watching for file changes with StatReloader
+WARNING 2025-05-26 21:41:30,361 log 43240 50212 Forbidden: /api/ai/admin/generate-quest/
+WARNING 2025-05-26 21:41:30,362 basehttp 43240 50212 "GET /api/ai/admin/generate-quest/ HTTP/1.1" 403 58
+INFO 2025-05-26 21:42:10,263 autoreload 43240 45100 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 21:42:11,604 autoreload 44540 45208 Watching for file changes with StatReloader
+INFO 2025-05-26 21:43:27,158 autoreload 17856 9376 Watching for file changes with StatReloader
+INFO 2025-05-26 21:43:57,570 basehttp 17856 46716 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 21:44:24,186 basehttp 17856 14104 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:44:47,728 basehttp 17856 14104 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1742
+INFO 2025-05-26 21:44:51,869 basehttp 17856 14104 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:44:51,907 basehttp 17856 14104 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:44:51,947 basehttp 17856 14104 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:48:45,952 autoreload 17856 9376 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\llm.py changed, reloading.
+INFO 2025-05-26 21:48:47,329 autoreload 46060 6948 Watching for file changes with StatReloader
+INFO 2025-05-26 21:49:06,570 basehttp 46060 32616 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 21:49:27,116 basehttp 46060 51104 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:49:43,205 basehttp 46060 51104 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 2236
+INFO 2025-05-26 21:52:44,799 basehttp 46060 41060 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:53:00,239 basehttp 46060 41060 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 2234
+INFO 2025-05-26 21:53:02,130 basehttp 46060 41060 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:53:02,178 basehttp 46060 41060 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:53:02,220 basehttp 46060 41060 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+ERROR 2025-05-26 21:53:05,159 log 46060 41060 Internal Server Error: /api/quests/create/
+ERROR 2025-05-26 21:53:05,160 basehttp 46060 41060 "POST /api/quests/create/ HTTP/1.1" 500 45
+INFO 2025-05-26 21:54:33,237 autoreload 46060 6948 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 21:54:34,627 autoreload 19472 22516 Watching for file changes with StatReloader
+INFO 2025-05-26 21:54:52,258 autoreload 19472 22516 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 21:54:53,657 autoreload 41432 40044 Watching for file changes with StatReloader
+INFO 2025-05-26 21:55:01,614 autoreload 41432 40044 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 21:55:02,995 autoreload 35300 45348 Watching for file changes with StatReloader
+INFO 2025-05-26 21:55:57,521 basehttp 35300 19484 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 21:56:32,771 basehttp 35300 40572 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1891
+INFO 2025-05-26 21:56:34,646 basehttp 35300 40572 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:56:34,685 basehttp 35300 40572 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:56:34,719 basehttp 35300 40572 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:56:34,749 basehttp 35300 40572 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+ERROR 2025-05-26 21:56:45,954 log 35300 40864 Internal Server Error: /api/quests/create/
+ERROR 2025-05-26 21:56:45,954 basehttp 35300 40864 "POST /api/quests/create/ HTTP/1.1" 500 51
+INFO 2025-05-26 21:57:55,378 autoreload 35300 45348 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 21:57:56,745 autoreload 25512 47944 Watching for file changes with StatReloader
+INFO 2025-05-26 21:58:35,715 autoreload 25512 47944 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 21:58:37,122 autoreload 45184 41932 Watching for file changes with StatReloader
+INFO 2025-05-26 21:58:49,769 autoreload 45184 41932 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 21:58:51,251 autoreload 21432 24732 Watching for file changes with StatReloader
+INFO 2025-05-26 21:59:16,737 basehttp 21432 7648 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 21:59:49,407 basehttp 21432 25188 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1885
+INFO 2025-05-26 21:59:51,440 basehttp 21432 25188 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:59:51,474 basehttp 21432 25188 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:59:51,518 basehttp 21432 25188 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 21:59:51,531 basehttp 21432 25188 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 22:00:10,241 basehttp 21432 47836 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1944
+INFO 2025-05-26 22:00:24,469 basehttp 21432 40916 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 22:02:53,206 basehttp 21432 41304 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 22:04:24,047 autoreload 21432 24732 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 22:04:25,504 autoreload 1896 49500 Watching for file changes with StatReloader
+INFO 2025-05-26 22:04:37,243 autoreload 1896 49500 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 22:04:38,638 autoreload 38804 41996 Watching for file changes with StatReloader
+INFO 2025-05-26 22:04:46,790 autoreload 38804 41996 C:\WISENTIA_Q\wisentia\wisentia_backend\ai\views.py changed, reloading.
+INFO 2025-05-26 22:04:48,079 autoreload 40412 42756 Watching for file changes with StatReloader
+INFO 2025-05-26 22:05:33,417 basehttp 40412 24732 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 22:06:06,591 basehttp 40412 19484 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1933
+INFO 2025-05-26 22:06:15,646 basehttp 40412 39548 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 22:06:15,682 basehttp 40412 39548 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 22:06:15,720 basehttp 40412 39548 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 22:06:15,756 basehttp 40412 39548 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 22:09:13,335 autoreload 40412 42756 C:\WISENTIA_Q\wisentia\wisentia_backend\courses\views.py changed, reloading.
+INFO 2025-05-26 22:09:14,695 autoreload 51096 41760 Watching for file changes with StatReloader
+INFO 2025-05-26 22:09:31,169 autoreload 51096 41760 C:\WISENTIA_Q\wisentia\wisentia_backend\courses\urls.py changed, reloading.
+INFO 2025-05-26 22:09:32,513 autoreload 41816 7744 Watching for file changes with StatReloader
+WARNING 2025-05-26 22:09:45,290 log 41816 38804 Not Found: /api/courses/videos/
+WARNING 2025-05-26 22:09:45,291 basehttp 41816 38804 "GET /api/courses/videos/ HTTP/1.1" 404 7802
+WARNING 2025-05-26 22:09:45,328 log 41816 38804 Not Found: /api/courses/videos/
+WARNING 2025-05-26 22:09:45,329 basehttp 41816 38804 "GET /api/courses/videos/ HTTP/1.1" 404 7802
+INFO 2025-05-26 22:11:41,358 basehttp 41816 40516 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 22:12:13,462 basehttp 41816 50380 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1903
+WARNING 2025-05-26 22:12:16,034 log 41816 50380 Not Found: /api/courses/videos/
+WARNING 2025-05-26 22:12:16,035 basehttp 41816 50380 "GET /api/courses/videos/ HTTP/1.1" 404 7802
+INFO 2025-05-26 22:12:16,084 basehttp 41816 49076 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+WARNING 2025-05-26 22:12:16,092 log 41816 50380 Not Found: /api/courses/videos/
+WARNING 2025-05-26 22:12:16,093 basehttp 41816 50380 "GET /api/courses/videos/ HTTP/1.1" 404 7802
+WARNING 2025-05-26 22:12:16,137 log 41816 50380 Not Found: /api/courses/videos/
+WARNING 2025-05-26 22:12:16,138 basehttp 41816 50380 "GET /api/courses/videos/ HTTP/1.1" 404 7802
+WARNING 2025-05-26 22:52:52,553 log 41816 28600 Not Found: /api/courses/videos/
+WARNING 2025-05-26 22:52:52,555 basehttp 41816 28600 "GET /api/courses/videos/ HTTP/1.1" 404 7802
+WARNING 2025-05-26 22:52:53,006 log 41816 28600 Not Found: /favicon.ico
+WARNING 2025-05-26 22:52:53,007 basehttp 41816 28600 "GET /favicon.ico HTTP/1.1" 404 4131
+INFO 2025-05-26 22:53:30,564 autoreload 41816 7744 C:\WISENTIA_Q\wisentia\wisentia_backend\courses\urls.py changed, reloading.
+INFO 2025-05-26 22:53:32,119 autoreload 20592 6056 Watching for file changes with StatReloader
+INFO 2025-05-26 22:56:12,239 basehttp 20592 47276 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 22:56:37,040 basehttp 20592 42672 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1912
+INFO 2025-05-26 22:56:41,238 basehttp 20592 33368 "GET /api/courses/videos/ HTTP/1.1" 200 11167
+INFO 2025-05-26 22:56:41,250 basehttp 20592 42672 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-26 22:56:41,288 basehttp 20592 42672 "GET /api/courses/videos/ HTTP/1.1" 200 11167
+INFO 2025-05-26 22:56:41,330 basehttp 20592 42672 "GET /api/courses/videos/ HTTP/1.1" 200 11167
+INFO 2025-05-26 22:56:49,496 basehttp 20592 35608 "POST /api/quests/create/ HTTP/1.1" 200 896
+INFO 2025-05-26 22:56:55,081 basehttp 20592 21080 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 11169
+INFO 2025-05-26 22:58:03,256 basehttp 20592 22424 "GET /api/quests/54/ HTTP/1.1" 200 955
+INFO 2025-05-26 22:58:13,101 basehttp 20592 41584 "GET /api/quests/54/ HTTP/1.1" 200 955
+INFO 2025-05-26 22:58:30,017 basehttp 20592 49628 "POST /api/quests/54/update/ HTTP/1.1" 200 802
+INFO 2025-05-26 22:58:35,347 basehttp 20592 45732 "POST /api/quests/54/update/ HTTP/1.1" 200 803
+INFO 2025-05-26 23:26:17,950 basehttp 20592 43524 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-05-26 23:26:18,453 basehttp 20592 33400 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-05-26 23:26:25,224 basehttp 20592 45648 "GET /api/admin/dashboard/ HTTP/1.1" 200 4540
+INFO 2025-05-26 23:26:31,848 basehttp 20592 45596 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 11170
+INFO 2025-05-26 23:26:36,489 basehttp 20592 45596 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-26 23:28:57,212 basehttp 20592 42092 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-26 23:28:57,244 basehttp 20592 42092 "GET /api/quests/54/ HTTP/1.1" 200 956
+INFO 2025-05-26 23:43:01,841 autoreload 20592 6056 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\views.py changed, reloading.
+INFO 2025-05-26 23:43:03,382 autoreload 43844 43000 Watching for file changes with StatReloader
+INFO 2025-05-26 23:44:15,478 autoreload 43844 43000 C:\WISENTIA_Q\wisentia\wisentia_backend\quests\urls.py changed, reloading.
+INFO 2025-05-26 23:44:16,827 autoreload 41340 35960 Watching for file changes with StatReloader
+INFO 2025-05-26 23:45:45,553 basehttp 41340 49304 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-26 23:45:45,594 basehttp 41340 49304 "GET /api/quests/admin/54/ HTTP/1.1" 200 2077
+INFO 2025-05-26 23:45:59,071 basehttp 41340 49128 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-26 23:45:59,084 basehttp 41340 49128 "GET /api/quests/admin/54/ HTTP/1.1" 200 2077
+INFO 2025-05-26 23:46:59,352 basehttp 41340 21692 "POST /api/quests/54/prepare-nft/ HTTP/1.1" 200 242
+INFO 2025-05-26 23:47:07,922 basehttp 41340 13228 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-26 23:47:07,946 basehttp 41340 13228 "GET /api/quests/admin/54/ HTTP/1.1" 200 2077
+INFO 2025-05-26 23:47:27,181 basehttp 41340 33648 "POST /api/quests/54/prepare-nft/ HTTP/1.1" 200 242
+INFO 2025-05-26 23:47:41,609 basehttp 41340 33572 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-26 23:47:41,642 basehttp 41340 33572 "GET /api/quests/admin/54/ HTTP/1.1" 200 2077
+INFO 2025-05-26 23:47:47,164 basehttp 41340 17196 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-26 23:48:55,493 basehttp 41340 2052 "GET /api/nfts/16/ HTTP/1.1" 200 826
+INFO 2025-05-26 23:48:56,018 basehttp 41340 29608 "GET /media/uploads/nft_images/b6f1974e91614578b2b9e908c3417821.jpg HTTP/1.1" 200 48710
+INFO 2025-05-26 23:51:29,920 basehttp 41340 40948 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-26 23:51:29,941 basehttp 41340 40948 "GET /api/quests/admin/54/ HTTP/1.1" 200 2077
+INFO 2025-05-26 23:51:32,037 basehttp 41340 40948 "POST /api/quests/54/prepare-nft/ HTTP/1.1" 200 242
+INFO 2025-05-26 23:51:36,053 basehttp 41340 40948 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-26 23:51:36,084 basehttp 41340 29608 "GET /media/uploads/nft_images/181c5428d8264ef98ecfeb97355959d2.jpg HTTP/1.1" 200 121044
+INFO 2025-05-27 00:03:31,295 basehttp 41340 27540 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:03:35,484 basehttp 41340 27540 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:03:41,798 basehttp 41340 50424 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:03:47,851 basehttp 41340 34568 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:03:54,637 basehttp 41340 47872 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:01,004 basehttp 41340 39096 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:08,419 basehttp 41340 42276 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:17,354 basehttp 41340 47088 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:25,312 basehttp 41340 36072 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:36,905 basehttp 41340 30676 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:45,680 basehttp 41340 50424 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:52,960 basehttp 41340 36236 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:04:59,821 basehttp 41340 31192 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:05:08,574 basehttp 41340 37144 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:05:15,436 basehttp 41340 51560 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:05:22,053 basehttp 41340 41100 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:05:30,897 basehttp 41340 39944 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:05:46,837 basehttp 41340 43724 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:09:42,306 basehttp 41340 52216 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:19:07,156 basehttp 41340 20928 "GET /api/nfts/11/ HTTP/1.1" 200 931
+INFO 2025-05-27 00:25:19,596 basehttp 41340 51404 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 00:38:22,671 autoreload 41340 35960 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 00:38:24,462 autoreload 34488 41736 Watching for file changes with StatReloader
+INFO 2025-05-27 00:38:40,487 autoreload 34488 41736 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-05-27 00:38:41,899 autoreload 40128 28928 Watching for file changes with StatReloader
+INFO 2025-05-27 00:41:43,389 basehttp 40128 37048 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 00:41:46,565 basehttp 40128 37048 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 00:41:58,276 basehttp 40128 41888 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 00:42:06,261 basehttp 40128 49972 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 00:42:09,158 basehttp 40128 49972 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 00:42:33,499 basehttp 40128 52024 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 00:42:54,094 basehttp 40128 41388 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 01:45:20,684 autoreload 40128 28928 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-05-27 01:45:23,087 autoreload 21736 6848 Watching for file changes with StatReloader
+INFO 2025-05-27 02:11:44,545 basehttp 21736 39592 "GET /api/admin/dashboard/ HTTP/1.1" 200 4540
+INFO 2025-05-27 02:11:53,839 basehttp 21736 5360 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-27 02:12:04,789 basehttp 21736 52356 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:15:08,327 basehttp 21736 31396 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:15:18,628 basehttp 21736 25964 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:15:32,914 basehttp 21736 45236 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:15:54,085 basehttp 21736 45608 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:16:07,402 basehttp 21736 39972 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:17:31,986 basehttp 21736 17196 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:17:34,756 basehttp 21736 17196 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+WARNING 2025-05-27 02:18:33,000 log 21736 41760 Not Found: /api/admin/quizzes/create/
+WARNING 2025-05-27 02:18:33,002 basehttp 21736 41760 "POST /api/admin/quizzes/create/ HTTP/1.1" 404 8250
+INFO 2025-05-27 02:20:31,767 autoreload 21736 6848 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-05-27 02:20:33,234 autoreload 30196 51556 Watching for file changes with StatReloader
+INFO 2025-05-27 02:21:23,357 autoreload 30196 51556 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:21:24,734 autoreload 52488 19896 Watching for file changes with StatReloader
+ERROR 2025-05-27 02:29:10,783 log 52488 37824 Internal Server Error: /api/admin/quizzes/create/
+ERROR 2025-05-27 02:29:10,783 basehttp 52488 37824 "POST /api/admin/quizzes/create/ HTTP/1.1" 500 282
+INFO 2025-05-27 02:29:27,772 basehttp 52488 52432 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+ERROR 2025-05-27 02:30:09,552 log 52488 40004 Internal Server Error: /api/admin/quizzes/create/
+ERROR 2025-05-27 02:30:09,552 basehttp 52488 40004 "POST /api/admin/quizzes/create/ HTTP/1.1" 500 282
+INFO 2025-05-27 02:31:19,523 autoreload 52488 19896 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:31:21,044 autoreload 51736 49340 Watching for file changes with StatReloader
+INFO 2025-05-27 02:31:44,576 autoreload 51736 49340 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:31:46,027 autoreload 38416 52652 Watching for file changes with StatReloader
+INFO 2025-05-27 02:31:54,423 autoreload 38416 52652 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:31:55,857 autoreload 38260 44472 Watching for file changes with StatReloader
+INFO 2025-05-27 02:32:11,300 autoreload 38260 44472 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:32:12,955 autoreload 43564 47164 Watching for file changes with StatReloader
+INFO 2025-05-27 02:32:23,205 autoreload 43564 47164 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:32:24,687 autoreload 48068 28208 Watching for file changes with StatReloader
+ERROR 2025-05-27 02:34:10,807 log 48068 51752 Internal Server Error: /api/admin/quizzes/create/
+ERROR 2025-05-27 02:34:10,808 basehttp 48068 51752 "POST /api/admin/quizzes/create/ HTTP/1.1" 500 388
+ERROR 2025-05-27 02:34:15,077 log 48068 51752 Internal Server Error: /api/admin/quizzes/create/
+ERROR 2025-05-27 02:34:15,078 basehttp 48068 51752 "POST /api/admin/quizzes/create/ HTTP/1.1" 500 388
+INFO 2025-05-27 02:34:23,122 basehttp 48068 52996 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+ERROR 2025-05-27 02:34:34,615 log 48068 13088 Internal Server Error: /api/admin/quizzes/create/
+ERROR 2025-05-27 02:34:34,616 basehttp 48068 13088 "POST /api/admin/quizzes/create/ HTTP/1.1" 500 388
+INFO 2025-05-27 02:36:27,216 autoreload 48068 28208 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:36:28,727 autoreload 52976 36072 Watching for file changes with StatReloader
+INFO 2025-05-27 02:36:37,203 autoreload 52976 36072 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:36:38,599 autoreload 25236 49088 Watching for file changes with StatReloader
+INFO 2025-05-27 02:36:47,243 autoreload 25236 49088 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:36:48,725 autoreload 52924 30708 Watching for file changes with StatReloader
+INFO 2025-05-27 02:37:28,776 basehttp 52924 38476 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:37:42,756 basehttp 52924 50720 "POST /api/admin/quizzes/create/ HTTP/1.1" 201 75
+INFO 2025-05-27 02:37:49,657 basehttp 52924 42568 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 02:41:43,307 autoreload 52924 30708 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:41:44,821 autoreload 45180 53092 Watching for file changes with StatReloader
+INFO 2025-05-27 02:42:11,482 autoreload 45180 53092 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:42:13,001 autoreload 41016 40144 Watching for file changes with StatReloader
+INFO 2025-05-27 02:42:59,116 basehttp 41016 50612 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 02:43:07,171 basehttp 41016 51144 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:43:33,119 basehttp 41016 52708 "POST /api/admin/quizzes/create/ HTTP/1.1" 201 75
+INFO 2025-05-27 02:43:35,338 basehttp 41016 52708 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 02:45:48,151 autoreload 41016 40144 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:45:49,658 autoreload 44164 53108 Watching for file changes with StatReloader
+INFO 2025-05-27 02:46:58,530 basehttp 44164 51828 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 02:47:05,161 basehttp 44164 45064 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:47:30,562 basehttp 44164 33352 "POST /api/admin/quizzes/create/ HTTP/1.1" 201 75
+INFO 2025-05-27 02:47:32,818 basehttp 44164 33352 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 02:50:01,442 autoreload 44164 53108 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:50:02,957 autoreload 51780 42592 Watching for file changes with StatReloader
+INFO 2025-05-27 02:50:39,715 autoreload 51780 42592 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:50:41,099 autoreload 40704 20420 Watching for file changes with StatReloader
+INFO 2025-05-27 02:51:06,165 autoreload 40704 20420 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:51:07,625 autoreload 10996 52308 Watching for file changes with StatReloader
+INFO 2025-05-27 02:51:15,736 autoreload 10996 52308 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:51:17,087 autoreload 27792 44560 Watching for file changes with StatReloader
+INFO 2025-05-27 02:51:25,358 autoreload 27792 44560 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:51:26,767 autoreload 40888 30252 Watching for file changes with StatReloader
+INFO 2025-05-27 02:51:39,858 autoreload 40888 30252 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:51:41,214 autoreload 31740 22320 Watching for file changes with StatReloader
+INFO 2025-05-27 02:51:49,335 autoreload 31740 22320 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-05-27 02:51:50,678 autoreload 52728 40096 Watching for file changes with StatReloader
+INFO 2025-05-27 02:52:28,550 basehttp 52728 52228 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 02:52:32,260 basehttp 52728 52228 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+WARNING 2025-05-27 02:52:58,574 log 52728 46604 Bad Request: /api/admin/quizzes/create/
+WARNING 2025-05-27 02:52:58,574 basehttp 52728 46604 "POST /api/admin/quizzes/create/ HTTP/1.1" 400 167
+INFO 2025-05-27 02:54:04,336 basehttp 52728 52404 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:54:10,125 basehttp 52728 19920 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:54:17,713 basehttp 52728 52104 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:54:27,052 basehttp 52728 40756 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:54:35,471 basehttp 52728 49916 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:54:43,971 basehttp 52728 6900 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:54:52,204 basehttp 52728 16300 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:55:03,845 basehttp 52728 6056 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:55:17,895 basehttp 52728 42336 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+WARNING 2025-05-27 02:55:58,767 log 52728 26836 Bad Request: /api/admin/quizzes/create/
+WARNING 2025-05-27 02:55:58,768 basehttp 52728 26836 "POST /api/admin/quizzes/create/ HTTP/1.1" 400 167
+INFO 2025-05-27 02:57:11,044 basehttp 52728 8948 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:57:32,969 basehttp 52728 51144 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 02:57:57,460 basehttp 52728 46568 "POST /api/admin/quizzes/create/ HTTP/1.1" 201 75
+INFO 2025-05-27 02:58:00,732 basehttp 52728 46568 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 13:15:53,709 basehttp 52728 59344 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-05-27 13:15:54,056 basehttp 52728 31836 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-05-27 13:16:00,002 basehttp 52728 60672 "GET /api/admin/dashboard/ HTTP/1.1" 200 4457
+INFO 2025-05-27 13:16:05,715 basehttp 52728 55268 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 11170
+INFO 2025-05-27 13:16:15,448 basehttp 52728 58940 "GET /api/courses/categories/ HTTP/1.1" 200 461
+INFO 2025-05-27 13:16:15,449 basehttp 52728 53300 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-27 13:16:56,478 basehttp 52728 56008 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 11170
+INFO 2025-05-27 13:17:01,219 basehttp 52728 56008 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-27 13:17:32,043 basehttp 52728 31836 "GET /media/uploads/nft_images/b6f1974e91614578b2b9e908c3417821.jpg HTTP/1.1" 200 48710
+INFO 2025-05-27 13:17:32,065 basehttp 52728 31836 "GET /media/uploads/nft_images/f5cecf95fff74b1189090f72a54fd4d5.png HTTP/1.1" 200 1999153
+INFO 2025-05-27 13:17:32,069 basehttp 52728 31836 "GET /media/uploads/nft_images/3c5bef8d2534456cb1d589cf18d890b4.jpg HTTP/1.1" 200 35748
+INFO 2025-05-27 13:17:32,090 basehttp 52728 31836 "GET /media/uploads/nft_images/test-1747278340583.png HTTP/1.1" 200 2043662
+INFO 2025-05-27 13:17:32,104 basehttp 52728 31836 "GET /media/uploads/nft_images/9b369fb62ac049c2923511baf81e7380.png HTTP/1.1" 200 772619
+INFO 2025-05-27 13:17:32,122 basehttp 52728 31836 "GET /media/uploads/nft_images/8dbd3bd99bbe4bce8b038651cc3f228f.png HTTP/1.1" 200 2043662
+INFO 2025-05-27 13:17:32,140 basehttp 52728 31836 "GET /media/uploads/nft_images/f70b6b8ae9db4763ab2b2972b99d7eb8.png HTTP/1.1" 200 1536321
+INFO 2025-05-27 13:17:32,147 basehttp 52728 31836 "GET /media/uploads/nft_images/dceec991f7bc415da959285bd3158a97.png HTTP/1.1" 200 235792
+INFO 2025-05-27 13:17:32,152 basehttp 52728 31836 "GET /media/uploads/nft_images/4d3a00fea0414a5b99617275429fdef5.jpg HTTP/1.1" 200 44243
+INFO 2025-05-27 13:17:32,157 basehttp 52728 31836 "GET /media/uploads/nft_images/d5936932aa3c4e62a825c05e02054a4e.jpg HTTP/1.1" 200 31941
+INFO 2025-05-27 13:17:32,164 basehttp 52728 31836 "GET /media/uploads/nft_images/198e11c13085471a83da46a6836a1718.jpg HTTP/1.1" 200 35748
+INFO 2025-05-27 13:17:32,172 basehttp 52728 31836 "GET /media/uploads/nft_images/181c5428d8264ef98ecfeb97355959d2.jpg HTTP/1.1" 200 121044
+INFO 2025-05-27 13:17:32,185 basehttp 52728 31836 "GET /media/uploads/nft_images/21baa3ce1c1643fcb2717ee8efcc6b15.png HTTP/1.1" 200 1169407
+INFO 2025-05-27 13:17:39,428 basehttp 52728 55072 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-27 13:17:58,206 basehttp 52728 62352 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 1814
+INFO 2025-05-27 13:18:12,286 basehttp 52728 45328 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 11170
+INFO 2025-05-27 13:18:40,543 basehttp 52728 27380 "GET /api/nfts/available/?page=1&pageSize=20&search=&type=&rarity=&status=&admin=true HTTP/1.1" 200 7427
+INFO 2025-05-27 13:19:17,331 basehttp 52728 56044 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-27 13:19:50,165 basehttp 52728 55284 "POST /api/ai/admin/generate-quest/ HTTP/1.1" 200 2217
+INFO 2025-05-27 13:19:54,612 basehttp 52728 10300 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-27 13:19:58,243 basehttp 52728 10300 "GET /api/courses/videos/ HTTP/1.1" 200 11167
+INFO 2025-05-27 13:19:58,304 basehttp 52728 10300 "GET /api/courses/videos/ HTTP/1.1" 200 11167
+INFO 2025-05-27 13:20:04,746 basehttp 52728 42668 "GET /api/courses/videos/ HTTP/1.1" 200 11167
+INFO 2025-05-27 13:20:04,763 basehttp 52728 55944 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-05-27 13:20:04,821 basehttp 52728 42668 "GET /api/courses/videos/ HTTP/1.1" 200 11167
+INFO 2025-05-27 13:20:07,953 basehttp 52728 42668 "POST /api/quests/create/ HTTP/1.1" 200 895
+INFO 2025-05-27 13:20:11,136 basehttp 52728 42668 "GET /api/quests/?page=1&page_size=20&include_inactive=true HTTP/1.1" 200 11561
+INFO 2025-05-27 13:20:22,933 basehttp 52728 60492 "GET /api/auth/profile/ HTTP/1.1" 200 301
+INFO 2025-05-27 13:20:22,951 basehttp 52728 60492 "GET /api/quests/admin/55/ HTTP/1.1" 200 2170
+INFO 2025-05-27 13:20:29,916 basehttp 52728 53272 "POST /api/quests/55/update/ HTTP/1.1" 200 808
+INFO 2025-05-27 13:20:35,718 basehttp 52728 57300 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-05-27 13:21:28,562 basehttp 52728 53780 "POST /api/admin/quizzes/create/ HTTP/1.1" 201 75
+INFO 2025-05-27 13:21:32,487 basehttp 52728 53780 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
+INFO 2025-05-27 13:22:05,234 basehttp 52728 58828 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436

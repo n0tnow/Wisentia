@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminLayout from '@/components/admin/AdminLayout';
+import MainLayout from '@/components/layout/MainLayout';
 import { 
   Box, Button, Card, CardContent, Container, Divider, FormControl, 
   Grid, IconButton, InputLabel, MenuItem, Paper, Select, Stack, 
@@ -89,6 +89,16 @@ export default function CreateQuestPage() {
     
     loadCategories();
   }, []);
+  
+  // Debug: Watch formData changes
+  useEffect(() => {
+    console.log('=== FORM DATA CHANGED ===');
+    console.log('New form data:', formData);
+    console.log('Conditions count:', formData.conditions?.length || 0);
+    formData.conditions?.forEach((condition, index) => {
+      console.log(`Condition ${index + 1}:`, condition);
+    });
+  }, [formData]);
   
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -200,7 +210,24 @@ export default function CreateQuestPage() {
   
   // Apply AI suggestions to form
   const handleAISuggestionsApply = (suggestedData) => {
-    setFormData(suggestedData);
+    console.log('\n=== CREATE PAGE: APPLYING AI SUGGESTIONS ===');
+    console.log('Received suggested data:', suggestedData);
+    console.log('Current form data before applying:', formData);
+    console.log('Suggested conditions:', suggestedData.conditions);
+    
+    // Apply the suggested data to form
+    setFormData(prevData => {
+      const newData = {
+        ...prevData,
+        ...suggestedData,
+        // Ensure conditions are properly set
+        conditions: suggestedData.conditions || []
+      };
+      
+      console.log('Setting form data to:', newData);
+      return newData;
+    });
+    
     // Clear any form errors when applying AI suggestions
     setErrors({});
   };
@@ -269,6 +296,8 @@ export default function CreateQuestPage() {
         token = localStorage.getItem('access_token');
       }
       
+      console.log('Submitting quest with form data:', formData);
+      
       // Try the admin endpoint first for manual quest creation
       const response = await fetch('/api/admin/quests', {
         method: 'POST',
@@ -287,7 +316,7 @@ export default function CreateQuestPage() {
       
       setSuccess(true);
       setTimeout(() => {
-        router.push('/admin/quests');
+        router.push('/admin/content/quests');
       }, 2000);
     } catch (err) {
       console.error('Failed to create quest:', err);
@@ -300,6 +329,9 @@ export default function CreateQuestPage() {
   // Render condition selector based on condition type
   const renderConditionSelector = (condition, index) => {
     const conditionType = condition.conditionType;
+    
+    console.log(`Rendering condition ${index + 1}:`, condition);
+    console.log(`Condition type: ${conditionType}, targetId: ${condition.targetId}`);
     
     switch (conditionType) {
       case 'course_completion':
@@ -337,6 +369,7 @@ export default function CreateQuestPage() {
         );
         
       case 'watch_videos':
+        console.log(`Rendering video selector for condition ${index + 1}, targetId: ${condition.targetId}`);
         return (
           <AdminVideoSelector 
             value={condition.targetId}
@@ -375,7 +408,7 @@ export default function CreateQuestPage() {
   };
   
   return (
-    <AdminLayout>
+    <MainLayout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Paper sx={{ p: 3, mb: 4 }}>
           <Typography variant="h4" component="h1" gutterBottom>
@@ -628,7 +661,7 @@ export default function CreateQuestPage() {
                 <Stack direction="row" spacing={2} justifyContent="flex-end">
                   <Button
                     variant="outlined"
-                    onClick={() => router.push('/admin/quests')}
+                    onClick={() => router.push('/admin/content/quests')}
                     disabled={loading}
                   >
                     Cancel
@@ -648,6 +681,6 @@ export default function CreateQuestPage() {
           </form>
         </Paper>
       </Container>
-    </AdminLayout>
+    </MainLayout>
   );
 } 

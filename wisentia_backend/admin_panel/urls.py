@@ -25,4 +25,10 @@ urlpatterns = [
     path('nfts/<int:nft_id>/update/', views.update_nft, name='update-nft'),
     path('nfts/upload-image/', views.upload_nft_image, name='upload-nft-image'),
     path('nfts/statistics/', views.nft_statistics, name='nft-statistics'),
+    
+    # Quiz yönetim endpointleri
+    path('quizzes/create/', views.create_quiz, name='admin-create-quiz'),
+    path('quizzes/<int:quiz_id>/', views.quiz_details, name='admin-quiz-details'),
+    path('quizzes/<int:quiz_id>/update/', views.update_quiz, name='admin-update-quiz'),
+    path('quizzes/<int:quiz_id>/delete/', views.delete_quiz, name='admin-delete-quiz'),
 ]

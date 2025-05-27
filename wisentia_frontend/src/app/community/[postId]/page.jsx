@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { use } from 'react'; // React.use() için import
 import {
   Container,
   Typography,
@@ -104,9 +103,7 @@ const StarBackground = () => {
 };
 
 export default function PostDetailPage({ params }) {
-  // Next.js'in yeni sürümleri için params'ı React.use() ile sarmalama
-  const postIdParams = use(params);
-  const postId = postIdParams.postId;
+  const postId = params.postId;
 
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();

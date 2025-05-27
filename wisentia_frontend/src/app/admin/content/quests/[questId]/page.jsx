@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import MainLayout from '@/components/layout/MainLayout';
-import { use } from 'react';
 
 // MUI components
 import {
@@ -62,9 +61,8 @@ export default function QuestDetailPage(props) {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   
-  // Resolve params promise
-  const params = use(props.params);
-  const questId = params.questId;
+  // Get questId from params
+  const questId = props.params.questId;
   
   const [quest, setQuest] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -88,7 +86,7 @@ export default function QuestDetailPage(props) {
     const fetchQuestDetails = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/quests/${questId}`);
+        const response = await fetch(`/api/admin/quests/${questId}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch quest details');
@@ -191,10 +189,12 @@ export default function QuestDetailPage(props) {
       setSaveError(null);
       
       // Prepare NFT data from the quest
-      const response = await fetch(`/api/quests/${questId}/prepare-nft/`, {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`/api/admin/quests/${questId}/nft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         }
       });
       
@@ -454,9 +454,14 @@ export default function QuestDetailPage(props) {
           </Tabs>
         </Box>
         
-        {/* General Information Tab */}
-        {tabValue === 0 && (
-          <Grid container spacing={3}>
+        {/* Tab Content Container with Fixed Height */}
+        <Box sx={{ 
+          minHeight: '600px', // Fixed minimum height to prevent layout shifts
+          position: 'relative'
+        }}>
+          {/* General Information Tab */}
+          {tabValue === 0 && (
+            <Grid container spacing={3}>
             <Grid item xs={12} md={8}>
               <Paper 
                 elevation={3} 
@@ -604,16 +609,33 @@ export default function QuestDetailPage(props) {
                           <TaskIcon color="primary" />
                         </ListItemIcon>
                         <ListItemText 
-                          primary={condition.description || `Condition ${index + 1}`}
-                          secondary={`Type: ${condition.conditionType || condition.ConditionType || 'Not specified'}`}
+                          primary={
+                            condition.displayText || 
+                            condition.targetTitle || 
+                            condition.description || 
+                            `${condition.conditionType || condition.ConditionType || 'Unknown'} - ID: ${condition.targetId || condition.TargetID || 'N/A'}`
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                Type: {condition.conditionType || condition.ConditionType || 'Not specified'}
+                              </Typography>
+                              {(condition.targetValue || condition.TargetValue) && (
+                                <Typography variant="body2" color="text.secondary">
+                                  Target Value: {condition.targetValue || condition.TargetValue}
+                                </Typography>
+                              )}
+                              {(condition.courseTitle || condition.CourseTitle) && (
+                                <Typography variant="body2" color="text.secondary">
+                                  Course: {condition.courseTitle || condition.CourseTitle}
+                                </Typography>
+                              )}
+                            </Box>
+                          }
                           primaryTypographyProps={{
                             sx: {
-                              wordBreak: 'break-word'
-                            }
-                          }}
-                          secondaryTypographyProps={{
-                            sx: {
-                              wordBreak: 'break-word'
+                              wordBreak: 'break-word',
+                              fontWeight: 'medium'
                             }
                           }}
                         />
@@ -799,7 +821,7 @@ export default function QuestDetailPage(props) {
                     >
                       <CardContent>
                         <Typography variant="h6" gutterBottom sx={{ wordBreak: 'break-word' }}>
-                          {condition.description || `Condition ${index + 1}`}
+                          {condition.displayText || condition.targetTitle || condition.description || `Condition ${index + 1}`}
                         </Typography>
                         
                         <Divider sx={{ my: 1 }} />
@@ -823,6 +845,18 @@ export default function QuestDetailPage(props) {
                         {(condition.targetTitle || condition.TargetTitle) && (
                           <Typography variant="body2" color="text.secondary" gutterBottom sx={{ wordBreak: 'break-word' }}>
                             <strong>Target:</strong> {condition.targetTitle || condition.TargetTitle}
+                          </Typography>
+                        )}
+                        
+                        {(condition.courseTitle || condition.CourseTitle) && (
+                          <Typography variant="body2" color="text.secondary" gutterBottom sx={{ wordBreak: 'break-word' }}>
+                            <strong>Course:</strong> {condition.courseTitle || condition.CourseTitle}
+                          </Typography>
+                        )}
+                        
+                        {(condition.targetDescription || condition.TargetDescription) && (
+                          <Typography variant="body2" color="text.secondary" gutterBottom sx={{ wordBreak: 'break-word' }}>
+                            <strong>Description:</strong> {condition.targetDescription || condition.TargetDescription}
                           </Typography>
                         )}
                       </CardContent>
@@ -849,6 +883,7 @@ export default function QuestDetailPage(props) {
             </Alert>
           </Paper>
         )}
+        </Box>
         
         {/* Delete Confirmation Dialog */}
         <Dialog

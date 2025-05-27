@@ -1639,6 +1639,118 @@ def course_quizzes(request, course_id):
     from quizzes.views import course_quizzes as quizzes_course_quizzes
     return quizzes_course_quizzes(request, course_id)
 
+@swagger_auto_schema(
+    method='get',
+    responses={
+        200: openapi.Response('Başarılı yanıt', openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'categories': openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'category': openapi.Schema(type=openapi.TYPE_STRING),
+                            'course_count': openapi.Schema(type=openapi.TYPE_INTEGER)
+                        }
+                    )
+                )
+            }
+        ))
+    },
+    operation_description="Database'deki tüm kurs kategorilerini ve her kategorideki kurs sayısını getirir"
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_course_categories(request):
+    """Get all unique course categories from database with course counts"""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT Category, COUNT(*) as CourseCount
+                FROM Courses
+                WHERE IsActive = 1 AND Category IS NOT NULL AND Category != ''
+                GROUP BY Category
+                ORDER BY Category
+            """)
+            
+            columns = [col[0] for col in cursor.description]
+            categories = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+            return Response({'categories': categories})
+            
+    except Exception as e:
+        print(f"Error getting course categories: {str(e)}")
+        return Response(
+            {"error": f"Failed to retrieve course categories: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter('course_id', openapi.IN_QUERY, description="Belirli bir kursa ait videoları filtrele", type=openapi.TYPE_INTEGER),
+        openapi.Parameter('category', openapi.IN_QUERY, description="Kategori filtresi", type=openapi.TYPE_STRING),
+    ],
+    responses={
+        200: openapi.Response('Başarılı yanıt', openapi.Schema(
+            type=openapi.TYPE_ARRAY,
+            items=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'VideoID': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'Title': openapi.Schema(type=openapi.TYPE_STRING),
+                    'Description': openapi.Schema(type=openapi.TYPE_STRING),
+                    'Duration': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'OrderInCourse': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'CourseID': openapi.Schema(type=openapi.TYPE_INTEGER),
+                    'CourseTitle': openapi.Schema(type=openapi.TYPE_STRING),
+                    'CourseCategory': openapi.Schema(type=openapi.TYPE_STRING),
+                }
+            )
+        ))
+    },
+    operation_description="Tüm course videolarını listeler, isteğe bağlı olarak course_id ve kategori filtresi uygulanabilir"
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_videos(request):
+    """List all course videos with optional filtering"""
+    course_id = request.query_params.get('course_id')
+    category = request.query_params.get('category')
+    
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT cv.VideoID, cv.Title, cv.Description, cv.Duration, cv.OrderInCourse,
+                       cv.CourseID, c.Title as CourseTitle, c.Category as CourseCategory
+                FROM CourseVideos cv
+                INNER JOIN Courses c ON cv.CourseID = c.CourseID
+                WHERE c.IsActive = 1
+            """
+            
+            params = []
+            
+            if course_id:
+                query += " AND cv.CourseID = %s"
+                params.append(course_id)
+            
+            if category:
+                query += " AND c.Category = %s"
+                params.append(category)
+                
+            query += " ORDER BY c.Title, cv.OrderInCourse"
+            
+            cursor.execute(query, params)
+            columns = [col[0] for col in cursor.description]
+            videos = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            
+            return Response(videos)
+    except Exception as e:
+        return Response({
+            'error': f'Database error: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 def get_db_connection():
     """Get a connection to the SQL Server database"""
     conn = pyodbc.connect('Driver={SQL Server};'

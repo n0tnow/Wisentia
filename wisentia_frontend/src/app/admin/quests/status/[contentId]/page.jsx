@@ -16,7 +16,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useAuth } from '@/contexts/AuthContext';
-import AdminLayout from '@/components/layout/AdminLayout';
+import AdminLayout from '@/components/admin/AdminLayout';
 
 export default function QuestStatusPage() {
   const router = useRouter();
@@ -35,20 +35,30 @@ export default function QuestStatusPage() {
     
     fetchQuestStatus();
     
-    // If status is processing, set up auto-refresh
-    if (questData?.status === 'processing') {
-      const interval = setInterval(fetchQuestStatus, 5000); // 5 seconds
-      setRefreshInterval(interval);
-      
-      return () => clearInterval(interval);
-    } else if (refreshInterval) {
-      clearInterval(refreshInterval);
-    }
+    // Set up auto-refresh for processing and queued status
+    const interval = setInterval(() => {
+      if (questData?.status === 'processing' || questData?.status === 'queued') {
+        fetchQuestStatus();
+      }
+    }, 2000); // 2 seconds for faster updates
+    
+    setRefreshInterval(interval);
     
     return () => {
-      if (refreshInterval) clearInterval(refreshInterval);
+      if (interval) clearInterval(interval);
     };
-  }, [user, contentId, questData?.status]);
+  }, [user, contentId]);
+
+  // Separate effect to handle status changes
+  useEffect(() => {
+    if (questData?.status && questData.status !== 'processing' && questData.status !== 'queued') {
+      // Clear interval when status is no longer processing or queued
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+        setRefreshInterval(null);
+      }
+    }
+  }, [questData?.status, refreshInterval]);
   
   const fetchQuestStatus = async () => {
     try {
@@ -126,6 +136,13 @@ export default function QuestStatusPage() {
   
   const getStatusChip = (status) => {
     switch (status?.toLowerCase()) {
+      case 'queued':
+        return <Chip 
+          icon={<ScheduleIcon />} 
+          label="Queued" 
+          color="default" 
+          size="small" 
+        />;
       case 'pending':
         return <Chip 
           icon={<ScheduleIcon />} 
@@ -136,7 +153,7 @@ export default function QuestStatusPage() {
       case 'processing':
         return <Chip 
           icon={<AutoAwesomeIcon />} 
-          label="Processing" 
+          label="AI Processing" 
           color="info" 
           size="small" 
         />;
@@ -152,6 +169,13 @@ export default function QuestStatusPage() {
           icon={<ErrorOutlineIcon />} 
           label="Failed" 
           color="error" 
+          size="small" 
+        />;
+      case 'duplicate_found':
+        return <Chip 
+          icon={<ErrorOutlineIcon />} 
+          label="Duplicate Found" 
+          color="warning" 
           size="small" 
         />;
       default:
@@ -227,6 +251,11 @@ export default function QuestStatusPage() {
                     <Grid item xs={12} md={8}>
                       <Typography variant="h5" component="h1" gutterBottom>
                         Quest Generation #{contentId}
+                        {questData.content?.createdQuestId && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Created Quest ID: {questData.content.createdQuestId}
+                          </Typography>
+                        )}
                       </Typography>
                       
                       <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
@@ -260,6 +289,35 @@ export default function QuestStatusPage() {
                           </Grid>
                         </Paper>
                       </Box>
+
+                      {/* API Cost Information */}
+                      {questData.content?.apiCost && (
+                        <Box sx={{ mb: 3 }}>
+                          <Typography variant="subtitle1" gutterBottom>API Cost Information:</Typography>
+                          <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                            <Grid container spacing={2}>
+                              <Grid item xs={6} md={3}>
+                                <Typography variant="body2" color="text.secondary">Total Cost:</Typography>
+                                <Typography variant="body1" color="primary" fontWeight="bold">
+                                  ${questData.content.apiCost.total_cost?.toFixed(4) || '0.0000'}
+                                </Typography>
+                              </Grid>
+                              <Grid item xs={6} md={3}>
+                                <Typography variant="body2" color="text.secondary">Input Tokens:</Typography>
+                                <Typography variant="body1">{questData.content.apiCost.input_tokens || 0}</Typography>
+                              </Grid>
+                              <Grid item xs={6} md={3}>
+                                <Typography variant="body2" color="text.secondary">Output Tokens:</Typography>
+                                <Typography variant="body1">{questData.content.apiCost.output_tokens || 0}</Typography>
+                              </Grid>
+                              <Grid item xs={6} md={3}>
+                                <Typography variant="body2" color="text.secondary">Currency:</Typography>
+                                <Typography variant="body1">{questData.content.apiCost.currency || 'USD'}</Typography>
+                              </Grid>
+                            </Grid>
+                          </Paper>
+                        </Box>
+                      )}
                     </Grid>
                     
                     <Grid item xs={12} md={4}>
@@ -306,6 +364,24 @@ export default function QuestStatusPage() {
                               The quest generation process encountered an error.
                             </Typography>
                           </>
+                        ) : questData.status === 'duplicate_found' ? (
+                          <>
+                            <ErrorOutlineIcon color="warning" sx={{ fontSize: 60, mb: 2 }} />
+                            <Typography variant="h6" gutterBottom>Duplicate Quest Found</Typography>
+                            <Typography color="text.secondary">
+                              A quest with similar title and description already exists in the database.
+                            </Typography>
+                            {questData.content?.duplicateQuestId && (
+                              <Button 
+                                variant="outlined" 
+                                color="primary" 
+                                onClick={() => router.push(`/admin/content/quests/${questData.content.duplicateQuestId}`)}
+                                sx={{ mt: 2 }}
+                              >
+                                View Existing Quest
+                              </Button>
+                            )}
+                          </>
                         ) : (
                           <>
                             <ScheduleIcon color="warning" sx={{ fontSize: 60, mb: 2 }} />
@@ -322,7 +398,7 @@ export default function QuestStatusPage() {
               </Card>
               
               {/* Quest Content Section */}
-              {questData.status === 'completed' && questData.content && (
+              {(questData.status === 'completed' || questData.status === 'duplicate_found') && questData.content && (
                 <Card sx={{ mb: 3 }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>Generated Quest</Typography>

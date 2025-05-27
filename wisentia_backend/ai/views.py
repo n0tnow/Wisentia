@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django.http import StreamingHttpResponse, JsonResponse
 import json
 import requests
-from .llm import generate_response, generate_quest, generate_quiz, generate_quiz_with_anthropic, generate_with_anthropic, call_llm
+from .llm import generate_response, generate_quest_with_anthropic, suggest_quest_conditions_with_anthropic, generate_quiz, generate_quiz_with_anthropic, generate_with_anthropic, call_llm
 import logging
 import re
 from .transcriber import download_audio, transcribe_audio
@@ -554,7 +554,7 @@ def dismiss_recommendation(request, recommendation_id):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def ai_generate_quest(request):
-    """API endpoint to generate quests with AI (admin only)"""
+    """API endpoint to suggest quest conditions with AI (admin only)"""
     user_id = request.user.id
     
     # Admin check
@@ -565,7 +565,7 @@ def ai_generate_quest(request):
         
         user_role = cursor.fetchone()
         if not user_role or user_role[0] != 'admin':
-            return Response({'error': 'Only administrators can generate quests'}, 
+            return Response({'error': 'Only administrators can use AI suggestions'}, 
                            status=status.HTTP_403_FORBIDDEN)
     
     # Get parameters
@@ -574,43 +574,68 @@ def ai_generate_quest(request):
     points_required = request.data.get('pointsRequired', 100)
     points_reward = request.data.get('pointsReward')
     
-    # Generate quest with AI
-    result = generate_quest(difficulty, category, points_required, points_reward)
+    print(f"=== AI QUEST SUGGESTION REQUEST ===")
+    print(f"Difficulty: {difficulty}")
+    print(f"Category: {category}")
+    print(f"Points Required: {points_required}")
+    print(f"Points Reward: {points_reward}")
+    
+    # Generate condition suggestions with AI using Anthropic
+    result = suggest_quest_conditions_with_anthropic(difficulty, category, points_required, points_reward)
+    
+    print(f"AI suggestion result: {result}")
     
     if not result['success']:
         return Response({
-            'error': result.get('error', 'Failed to generate quest'),
+            'error': result.get('error', 'Failed to generate condition suggestions'),
             'raw_response': result.get('raw_response', '')
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    quest_data = result['data']
+    suggestions_data = result['data']
     
-    # Save AI-generated content
-    with connection.cursor() as cursor:
-        # First, execute INSERT
-        cursor.execute("""
-            INSERT INTO AIGeneratedContent
-            (ContentType, Content, GenerationParams, CreationDate, ApprovalStatus)
-            VALUES ('quest', %s, %s, GETDATE(), 'pending')
-        """, [
-            json.dumps(quest_data),
-            json.dumps({
-                'difficulty': difficulty,
-                'category': category,
-                'points_required': points_required,
-                'points_reward': points_reward
-            })
-        ])
-        
-        # Then, get the ID in a separate query
-        cursor.execute("SELECT SCOPE_IDENTITY()")
-        content_id = cursor.fetchone()[0]
+    # Format suggestions for frontend
+    suggested_conditions = suggestions_data.get('suggestedConditions', [])
     
-    return Response({
-        'message': 'Quest generated successfully',
-        'contentId': content_id,
-        'quest': quest_data
-    })
+    print(f"Suggested conditions from AI: {suggested_conditions}")
+    
+    # Create a mock quest structure for the frontend
+    mock_quest = {
+        'title': f"AI Suggested Quest - {difficulty.capitalize()}",
+        'description': f"A {difficulty} level quest for {category} with meaningful learning objectives.",
+        'conditions': [
+            {
+                'type': condition.get('type', 'course_completion'),
+                'name': condition.get('name', condition.get('description', 'Complete learning objective')),
+                'description': condition.get('description', 'Complete this learning objective'),
+                'points': condition.get('targetValue', 1),
+                'targetValue': condition.get('targetValue', 1),  # Add targetValue field
+                'targetId': condition.get('targetId'),
+                'targetName': condition.get('targetName', '')
+            }
+            for condition in suggested_conditions
+        ],
+        'estimated_completion_time': len(suggested_conditions) * 15  # Estimate 15 minutes per condition
+    }
+    
+    print(f"Mock quest created: {mock_quest}")
+    
+    # Prepare response with cost information
+    response_data = {
+        'success': True,
+        'quest': mock_quest,
+        'suggestions': suggested_conditions,  # Keep original suggestions too
+        'message': 'AI condition suggestions generated successfully'
+    }
+    
+    # Add cost information if available
+    if result.get('cost'):
+        response_data['cost'] = result['cost']
+    if result.get('usage'):
+        response_data['usage'] = result['usage']
+    
+    print(f"Final response data: {response_data}")
+    
+    return Response(response_data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -701,6 +726,14 @@ def approve_generated_quest(request, content_id):
             reward_points = quest_data.get('rewardPoints', 50)
             required_points = quest_data.get('requiredPoints', 0)
             difficulty_level = quest_data.get('difficultyLevel', 'intermediate')
+            
+            # Check for duplicate before creating
+            duplicate_quest_id = check_duplicate_quest(title, description)
+            if duplicate_quest_id:
+                return Response({
+                    'error': 'A similar quest already exists in the database',
+                    'duplicateQuestId': duplicate_quest_id
+                }, status=status.HTTP_409_CONFLICT)
             
             # First, execute INSERT
             cursor.execute("""
@@ -2343,8 +2376,8 @@ def process_quest_generation_background(content_id, generation_params):
         
         # Only fetch database data if not already cached
         if not database_data:
-            logger.info("Fetching database data for quest generation")
-            database_data = get_quest_database_data()
+            logger.info(f"Fetching database data for quest generation (category: {category})")
+            database_data = get_quest_database_data(category)
             
             # Database data will always be returned now, even if empty
             # Update the content record with cached database data to avoid refetching
@@ -2366,95 +2399,8 @@ def process_quest_generation_background(content_id, generation_params):
                 except Exception as e:
                     logger.warning(f"Could not update GenerationParams with cached database data: {str(e)}")
         
-        # Check if we have enough actual data or need to use fallback
-        use_fallback = (len(database_data.get('popular_courses', [])) == 0 and 
-                       len(database_data.get('popular_videos', [])) == 0)
-        
-        if use_fallback:
-            logger.warning("Using fallback quest generation due to insufficient database data")
-            
-            # Update status to 'processing'
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    UPDATE AIGeneratedContent
-                    SET Content = %s, ApprovalStatus = %s
-                    WHERE ContentID = %s
-                """, [
-                    json.dumps({
-                        "status": "processing", 
-                        "message": "Generating fallback quest due to limited database content"
-                    }, default=datetime_handler),
-                    'processing',
-                    content_id
-                ])
-            
-            # Generate a fallback quest
-            fallback_quest = create_fallback_quest(database_data, difficulty, category, points_required, points_reward)
-            
-            # Update content in the database with the fallback quest
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    UPDATE AIGeneratedContent
-                    SET Content = %s, ApprovalStatus = %s
-                    WHERE ContentID = %s
-                """, [
-                    json.dumps(fallback_quest, default=datetime_handler),
-                    'completed',
-                    content_id
-                ])
-            
-            # If auto-create is enabled, create the quest immediately
-            if auto_create:
-                try:
-                    # Create the quest
-                    with connection.cursor() as cursor:
-                        cursor.execute("""
-                            INSERT INTO Quests
-                            (Title, Description, RequiredPoints, RewardPoints, DifficultyLevel, 
-                             IsActive, IsAIGenerated, CreationDate)
-                            VALUES (%s, %s, %s, %s, %s, 1, 1, GETDATE())
-                        """, [
-                            fallback_quest['title'], 
-                            fallback_quest['description'], 
-                            fallback_quest['requiredPoints'], 
-                            fallback_quest['rewardPoints'], 
-                            fallback_quest['difficultyLevel']
-                        ])
-                        
-                        cursor.execute("SELECT SCOPE_IDENTITY()")
-                        quest_id = cursor.fetchone()[0]
-                        
-                        if quest_id:
-                            # Add quest conditions (if any)
-                            for condition in fallback_quest.get('conditions', []):
-                                cursor.execute("""
-                                    INSERT INTO QuestConditions
-                                    (QuestID, ConditionType, TargetID, TargetValue, Description)
-                                    VALUES (%s, %s, %s, %s, %s)
-                                """, [
-                                    quest_id, 
-                                    condition.get('type', 'generic'), 
-                                    condition.get('targetId', 0), 
-                                    condition.get('targetValue', 1), 
-                                    condition.get('description', '')
-                                ])
-                            
-                            # Update content with created quest ID
-                            fallback_quest['createdQuestId'] = quest_id
-                            cursor.execute("""
-                                UPDATE AIGeneratedContent
-                                SET Content = %s
-                                WHERE ContentID = %s
-                            """, [
-                                json.dumps(fallback_quest, default=datetime_handler),
-                                content_id
-                            ])
-                    
-                    logger.info(f"Successfully created fallback quest with ID {quest_id}")
-                except Exception as create_error:
-                    logger.error(f"Error creating fallback quest: {str(create_error)}")
-            
-            return
+        # Always use AI generation - no fallback shortcuts
+        logger.info("Starting AI quest generation process")
         
         # Update status to 'processing'
         with connection.cursor() as cursor:
@@ -2465,11 +2411,35 @@ def process_quest_generation_background(content_id, generation_params):
             """, [
                 json.dumps({
                     "status": "processing", 
-                    "message": "AI generating quest content"
+                    "message": "AI analyzing database and generating quest content",
+                    "startedAt": datetime.now().isoformat()
                 }, default=datetime_handler),
                 'processing',
                 content_id
             ])
+        
+        # Add realistic processing delay for AI generation
+        logger.info(f"Starting quest generation process for content ID {content_id}")
+        time.sleep(8)  # Initial delay - increased for more realistic timing
+        
+        # Update progress - fetching NFT data
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE AIGeneratedContent
+                SET Content = %s
+                WHERE ContentID = %s
+            """, [
+                json.dumps({
+                    "status": "processing", 
+                    "message": "Fetching NFT and database information",
+                    "startedAt": datetime.now().isoformat(),
+                    "progress": "Preparing data for AI"
+                }, default=datetime_handler),
+                content_id
+            ])
+        
+        logger.info(f"Fetching database data for quest generation")
+        time.sleep(6)  # Additional delay for data preparation - increased
         
         # Get available NFT types
         with connection.cursor() as cursor:
@@ -2505,9 +2475,11 @@ def process_quest_generation_background(content_id, generation_params):
         
         # Generate quest with AI, including the database info
         system_prompt = (
-            "You are an AI specialized in creating educational quests based on real database content. "
+            "You are an AI specialized in creating UNIQUE and CREATIVE educational quests based on real database content. "
             "You will receive actual course, quiz, and video data from the database. "
-            "Create a coherent quest that uses REAL content IDs and targets from the provided database information. "
+            "Create a UNIQUE quest that uses REAL content IDs and targets from the provided database information. "
+            "IMPORTANT: Create quests that are DIFFERENT from typical learning patterns. Be creative with titles and descriptions. "
+            "Use varied themes like: adventure, mystery, challenge, exploration, mastery, discovery, achievement, etc. "
             "Your response should be a COMPLETE quest with title, description, and properly defined conditions "
             "that reference the actual database items by ID. "
             "Additionally, you should recommend a specific NFT reward with detailed properties that would be appropriate "
@@ -2515,12 +2487,16 @@ def process_quest_generation_background(content_id, generation_params):
         )
         
         user_prompt = f"""
-        Create a fully-defined quest with the following parameters:
+        Create a UNIQUE and CREATIVE quest with the following parameters:
         
         Difficulty level: {difficulty}
         Category: {category}
         Required points to start: {points_required}
         Reward points: {points_reward}
+        
+        IMPORTANT: This quest MUST be relevant to the "{category}" category. 
+        Use content from this category and create conditions that make sense for learners in this field.
+        If the category is "General Learning", you can mix different subjects creatively.
         
         DATABASE CONTENT AVAILABLE:
         
@@ -2539,14 +2515,22 @@ def process_quest_generation_background(content_id, generation_params):
         AVAILABLE NFT REWARDS:
         {json.dumps(available_nfts, indent=2, default=datetime_handler)}
         
+        CREATIVITY REQUIREMENTS:
+        - Create a quest with a UNIQUE theme (adventure, mystery, challenge, exploration, mastery, discovery, etc.)
+        - Use creative and engaging titles that don't sound generic
+        - Write compelling descriptions that tell a story or create excitement
+        - Combine different types of content in interesting ways
+        - Make the quest feel like an adventure, not just a checklist
+        
         Create a complete quest that:
-        1. Has a compelling title and description
+        1. Has a UNIQUE and compelling title and description with creative theme
         2. Includes 2-4 conditions using ACTUAL items from the database (reference real CourseID, QuizID, VideoID values)
-        3. Uses appropriate condition types (course_completion, quiz_score, take_quiz, watch_videos)
+        3. Uses appropriate condition types (course_completion, quiz_score, quiz_completion, watch_video)
         4. Makes logical sense for the specified difficulty level
+        5. Feels like an adventure or challenge, not just a learning task
         
         IMPORTANTLY, create a detailed NFT recommendation that matches the quest's theme:
-        - Include a suggested NFT title
+        - Include a suggested NFT title that matches the quest theme
         - Include a detailed NFT description
         - Specify NFT rarity (Common, Uncommon, Rare, Epic, Legendary)
         - Suggest an appropriate NFT type ID from the available types
@@ -2554,8 +2538,8 @@ def process_quest_generation_background(content_id, generation_params):
         - Include a brief visual description of how the NFT should look
         
         Return your response as a clean JSON object with these fields:
-        - title: A compelling quest title
-        - description: Detailed quest description
+        - title: A UNIQUE and compelling quest title (avoid generic names)
+        - description: Detailed quest description that tells a story or creates excitement
         - difficultyLevel: Should be set to the specified difficulty level
         - requiredPoints: Should be set to the specified required points
         - rewardPoints: Should be set to the specified reward points
@@ -2570,12 +2554,36 @@ def process_quest_generation_background(content_id, generation_params):
         Use only these condition types: "course_completion", "quiz_score", "quiz_completion", "watch_video"
         For "targetId", use REAL IDs from the database content provided.
         Make the quest challenging but achievable based on the difficulty level.
+        
+        EXAMPLES OF CREATIVE THEMES:
+        - "The Code Breaker's Journey" - programming quest with mystery theme
+        - "Digital Alchemist Challenge" - science quest with magical theme
+        - "The Knowledge Vault Expedition" - exploration theme for learning
+        - "Master of the Digital Realm" - mastery theme for advanced skills
+        - "The Wisdom Seeker's Trial" - adventure theme for comprehensive learning
         """
+        
+        # Update progress - calling AI
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE AIGeneratedContent
+                SET Content = %s
+                WHERE ContentID = %s
+            """, [
+                json.dumps({
+                    "status": "processing", 
+                    "message": "AI is generating quest content",
+                    "startedAt": datetime.now().isoformat(),
+                    "progress": "Calling AI service"
+                }, default=datetime_handler),
+                content_id
+            ])
         
         try:
             # Implement retry logic with exponential backoff
             success = False
             last_error = None
+            api_cost = None
             
             while retry_count < max_retries and not success:
                 try:
@@ -2596,7 +2604,49 @@ def process_quest_generation_background(content_id, generation_params):
                             ])
                     
                     # Call LLM with increasing timeout for retries
+                    logger.info(f"Calling AI service for quest generation (attempt {retry_count + 1})")
                     result = call_llm(system_prompt, user_prompt)
+                    logger.info(f"AI service returned result: {type(result)}")
+                    
+                    # Track API cost if available
+                    api_cost = None
+                    if isinstance(result, dict):
+                        api_cost = result.get('cost')
+                        if not api_cost and result.get('usage'):
+                            from .anthropic import estimate_cost
+                            api_cost = estimate_cost(result['usage'])
+                        
+                        # Extract content from structured response
+                        if result.get('success') and result.get('content'):
+                            content = result['content']
+                        elif result.get('content'):
+                            content = result['content']
+                        else:
+                            content = result
+                    else:
+                        content = result
+                    
+                    logger.info(f"AI content extracted, length: {len(str(content)) if content else 0}")
+                    
+                    # Add processing delay after AI call
+                    with connection.cursor() as cursor:
+                        cursor.execute("""
+                            UPDATE AIGeneratedContent
+                            SET Content = %s
+                            WHERE ContentID = %s
+                        """, [
+                            json.dumps({
+                                "status": "processing", 
+                                "message": "Processing AI response and preparing quest data",
+                                "startedAt": datetime.now().isoformat(),
+                                "progress": "Processing AI response"
+                            }, default=datetime_handler),
+                            content_id
+                        ])
+                    
+                    time.sleep(5)
+                    logger.info("AI response processing completed")
+                    
                     success = True
                     
                 except Exception as e:
@@ -2615,17 +2665,7 @@ def process_quest_generation_background(content_id, generation_params):
             if not success or not result:
                 error_message = "Failed after multiple attempts"
                 logger.error(f"AI service error in quest generation: {error_message}")
-            elif isinstance(result, dict) and (not result.get('success', True) or "error" in result):
-                error_message = result.get("error", "Unknown AI service error") 
-                logger.error(f"AI service error in quest generation: {error_message}")
-                
-                # Generate a fallback quest rather than failing
-                logger.info("Generating fallback quest due to AI service issues")
-                
-                # Create a simple fallback quest using database data
-                fallback_quest = create_fallback_quest(database_data, difficulty, category, points_required, points_reward)
-                
-                # Update with fallback quest instead of failing
+                # Update content to indicate failure
                 with connection.cursor() as cursor:
                     cursor.execute("""
                         UPDATE AIGeneratedContent
@@ -2633,147 +2673,44 @@ def process_quest_generation_background(content_id, generation_params):
                         WHERE ContentID = %s
                     """, [
                         json.dumps({
-                            **fallback_quest,
-                            "status": "completed",
-                            "message": "Fallback quest generation completed successfully",
-                            "completedAt": datetime.now().isoformat()
+                            "status": "failed",
+                            "error": error_message,
+                            "completedAt": datetime.now().isoformat(),
+                            "apiCost": api_cost
                         }, default=datetime_handler),
-                        'completed',
+                        'failed',
                         content_id
                     ])
-                    
-                logger.info(f"Fallback quest generation completed successfully for content ID {content_id}")
-                
-                # If auto_create is enabled, create the fallback quest
-                if auto_create:
-                    try:
-                        # Create the quest
-                        with connection.cursor() as cursor:
-                            cursor.execute("""
-                                INSERT INTO Quests
-                                (Title, Description, RequiredPoints, RewardPoints, DifficultyLevel, 
-                                 IsActive, IsAIGenerated, CreationDate)
-                                VALUES (%s, %s, %s, %s, %s, 1, 1, GETDATE())
-                            """, [
-                                fallback_quest['title'], 
-                                fallback_quest['description'], 
-                                fallback_quest['requiredPoints'], 
-                                fallback_quest['rewardPoints'], 
-                                fallback_quest['difficultyLevel']
-                            ])
-                            
-                            # Get the ID in a separate query using different methods
-                            try:
-                                cursor.execute("SELECT @@IDENTITY")
-                                quest_id_result = cursor.fetchone()
-                                quest_id = quest_id_result[0] if quest_id_result else None
-                                
-                                if quest_id is None:
-                                    # Try SCOPE_IDENTITY() as an alternative
-                                    cursor.execute("SELECT SCOPE_IDENTITY()")
-                                    quest_id_result = cursor.fetchone()
-                                    quest_id = quest_id_result[0] if quest_id_result else None
-                                    
-                                    if quest_id is None:
-                                        # Last resort: try to find the most recently created quest
-                                        cursor.execute("""
-                                            SELECT TOP 1 QuestID FROM Quests 
-                                            WHERE Title = %s AND Description = %s
-                                            ORDER BY CreationDate DESC
-                                        """, [
-                                            fallback_quest['title'], 
-                                            fallback_quest['description']
-                                        ])
-                                        quest_id_result = cursor.fetchone()
-                                        quest_id = quest_id_result[0] if quest_id_result else None
-                            except Exception as id_error:
-                                logger.error(f"Error retrieving quest ID: {str(id_error)}")
-                                quest_id = None
-                            
-                            if not quest_id:
-                                logger.error("Failed to get quest ID after insert for fallback quest, conditions will not be saved")
-                            else:
-                                logger.info(f"Successfully created fallback quest with ID {quest_id}, adding conditions")
-                                
-                                # Add quest conditions
-                                condition_count = 0
-                                
-                                # Build a single bulk insert for all conditions
-                                if fallback_quest.get('conditions', []):
-                                    try:
-                                        # Prepare values for bulk insert
-                                        condition_values = []
-                                        value_params = []
-                                        
-                                        for i, condition in enumerate(fallback_quest.get('conditions', [])):
-                                            # Ensure targetId is an integer or NULL
-                                            target_id = condition.get('targetId')
-                                            if target_id is not None:
-                                                try:
-                                                    target_id = int(target_id)
-                                                except (ValueError, TypeError):
-                                                    # If conversion fails, log the issue and set to NULL
-                                                    logger.warning(f"Invalid targetId (not an integer): {target_id}, setting to NULL")
-                                                    target_id = None
-                                            
-                                            condition_type = condition.get('type', 'generic')
-                                            target_value = condition.get('targetValue', 1)
-                                            description = condition.get('description', '')
-                                            
-                                            # Add to parameters
-                                            value_params.extend([
-                                                quest_id, 
-                                                condition_type, 
-                                                target_id, 
-                                                target_value, 
-                                                description
-                                            ])
-                                            
-                                            # Add placeholder
-                                            condition_values.append(f"(%s, %s, %s, %s, %s)")
-                                            condition_count += 1
-                                        
-                                        if condition_values:
-                                            # Create bulk insert statement
-                                            sql = f"""
-                                                INSERT INTO QuestConditions
-                                                (QuestID, ConditionType, TargetID, TargetValue, Description)
-                                                VALUES {', '.join(condition_values)}
-                                            """
-                                            
-                                            cursor.execute(sql, value_params)
-                                            logger.info(f"Bulk inserted {condition_count} conditions for fallback quest {quest_id}")
-                                    except Exception as condition_error:
-                                        logger.error(f"Error bulk adding fallback quest conditions: {str(condition_error)}")
-                                
-                                logger.info(f"Added {condition_count} conditions to fallback quest {quest_id}")
-                            
-                            # Update content to include created quest ID and completion message
-                            cursor.execute("""
-                                UPDATE AIGeneratedContent
-                                SET Content = %s, ApprovalStatus = %s, ApprovalDate = GETDATE(), ApprovedBy = NULL
-                                WHERE ContentID = %s
-                            """, [
-                                json.dumps({
-                                    **fallback_quest, 
-                                    "createdQuestId": quest_id,
-                                    "status": "completed",
-                                    "message": f"Fallback quest created successfully with ID {quest_id}",
-                                    "completedAt": datetime.now().isoformat()
-                                }, default=datetime_handler),
-                                'approved',
-                                content_id
-                            ])
-                    except Exception as e:
-                        logger.error(f"Error creating fallback quest: {str(e)}")
-                        # Continue despite error in auto-creation
-                
-                # Return here as we've handled the failure with a fallback
                 return
+            elif isinstance(result, dict) and (not result.get('success', True) or "error" in result):
+                error_message = result.get("error", "Unknown AI service error") 
+                logger.error(f"AI service error in quest generation: {error_message}")
+                # Update content to indicate failure
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        UPDATE AIGeneratedContent
+                        SET Content = %s, ApprovalStatus = %s
+                        WHERE ContentID = %s
+                    """, [
+                        json.dumps({
+                            "status": "failed",
+                            "error": error_message,
+                            "completedAt": datetime.now().isoformat(),
+                            "apiCost": api_cost
+                        }, default=datetime_handler),
+                        'failed',
+                        content_id
+                    ])
+                return
+
             
             # Parse the AI response
             try:
-                content = result.get("content", "") if isinstance(result, dict) else result
+                # Use the extracted content from earlier processing
+                if 'content' not in locals():
+                    content = result.get("content", "") if isinstance(result, dict) else result
+                
+                logger.info(f"Parsing AI response, content preview: {str(content)[:200]}...")
                 
                 # Try to extract JSON from the content (handling potential text wrapping)
                 content = content.strip()
@@ -2782,9 +2719,13 @@ def process_quest_generation_background(content_id, generation_params):
                 
                 if json_start >= 0 and json_end > json_start:
                     json_content = content[json_start:json_end+1]
+                    logger.info(f"Extracted JSON content: {json_content[:200]}...")
                     quest_data = json.loads(json_content)
                 else:
+                    logger.info("Parsing content directly as JSON")
                     quest_data = json.loads(content)
+                
+                logger.info(f"Successfully parsed quest data with title: {quest_data.get('title', 'Unknown')}")
                 
                 # Validate the quest data has required fields
                 if not all(k in quest_data for k in ['title', 'description', 'conditions']):
@@ -2795,81 +2736,106 @@ def process_quest_generation_background(content_id, generation_params):
                 quest_data['requiredPoints'] = quest_data.get('requiredPoints', points_required)
                 quest_data['rewardPoints'] = quest_data.get('rewardPoints', points_reward)
                 
-                # Update content in the database
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        UPDATE AIGeneratedContent
-                        SET Content = %s, ApprovalStatus = %s
-                        WHERE ContentID = %s
-                    """, [
-                        json.dumps({
-                            **quest_data,
-                            "status": "completed",
-                            "message": "Quest generation completed successfully",
-                            "completedAt": datetime.now().isoformat()
-                        }, default=datetime_handler),
-                        'completed',
-                        content_id
-                    ])
-                
                 logger.info(f"Quest generation completed successfully for content ID {content_id}")
                 
                 # If auto-create is enabled, create the quest immediately
                 if auto_create:
-                    # Create the quest
-                    with connection.cursor() as cursor:
-                        cursor.execute("""
-                            INSERT INTO Quests
-                            (Title, Description, RequiredPoints, RewardPoints, DifficultyLevel, 
-                             IsActive, IsAIGenerated, CreationDate)
-                            VALUES (%s, %s, %s, %s, %s, 1, 1, GETDATE())
-                        """, [
-                            quest_data['title'], 
-                            quest_data['description'], 
-                            quest_data['requiredPoints'], 
-                            quest_data['rewardPoints'], 
-                            quest_data['difficultyLevel']
-                        ])
+                    try:
+                        # Update status to show database operations starting
+                        with connection.cursor() as cursor:
+                            cursor.execute("""
+                                UPDATE AIGeneratedContent
+                                SET Content = %s
+                                WHERE ContentID = %s
+                            """, [
+                                json.dumps({
+                                    "status": "processing", 
+                                    "message": "Creating quest in database",
+                                    "startedAt": datetime.now().isoformat(),
+                                    "progress": "Database operations"
+                                }, default=datetime_handler),
+                                content_id
+                            ])
                         
-                        # Get the ID in a separate query using different methods
-                        try:
-                            cursor.execute("SELECT @@IDENTITY")
+                        # Add delay before database operations
+                        time.sleep(3)
+                        
+                        # Check for duplicate quest before creating
+                        duplicate_quest_id = check_duplicate_quest(quest_data['title'], quest_data['description'])
+                        if duplicate_quest_id:
+                            logger.warning(f"Duplicate quest found with ID {duplicate_quest_id}, skipping creation")
+                            # Update content to indicate duplicate found
+                            cursor.execute("""
+                                UPDATE AIGeneratedContent
+                                SET Content = %s, ApprovalStatus = %s
+                                WHERE ContentID = %s
+                            """, [
+                                json.dumps({
+                                    **quest_data,
+                                    "status": "duplicate_found",
+                                    "message": f"Duplicate quest found with ID {duplicate_quest_id}",
+                                    "duplicateQuestId": duplicate_quest_id,
+                                    "completedAt": datetime.now().isoformat(),
+                                    "apiCost": api_cost
+                                }, default=datetime_handler),
+                                'duplicate_found',
+                                content_id
+                            ])
+                            logger.info(f"Marked quest as duplicate for content ID {content_id}")
+                            return  # Exit early, don't create quest
+                        
+                        logger.info("No duplicate quest found, proceeding with creation")
+                        
+                        # Create the quest and get conditions in single transaction
+                        logger.info(f"Creating quest in database: {quest_data['title']}")
+                        with connection.cursor() as cursor:
+                            # Insert quest
+                            cursor.execute("""
+                                INSERT INTO Quests
+                                (Title, Description, RequiredPoints, RewardPoints, DifficultyLevel, 
+                                 IsActive, IsAIGenerated, CreationDate)
+                                VALUES (%s, %s, %s, %s, %s, 1, 1, GETDATE())
+                            """, [
+                                quest_data['title'], 
+                                quest_data['description'], 
+                                quest_data['requiredPoints'], 
+                                quest_data['rewardPoints'], 
+                                quest_data['difficultyLevel']
+                            ])
+                            logger.info("Quest INSERT statement executed successfully")
+                            
+                            # Get the ID immediately after insert in same transaction
+                            cursor.execute("SELECT SCOPE_IDENTITY()")
                             quest_id_result = cursor.fetchone()
-                            quest_id = quest_id_result[0] if quest_id_result else None
+                            quest_id = int(quest_id_result[0]) if quest_id_result and quest_id_result[0] else None
+                            
+                            logger.info(f"Retrieved quest ID from SCOPE_IDENTITY(): {quest_id}")
                             
                             if quest_id is None:
-                                # Try SCOPE_IDENTITY() as an alternative
-                                cursor.execute("SELECT SCOPE_IDENTITY()")
+                                # Fallback: try to find the most recently created quest
+                                cursor.execute("""
+                                    SELECT TOP 1 QuestID FROM Quests 
+                                    WHERE Title = %s AND Description = %s
+                                    ORDER BY CreationDate DESC
+                                """, [
+                                    quest_data['title'], 
+                                    quest_data['description']
+                                ])
                                 quest_id_result = cursor.fetchone()
-                                quest_id = quest_id_result[0] if quest_id_result else None
-                                
-                                if quest_id is None:
-                                    # Last resort: try to find the most recently created quest
-                                    cursor.execute("""
-                                        SELECT TOP 1 QuestID FROM Quests 
-                                        WHERE Title = %s AND Description = %s
-                                        ORDER BY CreationDate DESC
-                                    """, [
-                                        quest_data['title'], 
-                                        quest_data['description']
-                                    ])
-                                    quest_id_result = cursor.fetchone()
-                                    quest_id = quest_id_result[0] if quest_id_result else None
-                        except Exception as id_error:
-                            logger.error(f"Error retrieving quest ID: {str(id_error)}")
-                            quest_id = None
+                                quest_id = int(quest_id_result[0]) if quest_id_result and quest_id_result[0] else None
+                                logger.info(f"Retrieved quest ID from fallback query: {quest_id}")
                         
-                        if not quest_id:
-                            logger.error("Failed to get quest ID after insert, quest conditions will not be saved")
-                        else:
-                            logger.info(f"Successfully created quest with ID {quest_id}, adding conditions")
-                            
-                            # Add quest conditions
-                            condition_count = 0
-                            
-                            # Build a single bulk insert for all conditions
-                            if quest_data.get('conditions', []):
-                                try:
+                            if not quest_id:
+                                logger.error("Failed to get quest ID after insert, quest conditions will not be saved")
+                                raise Exception("Failed to retrieve quest ID after insertion")
+                            else:
+                                logger.info(f"Successfully created quest with ID {quest_id}, adding conditions")
+                                
+                                # Add quest conditions in same transaction
+                                condition_count = 0
+                                
+                                # Build a single bulk insert for all conditions
+                                if quest_data.get('conditions', []):
                                     # Prepare values for bulk insert
                                     condition_values = []
                                     value_params = []
@@ -2910,29 +2876,115 @@ def process_quest_generation_background(content_id, generation_params):
                                             VALUES {', '.join(condition_values)}
                                         """
                                         
+                                        logger.info(f"Executing conditions insert SQL: {sql}")
+                                        logger.info(f"With parameters: {value_params}")
+                                        
                                         cursor.execute(sql, value_params)
                                         logger.info(f"Bulk inserted {condition_count} conditions for quest {quest_id}")
-                                except Exception as condition_error:
-                                    logger.error(f"Error bulk adding quest conditions: {str(condition_error)}")
-                            
-                            logger.info(f"Added {condition_count} conditions to quest {quest_id}")
-                        
-                        # Update content to include created quest ID and completion message
+                                        
+                                        # Verify conditions were inserted
+                                        cursor.execute("SELECT COUNT(*) FROM QuestConditions WHERE QuestID = %s", [quest_id])
+                                        inserted_count = cursor.fetchone()[0]
+                                        logger.info(f"Verified: {inserted_count} conditions found in database for quest {quest_id}")
+                                        
+                                        if inserted_count != condition_count:
+                                            logger.error(f"Condition count mismatch! Expected {condition_count}, found {inserted_count}")
+                                else:
+                                    logger.warning("No conditions found in quest data to insert")
+                                
+                                logger.info(f"Added {condition_count} conditions to quest {quest_id}")
+                                
+                                # Verify quest was actually created in database (in same transaction)
+                                cursor.execute("""
+                                    SELECT COUNT(*) FROM Quests WHERE QuestID = %s AND IsActive = 1
+                                """, [quest_id])
+                                quest_exists = cursor.fetchone()[0] > 0
+                                
+                                cursor.execute("""
+                                    SELECT COUNT(*) FROM QuestConditions WHERE QuestID = %s
+                                """, [quest_id])
+                                conditions_count = cursor.fetchone()[0]
+                                
+                                verification_message = f"Quest verified: exists={quest_exists}, conditions={conditions_count}"
+                                logger.info(verification_message)
+                                
+                                if quest_exists:
+                                    # Update content to include created quest ID and completion message
+                                    cursor.execute("""
+                                        UPDATE AIGeneratedContent
+                                        SET Content = %s, ApprovalStatus = %s, ApprovalDate = GETDATE(), ApprovedBy = NULL
+                                        WHERE ContentID = %s
+                                    """, [
+                                        json.dumps({
+                                            **quest_data, 
+                                            "createdQuestId": quest_id,
+                                            "status": "completed",
+                                            "message": f"Quest created successfully with ID {quest_id}",
+                                            "verificationMessage": verification_message,
+                                            "conditionsCount": conditions_count,
+                                            "completedAt": datetime.now().isoformat(),
+                                            "apiCost": api_cost
+                                        }, default=datetime_handler),
+                                        'approved',
+                                        content_id
+                                    ])
+                                    logger.info(f"Successfully created and verified quest with ID {quest_id}: {verification_message}")
+                                else:
+                                    logger.error(f"Quest {quest_id} verification failed: {verification_message}")
+                                    # Update status to failed
+                                    cursor.execute("""
+                                        UPDATE AIGeneratedContent
+                                        SET Content = %s, ApprovalStatus = %s
+                                        WHERE ContentID = %s
+                                    """, [
+                                        json.dumps({
+                                            **quest_data,
+                                            "status": "failed",
+                                            "message": "Quest creation failed - database verification failed",
+                                            "error": verification_message,
+                                            "apiCost": api_cost
+                                        }, default=datetime_handler),
+                                        'failed',
+                                        content_id
+                                    ])
+                    except Exception as create_error:
+                        logger.error(f"Error creating quest: {str(create_error)}")
+                        # Update status to failed
+                        with connection.cursor() as cursor:
+                            cursor.execute("""
+                                UPDATE AIGeneratedContent
+                                SET Content = %s, ApprovalStatus = %s
+                                WHERE ContentID = %s
+                            """, [
+                                json.dumps({
+                                    **quest_data,
+                                    "status": "failed",
+                                    "message": "Quest creation failed",
+                                    "error": str(create_error),
+                                    "apiCost": api_cost
+                                }, default=datetime_handler),
+                                'failed',
+                                content_id
+                            ])
+                else:
+                    # Auto-create is disabled, just mark as completed for manual approval
+                    with connection.cursor() as cursor:
                         cursor.execute("""
                             UPDATE AIGeneratedContent
-                            SET Content = %s, ApprovalStatus = %s, ApprovalDate = GETDATE(), ApprovedBy = NULL
+                            SET Content = %s, ApprovalStatus = %s
                             WHERE ContentID = %s
                         """, [
                             json.dumps({
-                                **quest_data, 
-                                "createdQuestId": quest_id,
+                                **quest_data,
                                 "status": "completed",
-                                "message": f"Quest created successfully with ID {quest_id}",
-                                "completedAt": datetime.now().isoformat()
+                                "message": "Quest generation completed successfully - awaiting manual approval",
+                                "completedAt": datetime.now().isoformat(),
+                                "apiCost": api_cost
                             }, default=datetime_handler),
-                            'approved',
+                            'completed',
                             content_id
                         ])
+                    logger.info(f"Quest generation completed for manual approval, content ID {content_id}")
                 
             except (json.JSONDecodeError, ValueError) as e:
                 logger.error(f"Error parsing AI response: {str(e)}")
@@ -2948,7 +3000,8 @@ def process_quest_generation_background(content_id, generation_params):
                             "status": "failed", 
                             "error": f"Failed to parse AI response: {str(e)}",
                             "raw_response": content,
-                            "errorDetails": traceback.format_exc()
+                            "errorDetails": traceback.format_exc(),
+                            "apiCost": api_cost
                         }),
                         'failed',
                         content_id
@@ -2967,7 +3020,8 @@ def process_quest_generation_background(content_id, generation_params):
                     json.dumps({
                         "status": "failed", 
                         "error": str(e),
-                        "errorDetails": traceback.format_exc()
+                        "errorDetails": traceback.format_exc(),
+                        "apiCost": api_cost
                     }),
                     'failed',
                     content_id
@@ -2987,7 +3041,8 @@ def process_quest_generation_background(content_id, generation_params):
                     json.dumps({
                         "status": "failed", 
                         "error": f"Unexpected error: {str(e)}",
-                        "errorDetails": traceback.format_exc()
+                        "errorDetails": traceback.format_exc(),
+                        "apiCost": api_cost
                     }, default=datetime_handler),
                     'failed',
                     content_id
@@ -3086,7 +3141,7 @@ def transcribe_audio(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_quest_queue(request):
-    """Get the list of queued quests"""
+    """Get the list of queued quests - matching quiz system structure"""
     user_id = request.user.id
     
     # Admin check
@@ -3100,16 +3155,21 @@ def get_quest_queue(request):
             return Response({'error': 'Only administrators can view quest queue'}, 
                            status=status.HTTP_403_FORBIDDEN)
         
-        # Get all queued and recently completed quests from AIGeneratedContent
+        # Get all quest content from AIGeneratedContent - matching quiz structure
         cursor.execute("""
             SELECT ContentID, ContentType, Content, GenerationParams, CreationDate, ApprovalStatus
             FROM AIGeneratedContent
-            WHERE ContentType = 'quest' AND ApprovalStatus IN ('queued', 'processing', 'completed')
+            WHERE ContentType = 'quest'
             ORDER BY CASE 
                 WHEN ApprovalStatus = 'queued' THEN 1
                 WHEN ApprovalStatus = 'processing' THEN 2
-                ELSE 3
-            END, CreationDate ASC
+                WHEN ApprovalStatus = 'completed' THEN 3
+                WHEN ApprovalStatus = 'pending' THEN 4
+                WHEN ApprovalStatus = 'approved' THEN 5
+                WHEN ApprovalStatus = 'failed' THEN 6
+                WHEN ApprovalStatus = 'duplicate_found' THEN 7
+                ELSE 8
+            END, CreationDate DESC
         """)
         
         columns = [col[0] for col in cursor.description]
@@ -3118,61 +3178,62 @@ def get_quest_queue(request):
         for row in cursor.fetchall():
             item = dict(zip(columns, row))
             
-            # Parse JSON fields
+            # Parse JSON fields safely
             try:
-                item['Content'] = json.loads(item['Content'])
+                content_data = json.loads(item['Content']) if item['Content'] else {}
             except json.JSONDecodeError:
-                item['Content'] = {'status': 'error', 'message': 'Invalid content format'}
+                content_data = {'status': 'error', 'message': 'Invalid content format'}
                 
             try:
-                item['GenerationParams'] = json.loads(item['GenerationParams'])
+                generation_params = json.loads(item['GenerationParams']) if item['GenerationParams'] else {}
             except json.JSONDecodeError:
-                item['GenerationParams'] = {}
+                generation_params = {}
+            
+            # Extract quest data and parameters
+            difficulty = generation_params.get('difficulty', 'N/A')
+            category = generation_params.get('category', 'N/A')
+            points_required = generation_params.get('points_required', 0)
+            points_reward = generation_params.get('points_reward', 0)
+            
+            # Extract API cost information - matching quiz structure
+            api_cost = None
+            if 'cost' in content_data:
+                cost_data = content_data['cost']
+                api_cost = {
+                    'total_cost': cost_data.get('total_cost', 0),
+                    'input_tokens': cost_data.get('input_tokens', 0),
+                    'output_tokens': cost_data.get('output_tokens', 0)
+                }
+            elif 'apiCost' in content_data:
+                cost_data = content_data['apiCost']
+                api_cost = {
+                    'total_cost': cost_data.get('total_cost', 0),
+                    'input_tokens': cost_data.get('input_tokens', 0),
+                    'output_tokens': cost_data.get('output_tokens', 0)
+                }
+            
+            # Extract created quest ID if available
+            created_quest_id = None
+            if 'createdQuestId' in content_data:
+                created_quest_id = content_data['createdQuestId']
+            elif 'quest_id' in content_data:
+                created_quest_id = content_data['quest_id']
             
             queue_items.append({
                 'contentId': item['ContentID'],
                 'status': item['ApprovalStatus'],
                 'creationDate': item['CreationDate'],
-                'content': item['Content'],
-                'generationParams': item['GenerationParams']
-            })
-        
-        # Also include items that are failed or completed but recent (last 24 hours)
-        cursor.execute("""
-            SELECT ContentID, ContentType, Content, GenerationParams, CreationDate, ApprovalStatus
-            FROM AIGeneratedContent
-            WHERE ContentType = 'quest' 
-            AND ApprovalStatus IN ('failed', 'pending', 'approved')
-            AND CreationDate > DATEADD(day, -1, GETDATE())
-            ORDER BY CreationDate DESC
-        """)
-        
-        recent_items = []
-        for row in cursor.fetchall():
-            item = dict(zip(columns, row))
-            
-            # Parse JSON fields
-            try:
-                item['Content'] = json.loads(item['Content'])
-            except json.JSONDecodeError:
-                item['Content'] = {'status': 'error', 'message': 'Invalid content format'}
-                
-            try:
-                item['GenerationParams'] = json.loads(item['GenerationParams'])
-            except json.JSONDecodeError:
-                item['GenerationParams'] = {}
-            
-            recent_items.append({
-                'contentId': item['ContentID'],
-                'status': item['ApprovalStatus'],
-                'creationDate': item['CreationDate'],
-                'content': item['Content'],
-                'generationParams': item['GenerationParams']
+                'difficulty': difficulty,
+                'category': category,
+                'pointsRequired': points_required,
+                'pointsReward': points_reward,
+                'content': content_data,
+                'apiCost': api_cost,
+                'createdQuestId': created_quest_id
             })
         
         return Response({
-            'queue': queue_items,
-            'recent': recent_items
+            'queueItems': queue_items
         })
 
 @api_view(['POST'])
@@ -3326,6 +3387,22 @@ def process_quest_queue(request):
                 'contentId': content_id
             }, status=status.HTTP_400_BAD_REQUEST)
     
+    # Update status to processing BEFORE starting background thread
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            UPDATE AIGeneratedContent
+            SET ApprovalStatus = 'processing',
+                Content = %s
+            WHERE ContentID = %s
+        """, [
+            json.dumps({
+                "status": "processing", 
+                "message": "Quest generation started - initializing AI process",
+                "startedAt": datetime.now().isoformat()
+            }, default=datetime_handler),
+            content_id
+        ])
+    
     # Start a background thread to process the quest generation
     thread = threading.Thread(
         target=process_quest_generation_background,
@@ -3340,109 +3417,8 @@ def process_quest_queue(request):
         'status': 'processing'
     })
 
-# Add this function to help with quest generation
-def get_quest_database_data():
-    """Gather database content for quest generation"""
-    database_data = {
-        'popular_courses': [],
-        'recent_quizzes': [],
-        'popular_videos': [],
-        'available_nfts': []
-    }
-    
-    try:
-        with connection.cursor() as cursor:
-            # Get popular courses
-            try:
-                cursor.execute("""
-                    SELECT TOP 10 c.CourseID, c.Title, c.Description, c.Difficulty, c.CreationDate,
-                          COUNT(uce.EnrollmentID) as EnrollmentCount
-                    FROM Courses c
-                    LEFT JOIN UserCourseEnrollments uce ON c.CourseID = uce.CourseID
-                    WHERE c.IsActive = 1
-                    GROUP BY c.CourseID, c.Title, c.Description, c.Difficulty, c.CreationDate
-                    ORDER BY EnrollmentCount DESC, c.CreationDate DESC
-                """)
-                
-                columns = [col[0] for col in cursor.description]
-                database_data['popular_courses'] = [dict(zip(columns, row)) for row in cursor.fetchall()]
-                logger.info(f"Fetched {len(database_data['popular_courses'])} courses for quest generation")
-            except Exception as e:
-                logger.warning(f"Error fetching courses: {str(e)}")
-            
-            # Get recent quizzes
-            try:
-                cursor.execute("""
-                    SELECT TOP 10 q.QuizID, q.Title, q.Description, q.CourseID,
-                          c.Title as CourseName
-                    FROM Quizzes q
-                    LEFT JOIN Courses c ON q.CourseID = c.CourseID
-                    WHERE q.IsActive = 1
-                    ORDER BY q.QuizID DESC
-                """)
-                
-                columns = [col[0] for col in cursor.description]
-                database_data['recent_quizzes'] = [dict(zip(columns, row)) for row in cursor.fetchall()]
-                logger.info(f"Fetched {len(database_data['recent_quizzes'])} quizzes for quest generation")
-            except Exception as e:
-                logger.warning(f"Error fetching quizzes: {str(e)}")
-            
-            # Get popular videos - fixed query with proper GROUP BY
-            try:
-                cursor.execute("""
-                    SELECT TOP 40 v.VideoID, v.Title, v.Description, cv.CourseID,
-                          c.Title as CourseName, COUNT(uvv.ViewID) as ViewCount
-                    FROM CourseVideos cv
-                    JOIN Videos v ON cv.YouTubeVideoID = v.YouTubeVideoID
-                    LEFT JOIN Courses c ON cv.CourseID = c.CourseID
-                    LEFT JOIN UserVideoViews uvv ON v.VideoID = uvv.VideoID
-                    WHERE v.IsActive = 1
-                    GROUP BY v.VideoID, v.Title, v.Description, cv.CourseID, c.Title
-                    ORDER BY COUNT(uvv.ViewID) DESC, v.VideoID DESC
-                """)
-                
-                columns = [col[0] for col in cursor.description]
-                database_data['popular_videos'] = [dict(zip(columns, row)) for row in cursor.fetchall()]
-                logger.info(f"Fetched {len(database_data['popular_videos'])} videos for quest generation")
-            except Exception as e:
-                logger.warning(f"Error fetching videos: {str(e)}")
-            
-            # Get available NFTs
-            try:
-                cursor.execute("""
-                    SELECT NFTID, Title, Description, Rarity
-                    FROM NFTs
-                    WHERE IsActive = 1
-                    ORDER BY NFTID DESC
-                """)
-                
-                columns = [col[0] for col in cursor.description]
-                database_data['available_nfts'] = [dict(zip(columns, row)) for row in cursor.fetchall()]
-                logger.info(f"Fetched {len(database_data['available_nfts'])} NFTs for quest generation")
-            except Exception as e:
-                logger.warning(f"Error fetching NFTs: {str(e)}")
-            
-            # Get user count for fallback
-            try:
-                cursor.execute("SELECT COUNT(*) FROM Users")
-                database_data['user_count'] = cursor.fetchone()[0] or 0
-                logger.info(f"Fetched user count: {database_data['user_count']}")
-            except Exception as e:
-                database_data['user_count'] = 0
-                logger.warning(f"Error fetching user count: {str(e)}")
-
-    except Exception as e:
-        logger.error(f"Error fetching quest database data: {str(e)}")
-        # Still return the database_data with empty arrays
-    
-    # Log data availability status
-    logger.info(f"Database data availability - Courses: {len(database_data['popular_courses'])}, "
-                f"Videos: {len(database_data['popular_videos'])}, "
-                f"Quizzes: {len(database_data['recent_quizzes'])}, "
-                f"NFTs: {len(database_data['available_nfts'])}")
-    
-    # Always return the data, even if empty
-    return database_data
+# Import the function from llm.py
+from .llm import get_quest_database_data
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -3539,9 +3515,9 @@ def quest_queue(request):
             return Response({'error': 'Only administrators can view the quest queue'}, 
                           status=status.HTTP_403_FORBIDDEN)
         
-        # Get queue data - use minimal data selection to reduce load
+        # Get queue data with content for API cost information
         cursor.execute("""
-            SELECT ContentID, CreationDate, ApprovalStatus
+            SELECT ContentID, CreationDate, ApprovalStatus, Content, GenerationParams
             FROM AIGeneratedContent
             WHERE ContentType = 'quest' AND ApprovalStatus IN ('queued', 'processing', 'completed', 'failed')
             ORDER BY CreationDate DESC
@@ -3552,12 +3528,43 @@ def quest_queue(request):
             content_id = row[0]
             creation_date = row[1]
             approval_status = row[2]
+            content_json = row[3]
+            generation_params_json = row[4]
             
-            # Only include basic information in the list view
+            # Parse content and generation params
+            try:
+                content = json.loads(content_json) if content_json else {}
+                generation_params = json.loads(generation_params_json) if generation_params_json else {}
+            except json.JSONDecodeError:
+                content = {}
+                generation_params = {}
+            
+            # Extract API cost information
+            api_cost = content.get('apiCost')
+            total_cost = None
+            input_tokens = None
+            output_tokens = None
+            
+            if api_cost:
+                total_cost = api_cost.get('total_cost', 0)
+                input_tokens = api_cost.get('input_tokens', 0)
+                output_tokens = api_cost.get('output_tokens', 0)
+            
             queue_items.append({
                 "contentId": content_id,
                 "status": approval_status,
-                "creationDate": creation_date.isoformat() if creation_date else None
+                "creationDate": creation_date.isoformat() if creation_date else None,
+                "content": content,
+                "generationParams": generation_params,
+                "category": generation_params.get('category', 'N/A'),
+                "difficulty": generation_params.get('difficulty', 'N/A'),
+                "pointsRequired": generation_params.get('points_required', 0),
+                "pointsReward": generation_params.get('points_reward', 0),
+                "apiCost": {
+                    "total_cost": total_cost,
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens
+                } if api_cost else None
             })
         
         return Response({
@@ -3565,176 +3572,245 @@ def quest_queue(request):
             "queueCount": len(queue_items)
         })
 
-def create_fallback_quest(database_data, difficulty, category, points_required, points_reward):
-    """Creates a simple fallback quest when there isn't enough database data"""
-    logger.info("Creating fallback quest")
-    
-    # Extract available data for quest components
-    available_courses = database_data.get('popular_courses', [])
-    available_quizzes = database_data.get('recent_quizzes', [])
-    available_videos = database_data.get('popular_videos', [])
-    available_nfts = database_data.get('available_nfts', [])
-    user_count = database_data.get('user_count', 0)
-    
-    # Default title templates based on difficulty
-    title_templates = {
-        "beginner": [
-            "Learning Explorer: Start Your Journey",
-            "Knowledge Seeker: First Steps",
-            "Educational Adventurer: Getting Started",
-            "Wisdom Path: Beginner's Route"
-        ],
-        "intermediate": [
-            "Knowledge Enhancer: Skill Building Challenge",
-            "Learning Accelerator: Mid-Level Quest",
-            "Education Master: Intermediate Path",
-            "Skill Booster: Advancing Your Knowledge"
-        ],
-        "advanced": [
-            "Expert Challenger: Advanced Learning Path",
-            "Knowledge Mastery: Expert-Level Quest",
-            "Wisdom Summit: Advanced Learning Journey",
-            "Ultimate Scholar: High-Level Challenge"
-        ]
-    }
-    
-    # Default description templates
-    description_templates = {
-        "beginner": [
-            "Begin your learning journey by completing these introductory activities. Perfect for newcomers looking to build a foundation of knowledge.",
-            "Take your first steps on the path to knowledge. This beginner-friendly quest will introduce you to essential concepts."
-        ],
-        "intermediate": [
-            "Ready for a challenge? This intermediate quest will test your growing knowledge and help you build more advanced skills.",
-            "Designed for those with some experience, this quest will help you strengthen your understanding and tackle more complex concepts."
-        ],
-        "advanced": [
-            "Put your expertise to the test with this advanced quest. Only those with significant knowledge should attempt this challenging journey.",
-            "The ultimate challenge for experienced learners. This advanced quest requires deep understanding and refined skills."
-        ]
-    }
-    
-    # Normalize difficulty to match our templates
-    norm_difficulty = difficulty.lower()
-    if norm_difficulty not in title_templates:
-        if norm_difficulty in ["easy", "basic"]:
-            norm_difficulty = "beginner"
-        elif norm_difficulty in ["hard", "expert"]:
-            norm_difficulty = "advanced"
-        else:
-            norm_difficulty = "intermediate"
-    
-    # Select random templates
-    title = random.choice(title_templates[norm_difficulty])
-    description = random.choice(description_templates[norm_difficulty])
-    
-    # Personalize with category if provided
-    if category and category != "General Learning":
-        title = f"{title}: {category} Edition"
-        description = f"{description} Focus area: {category}."
-    
-    # Create base quest data
-    quest_data = {
-        "title": title,
-        "description": description,
-        "difficultyLevel": norm_difficulty.capitalize(),
-        "requiredPoints": points_required,
-        "rewardPoints": points_reward,
-        "conditions": []
-    }
-    
-    # Try to create at least one valid condition based on available data
-    conditions = []
-    
-    # Add login condition
-    conditions.append({
-        "type": "login",
-        "targetId": None,
-        "targetValue": 5,
-        "description": "Log in to the platform for 5 days"
-    })
-    
-    # Add profile completion if we have users
-    if user_count > 0:
-        conditions.append({
-            "type": "profile",
-            "targetId": None,
-            "targetValue": 1,
-            "description": "Complete your user profile"
-        })
-    
-    # Try to add course-related condition if available
-    if available_courses:
-        course = random.choice(available_courses)
-        conditions.append({
-            "type": "course_enroll",
-            "targetId": course.get('CourseID', 1),
-            "targetValue": 1,
-            "description": f"Enroll in the course: {course.get('Title', 'Any course')}"
-        })
-    else:
-        # Generic course condition
-        conditions.append({
-            "type": "course_enroll",
-            "targetId": None,
-            "targetValue": 1,
-            "description": "Enroll in any course"
-        })
-    
-    # Try to add video-related condition if available
-    if available_videos:
-        video = random.choice(available_videos)
-        conditions.append({
-            "type": "video_watch",
-            "targetId": video.get('VideoID', 1),
-            "targetValue": 1,
-            "description": f"Watch the video: {video.get('Title', 'Any video')}"
-        })
-    else:
-        # Generic video condition
-        conditions.append({
-            "type": "video_watch",
-            "targetId": None,
-            "targetValue": 3,
-            "description": "Watch any 3 videos"
-        })
-    
-    # Try to add quiz-related condition if available
-    if available_quizzes:
-        quiz = random.choice(available_quizzes)
-        conditions.append({
-            "type": "quiz_complete",
-            "targetId": quiz.get('QuizID', 1),
-            "targetValue": 1,
-            "description": f"Complete the quiz: {quiz.get('Title', 'Any quiz')}"
-        })
-    else:
-        # Generic quiz condition
-        conditions.append({
-            "type": "quiz_complete",
-            "targetId": None,
-            "targetValue": 1,
-            "description": "Complete any quiz"
-        })
-    
-    # Pick a random subset of conditions (2-4) to keep the quest varied
-    if len(conditions) > 1:
-        # Always include at least 2 conditions, up to 4
-        num_conditions = min(max(2, random.randint(2, 4)), len(conditions))
-        selected_conditions = random.sample(conditions, num_conditions)
-        quest_data["conditions"] = selected_conditions
-    else:
-        quest_data["conditions"] = conditions
-    
-    # Add a recommended NFT reward if available
-    if available_nfts:
-        nft = random.choice(available_nfts)
-        quest_data["recommendedNFT"] = {
-            "id": nft.get('NFTID', 1),
-            "title": nft.get('Title', 'Knowledge Token'),
-            "description": nft.get('Description', 'A token of achievement'),
-            "rarity": nft.get('Rarity', 'Common')
-        }
-    
-    logger.info(f"Created fallback quest: {quest_data['title']}")
-    return quest_data
+# Fallback quest creation removed - AI generation should work properly
+
+def check_duplicate_quest(title, description):
+    """Check if a quest with similar title and description already exists"""
+    try:
+        with connection.cursor() as cursor:
+            # Check for exact title match first
+            cursor.execute("""
+                SELECT QuestID, Title FROM Quests 
+                WHERE Title = %s AND IsActive = 1
+            """, [title])
+            
+            result = cursor.fetchone()
+            if result:
+                logger.info(f"Found exact title match for quest: {title} (ID: {result[0]})")
+                return result[0]
+            
+            # Check for similar title (fuzzy match) - more precise matching
+            title_words = [word for word in title.lower().split() if len(word) > 3][:4]  # Take meaningful words
+            description_words = [word for word in description.lower().split() if len(word) > 4][:8]  # Take meaningful words
+            
+            if title_words and len(title_words) >= 2:
+                # Create a more sophisticated search pattern for titles
+                title_pattern = '%'.join(title_words[:3])  # Use first 3 meaningful words
+                cursor.execute("""
+                    SELECT QuestID, Title, Description FROM Quests 
+                    WHERE IsActive = 1 AND LOWER(Title) LIKE %s
+                """, [f"%{title_pattern}%"])
+                
+                results = cursor.fetchall()
+                for result in results:
+                    existing_title = result[1].lower()
+                    # Check if at least 2 meaningful words match
+                    matching_words = sum(1 for word in title_words if word in existing_title)
+                    if matching_words >= 2:
+                        logger.info(f"Found similar quest title: '{result[1]}' matches '{title}' (ID: {result[0]})")
+                        return result[0]
+            
+            # Check for very similar descriptions (only if description is substantial)
+            if len(description) > 100 and description_words and len(description_words) >= 3:
+                description_pattern = '%'.join(description_words[:4])  # First 4 meaningful words
+                cursor.execute("""
+                    SELECT QuestID, Title, Description FROM Quests 
+                    WHERE IsActive = 1 AND LEN(Description) > 100 
+                    AND LOWER(Description) LIKE %s
+                """, [f"%{description_pattern}%"])
+                
+                results = cursor.fetchall()
+                for result in results:
+                    existing_desc = result[2].lower() if result[2] else ""
+                    # Check if at least 3 meaningful words match
+                    matching_words = sum(1 for word in description_words if word in existing_desc)
+                    if matching_words >= 3:
+                        logger.info(f"Found similar quest description: '{result[1]}' (ID: {result[0]})")
+                        return result[0]
+            
+            logger.info(f"No duplicate found for quest: {title}")
+            return None
+    except Exception as e:
+        logger.error(f"Error checking for duplicate quest: {str(e)}")
+        return None
+
+def create_quest_in_database(quest_data):
+    """Create a quest in the database and return its ID"""
+    try:
+        # Check for duplicate before creating
+        duplicate_quest_id = check_duplicate_quest(quest_data['title'], quest_data['description'])
+        if duplicate_quest_id:
+            logger.warning(f"Duplicate quest found with ID {duplicate_quest_id}, skipping creation")
+            return None
+        
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO Quests
+                (Title, Description, RequiredPoints, RewardPoints, DifficultyLevel, 
+                 IsActive, IsAIGenerated, CreationDate)
+                VALUES (%s, %s, %s, %s, %s, 1, 1, GETDATE())
+            """, [
+                quest_data['title'], 
+                quest_data['description'], 
+                quest_data['requiredPoints'], 
+                quest_data['rewardPoints'], 
+                quest_data['difficultyLevel']
+            ])
+            
+            # Get the ID in a separate query using different methods
+            try:
+                cursor.execute("SELECT @@IDENTITY")
+                quest_id_result = cursor.fetchone()
+                quest_id = quest_id_result[0] if quest_id_result else None
+                
+                if quest_id is None:
+                    # Try SCOPE_IDENTITY() as an alternative
+                    cursor.execute("SELECT SCOPE_IDENTITY()")
+                    quest_id_result = cursor.fetchone()
+                    quest_id = quest_id_result[0] if quest_id_result else None
+                    
+                    if quest_id is None:
+                        # Last resort: try to find the most recently created quest
+                        cursor.execute("""
+                            SELECT TOP 1 QuestID FROM Quests 
+                            WHERE Title = %s AND Description = %s
+                            ORDER BY CreationDate DESC
+                        """, [
+                            quest_data['title'], 
+                            quest_data['description']
+                        ])
+                        quest_id_result = cursor.fetchone()
+                        quest_id = quest_id_result[0] if quest_id_result else None
+            except Exception as id_error:
+                logger.error(f"Error retrieving quest ID: {str(id_error)}")
+                quest_id = None
+            
+            if not quest_id:
+                logger.error("Failed to get quest ID after insert, conditions will not be saved")
+                return None
+            else:
+                logger.info(f"Successfully created quest with ID {quest_id}, adding conditions")
+                
+                # Add quest conditions
+                condition_count = 0
+                
+                # Build a single bulk insert for all conditions
+                if quest_data.get('conditions', []):
+                    try:
+                        # Prepare values for bulk insert
+                        condition_values = []
+                        value_params = []
+                        
+                        for i, condition in enumerate(quest_data.get('conditions', [])):
+                            # Ensure targetId is an integer or NULL
+                            target_id = condition.get('targetId')
+                            if target_id is not None:
+                                try:
+                                    target_id = int(target_id)
+                                except (ValueError, TypeError):
+                                    # If conversion fails, log the issue and set to NULL
+                                    logger.warning(f"Invalid targetId (not an integer): {target_id}, setting to NULL")
+                                    target_id = None
+                            
+                            condition_type = condition.get('type', 'generic')
+                            target_value = condition.get('targetValue', 1)
+                            description = condition.get('description', '')
+                            
+                            # Add to parameters
+                            value_params.extend([
+                                quest_id, 
+                                condition_type, 
+                                target_id, 
+                                target_value, 
+                                description
+                            ])
+                            
+                            # Add placeholder
+                            condition_values.append(f"(%s, %s, %s, %s, %s)")
+                            condition_count += 1
+                        
+                        if condition_values:
+                            # Create bulk insert statement
+                            sql = f"""
+                                INSERT INTO QuestConditions
+                                (QuestID, ConditionType, TargetID, TargetValue, Description)
+                                VALUES {', '.join(condition_values)}
+                            """
+                            
+                            try:
+                                cursor.execute(sql, value_params)
+                                logger.info(f"Bulk inserted {condition_count} conditions for quest {quest_id}")
+                                
+                                # Verify conditions were inserted
+                                cursor.execute("SELECT COUNT(*) FROM QuestConditions WHERE QuestID = %s", [quest_id])
+                                inserted_count = cursor.fetchone()[0]
+                                logger.info(f"Verified: {inserted_count} conditions found in database for quest {quest_id}")
+                                
+                            except Exception as insert_error:
+                                logger.error(f"Error executing bulk insert: {str(insert_error)}")
+                                logger.error(f"SQL: {sql}")
+                                logger.error(f"Params: {value_params}")
+                                raise insert_error
+                    except Exception as condition_error:
+                        logger.error(f"Error bulk adding quest conditions: {str(condition_error)}")
+                
+                logger.info(f"Added {condition_count} conditions to quest {quest_id}")
+                return quest_id
+                
+    except Exception as e:
+        logger.error(f"Error creating quest in database: {str(e)}")
+        return None
+
+def verify_quest_in_database(quest_id):
+    """Verify that a quest was properly created in the database"""
+    try:
+        with connection.cursor() as cursor:
+            # Check quest exists and has required fields
+            cursor.execute("""
+                SELECT QuestID, Title, Description, RequiredPoints, RewardPoints, 
+                       DifficultyLevel, IsActive, IsAIGenerated
+                FROM Quests 
+                WHERE QuestID = %s
+            """, [quest_id])
+            
+            quest = cursor.fetchone()
+            if not quest:
+                return False, "Quest not found in database"
+            
+            # Check if quest has basic required fields
+            if not quest[1] or not quest[2]:  # Title or Description missing
+                return False, "Quest missing required fields (title or description)"
+            
+            if quest[3] is None or quest[4] is None:  # Points missing
+                return False, "Quest missing points configuration"
+            
+            # Check if quest conditions exist
+            cursor.execute("""
+                SELECT COUNT(*) FROM QuestConditions 
+                WHERE QuestID = %s
+            """, [quest_id])
+            
+            condition_count = cursor.fetchone()[0]
+            if condition_count == 0:
+                return False, "Quest has no conditions defined"
+            
+            # Verify conditions have required fields
+            cursor.execute("""
+                SELECT ConditionID, ConditionType, TargetID, TargetValue, Description
+                FROM QuestConditions 
+                WHERE QuestID = %s
+            """, [quest_id])
+            
+            conditions = cursor.fetchall()
+            for condition in conditions:
+                if not condition[1]:  # ConditionType missing
+                    return False, f"Quest condition {condition[0]} missing type"
+                if condition[3] is None:  # TargetValue missing
+                    return False, f"Quest condition {condition[0]} missing target value"
+            
+            logger.info(f"Quest {quest_id} verified successfully with {condition_count} conditions")
+            return True, f"Quest verified successfully with {condition_count} conditions"
+            
+    except Exception as e:
+        logger.error(f"Error verifying quest in database: {str(e)}")
+        return False, f"Database verification error: {str(e)}"

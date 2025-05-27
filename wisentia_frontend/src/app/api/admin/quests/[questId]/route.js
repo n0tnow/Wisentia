@@ -1,23 +1,61 @@
 // app/api/admin/quests/[questId]/route.js
 import { NextResponse } from 'next/server';
-import { getToken } from "next-auth/jwt";
 
 // API baz URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+// Helper function to extract token from request
+const extractToken = (request) => {
+  try {
+    // Get token from either Authorization header or cookies
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+    
+    const tokenCookie = request.cookies.get('access_token');
+    return tokenCookie?.value || '';
+  } catch (error) {
+    console.error('Token extraction error:', error);
+    return '';
+  }
+};
+
 // Admin yetkisini kontrol et
 const checkAdminPermission = async (request) => {
   try {
-    const token = await getToken({ req: request });
+    const token = extractToken(request);
     
-    // Token yoksa ya da admin değilse
-    if (!token?.accessToken || !token?.user?.isAdmin) {
+    if (!token) {
       return false;
     }
     
+    // Token'ı backend'e gönderip kullanıcı bilgilerini al
+    const response = await fetch(`${API_BASE_URL}/auth/profile/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error('Profile fetch failed:', response.status, response.statusText);
+      return false;
+    }
+    
+    const userData = await response.json();
+    console.log('User data from backend:', userData);
+    
+    // Admin kontrolü - role alanını kontrol et (backend'den 'role' olarak dönüyor)
+    if (userData.role !== 'admin') {
+      console.log('User is not admin. Role:', userData.role);
+      return false;
+    }
+    
+    console.log('Admin permission granted for user:', userData.id);
     return {
-      token: token.accessToken,
-      userId: token.user.id
+      token: token,
+      userId: userData.id
     };
   } catch (error) {
     console.error('Admin permission check failed:', error);
@@ -46,12 +84,12 @@ export async function GET(request, { params }) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
     
-    // Try the main admin content endpoint first
+    // Use the authenticated quest detail endpoint directly
     let response;
     try {
-      console.log(`API: Calling primary endpoint for quest ID ${questId}`);
+      console.log(`API: Calling quest detail endpoint for quest ID ${questId}`);
       
-      response = await fetch(`${API_BASE_URL}/admin/content/?type=quests&quest_id=${questId}`, {
+      response = await fetch(`${API_BASE_URL}/quests/admin/${questId}/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -61,7 +99,7 @@ export async function GET(request, { params }) {
         signal: controller.signal
       }).finally(() => clearTimeout(timeoutId));
     } catch (fetchError) {
-      console.error('API: Primary endpoint fetch error:', fetchError);
+      console.error('API: Quest detail endpoint fetch error:', fetchError);
       if (fetchError.name === 'AbortError') {
         return NextResponse.json(
           { error: 'Connection timed out', message: 'Backend did not respond' },
@@ -69,35 +107,6 @@ export async function GET(request, { params }) {
         );
       }
       throw fetchError;
-    }
-    
-    // If the first endpoint fails, try the direct quest endpoint
-    if (!response.ok) {
-      console.log(`API: Primary endpoint failed (${response.status}), trying secondary endpoint`);
-      
-      const altController = new AbortController();
-      const altTimeoutId = setTimeout(() => altController.abort(), 5000);
-      
-      try {
-        response = await fetch(`${API_BASE_URL}/admin/quests/${questId}/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${admin.token}`,
-            'Cache-Control': 'no-cache'
-          },
-          signal: altController.signal
-        }).finally(() => clearTimeout(altTimeoutId));
-      } catch (altFetchError) {
-        console.error('API: Secondary endpoint fetch error:', altFetchError);
-        if (altFetchError.name === 'AbortError') {
-          return NextResponse.json(
-            { error: 'Connection timed out', message: 'Backend did not respond' },
-            { status: 504 }
-          );
-        }
-        throw altFetchError;
-      }
     }
     
     if (!response.ok) {

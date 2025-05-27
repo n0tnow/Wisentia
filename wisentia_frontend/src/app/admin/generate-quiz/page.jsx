@@ -57,7 +57,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Modal
+  Modal,
+  Tabs,
+  Tab
 } from '@mui/material';
 
 // MUI icons
@@ -91,6 +93,9 @@ import {
   Help as QuestionIcon,
   Queue as QueueIcon,
   ExpandMore as ExpandMoreIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
 } from '@mui/icons-material';
 
 // LocalStorage keys for persistence
@@ -524,6 +529,9 @@ export default function GenerateQuizPage() {
   const { user, isAdmin } = useAuth();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
   
+  // Tab kontrolü
+  const [activeTab, setActiveTab] = useState(0); // 0: AI Generation, 1: Manual Creation
+  
   // Video URL ve analiz için state'ler
   const [videoUrl, setVideoUrl] = useState('');
   const [videoId, setVideoId] = useState('');
@@ -535,6 +543,31 @@ export default function GenerateQuizPage() {
   const [selectedVideos, setSelectedVideos] = useState([]);
   const [courseVideos, setCourseVideos] = useState([]);
   const [contentSource, setContentSource] = useState('youtube'); // 'youtube' veya 'course'
+  
+  // Manuel quiz oluşturma için state'ler
+  const [manualQuiz, setManualQuiz] = useState({
+    title: '',
+    description: '',
+    courseId: '',
+    videoId: '',
+    difficulty: 'intermediate',
+    passingScore: 70,
+    language: 'en',
+    questions: []
+  });
+  
+  // Manuel quiz soruları için state
+  const [currentQuestion, setCurrentQuestion] = useState({
+    questionText: '',
+    questionType: 'multiple_choice',
+    options: [
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false },
+      { text: '', isCorrect: false }
+    ],
+    explanation: ''
+  });
   
   // Quiz parametreleri
   const [settings, setSettings] = useState({
@@ -1376,6 +1409,201 @@ export default function GenerateQuizPage() {
     setQuizPreviewData(null);
   };
 
+  // Manuel quiz fonksiyonları
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
+  const handleManualQuizChange = (field, value) => {
+    setManualQuiz(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleQuestionChange = (field, value) => {
+    setCurrentQuestion(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleOptionChange = (index, field, value) => {
+    setCurrentQuestion(prev => ({
+      ...prev,
+      options: prev.options.map((option, i) => 
+        i === index ? { ...option, [field]: value } : option
+      )
+    }));
+  };
+
+  const addQuestionToQuiz = () => {
+    console.log('Adding question:', currentQuestion);
+    
+    if (!currentQuestion.questionText.trim()) {
+      showSnackbar('Soru metni gereklidir', 'error');
+      return;
+    }
+
+    if (currentQuestion.questionType === 'multiple_choice') {
+      const hasCorrectAnswer = currentQuestion.options.some(opt => opt.isCorrect && opt.text.trim());
+      const hasOptions = currentQuestion.options.filter(opt => opt.text.trim()).length >= 2;
+      
+      if (!hasCorrectAnswer) {
+        showSnackbar('En az bir doğru cevap seçmelisiniz', 'error');
+        return;
+      }
+      
+      if (!hasOptions) {
+        showSnackbar('En az iki seçenek girmelisiniz', 'error');
+        return;
+      }
+    }
+
+    const newQuestion = {
+      ...currentQuestion,
+      id: Date.now(),
+      options: currentQuestion.questionType === 'multiple_choice' 
+        ? currentQuestion.options.filter(opt => opt.text.trim())
+        : []
+    };
+
+    setManualQuiz(prev => ({
+      ...prev,
+      questions: [...prev.questions, newQuestion]
+    }));
+
+    // Reset current question
+    setCurrentQuestion({
+      questionText: '',
+      questionType: 'multiple_choice',
+      options: [
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false },
+        { text: '', isCorrect: false }
+      ],
+      explanation: ''
+    });
+
+    showSnackbar('Soru eklendi', 'success');
+  };
+
+  const removeQuestionFromQuiz = (questionId) => {
+    setManualQuiz(prev => ({
+      ...prev,
+      questions: prev.questions.filter(q => q.id !== questionId)
+    }));
+    showSnackbar('Soru silindi', 'success');
+  };
+
+  const submitManualQuiz = async () => {
+    if (!manualQuiz.title.trim()) {
+      showSnackbar('Quiz başlığı gereklidir', 'error');
+      return;
+    }
+
+    if (!manualQuiz.description.trim()) {
+      showSnackbar('Quiz açıklaması gereklidir', 'error');
+      return;
+    }
+
+    if (manualQuiz.questions.length === 0) {
+      showSnackbar('En az bir soru eklemelisiniz', 'error');
+      return;
+    }
+
+    // Validate questions
+    for (let i = 0; i < manualQuiz.questions.length; i++) {
+      const question = manualQuiz.questions[i];
+      if (!question.questionText || !question.questionText.trim()) {
+        showSnackbar(`Soru ${i + 1} için soru metni gereklidir`, 'error');
+        return;
+      }
+      
+      if (question.questionType === 'multiple_choice') {
+        const validOptions = question.options.filter(opt => opt.text && opt.text.trim());
+        if (validOptions.length < 2) {
+          showSnackbar(`Soru ${i + 1} için en az 2 seçenek gereklidir`, 'error');
+          return;
+        }
+        
+        const hasCorrectAnswer = validOptions.some(opt => opt.isCorrect);
+        if (!hasCorrectAnswer) {
+          showSnackbar(`Soru ${i + 1} için en az bir doğru cevap seçmelisiniz`, 'error');
+          return;
+        }
+      }
+    }
+
+    setLoading(true);
+    try {
+      // Frontend'den API proxy'ye gönderilecek format
+      const quizData = {
+        title: manualQuiz.title,
+        description: manualQuiz.description,
+        difficulty: manualQuiz.difficulty,
+        passingScore: manualQuiz.passingScore,
+        language: manualQuiz.language,
+        courseId: manualQuiz.courseId || null,
+        videoId: manualQuiz.videoId || null,
+        questions: manualQuiz.questions.map(q => ({
+          questionText: q.questionText,
+          questionType: q.questionType,
+          explanation: q.explanation || '',
+          correctAnswer: q.correctAnswer,
+          options: q.options ? q.options.map(opt => ({
+            text: opt.text,
+            isCorrect: opt.isCorrect
+          })) : []
+        }))
+      };
+
+      console.log('Sending quiz data:', JSON.stringify(quizData, null, 2));
+      console.log('Manual quiz questions:', manualQuiz.questions);
+
+      const response = await fetch('/api/admin/quizzes/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(quizData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Quiz oluşturulamadı');
+      }
+
+      const result = await response.json();
+      showSnackbar('Quiz başarıyla oluşturuldu!', 'success');
+      
+      // Reset form
+      setManualQuiz({
+        title: '',
+        description: '',
+        courseId: '',
+        videoId: '',
+        difficulty: 'intermediate',
+        passingScore: 70,
+        language: 'en',
+        questions: []
+      });
+
+      // Redirect to pending content or quiz management
+      setTimeout(() => {
+        router.push('/admin/pending-content');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Manuel quiz oluşturma hatası:', error);
+      showSnackbar(error.message || 'Quiz oluşturulamadı', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <MainLayout>
       <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -1386,11 +1614,54 @@ export default function GenerateQuizPage() {
           </Typography>
           
           <Typography variant="body1" color="text.secondary" gutterBottom>
-            Create quizzes for YouTube videos or course content. AI will analyze the content and automatically generate questions.
+            Create quizzes using AI generation or manual creation methods.
           </Typography>
+          
+          {/* Tab Navigation */}
+          <Paper elevation={0} sx={{ mt: 3, border: '1px solid', borderColor: 'divider' }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={handleTabChange}
+              sx={{ 
+                borderBottom: '1px solid', 
+                borderColor: 'divider',
+                '& .MuiTab-root': {
+                  minHeight: 64,
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  fontWeight: 500
+                }
+              }}
+            >
+              <Tab 
+                icon={<AutoAwesomeIcon />} 
+                label="AI Generation" 
+                iconPosition="start"
+                sx={{ 
+                  '&.Mui-selected': { 
+                    color: 'primary.main',
+                    fontWeight: 600
+                  }
+                }}
+              />
+              <Tab 
+                icon={<EditIcon />} 
+                label="Manual Creation" 
+                iconPosition="start"
+                sx={{ 
+                  '&.Mui-selected': { 
+                    color: 'primary.main',
+                    fontWeight: 600
+                  }
+                }}
+              />
+            </Tabs>
+          </Paper>
         </Box>
         
-        <Paper elevation={0} sx={{ p: 3, mb: 4, border: '1px solid', borderColor: 'divider' }}>
+        {/* Tab Content */}
+        {activeTab === 0 && (
+          <Paper elevation={0} sx={{ p: 3, mb: 4, border: '1px solid', borderColor: 'divider' }}>
           <Box sx={{ mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               <ContentIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
@@ -1992,6 +2263,349 @@ export default function GenerateQuizPage() {
                   </Button>
                 </Box>
           </Paper>
+        )}
+
+        {/* Manual Quiz Creation Tab */}
+        {activeTab === 1 && (
+          <Paper elevation={0} sx={{ p: 3, mb: 4, border: '1px solid', borderColor: 'divider' }}>
+            <Typography variant="h6" gutterBottom>
+              <EditIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+              Manual Quiz Creation
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Create a quiz manually by adding questions one by one.
+            </Typography>
+
+            {/* Progress Indicator */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Progress: Step {manualQuiz.title && manualQuiz.description ? (manualQuiz.questions.length > 0 ? '3' : '2') : '1'} of 3
+              </Typography>
+              <LinearProgress 
+                variant="determinate" 
+                value={
+                  manualQuiz.title && manualQuiz.description 
+                    ? (manualQuiz.questions.length > 0 ? 100 : 66)
+                    : 33
+                } 
+                sx={{ height: 8, borderRadius: 1 }}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                <Typography variant="caption" color={manualQuiz.title && manualQuiz.description ? 'success.main' : 'text.secondary'}>
+                  Basic Info
+                </Typography>
+                <Typography variant="caption" color={manualQuiz.questions.length > 0 ? 'success.main' : 'text.secondary'}>
+                  Add Questions
+                </Typography>
+                <Typography variant="caption" color={manualQuiz.questions.length > 0 && manualQuiz.title && manualQuiz.description ? 'success.main' : 'text.secondary'}>
+                  Create Quiz
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Quiz Basic Information */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Quiz Title"
+                  placeholder="Enter quiz title..."
+                  value={manualQuiz.title}
+                  onChange={(e) => handleManualQuizChange('title', e.target.value)}
+                  required
+                  helperText="Required: Give your quiz a descriptive title"
+                  error={!manualQuiz.title.trim() && manualQuiz.title !== ''}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Difficulty</InputLabel>
+                  <Select
+                    value={manualQuiz.difficulty}
+                    onChange={(e) => handleManualQuizChange('difficulty', e.target.value)}
+                    label="Difficulty"
+                  >
+                    {difficulties.map(d => (
+                      <MenuItem key={d.value} value={d.value}>
+                        <Chip size="small" label={d.label} color={d.color} sx={{ mr: 1 }} />
+                        {d.description}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Quiz Description"
+                  placeholder="Describe what this quiz covers..."
+                  value={manualQuiz.description}
+                  onChange={(e) => handleManualQuizChange('description', e.target.value)}
+                  multiline
+                  rows={3}
+                  required
+                  helperText="Required: Provide a brief description of the quiz content"
+                  error={!manualQuiz.description.trim() && manualQuiz.description !== ''}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Course (Optional)</InputLabel>
+                  <Select
+                    value={manualQuiz.courseId}
+                    onChange={(e) => handleManualQuizChange('courseId', e.target.value)}
+                    label="Course (Optional)"
+                  >
+                    <MenuItem value="">No Course</MenuItem>
+                    {courses.map((course) => (
+                      <MenuItem key={course.CourseID} value={course.CourseID}>
+                        {course.Title}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Passing Score (%)"
+                  type="number"
+                  value={manualQuiz.passingScore}
+                  onChange={(e) => handleManualQuizChange('passingScore', parseInt(e.target.value) || 70)}
+                  InputProps={{ inputProps: { min: 50, max: 100 } }}
+                />
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Question Creation Section */}
+            <Typography variant="h6" gutterBottom>
+              <QuestionIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+              Add Questions
+            </Typography>
+
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Question Text"
+                  placeholder="Enter your question here..."
+                  value={currentQuestion.questionText}
+                  onChange={(e) => handleQuestionChange('questionText', e.target.value)}
+                  multiline
+                  rows={2}
+                  required
+                  helperText="This field is required. Enter the question you want to ask."
+                  error={!currentQuestion.questionText.trim() && currentQuestion.questionText !== ''}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Question Type</InputLabel>
+                  <Select
+                    value={currentQuestion.questionType}
+                    onChange={(e) => handleQuestionChange('questionType', e.target.value)}
+                    label="Question Type"
+                  >
+                    <MenuItem value="multiple_choice">Multiple Choice</MenuItem>
+                    <MenuItem value="true_false">True/False</MenuItem>
+                    <MenuItem value="short_answer">Short Answer</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            {/* Multiple Choice Options */}
+            {currentQuestion.questionType === 'multiple_choice' && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>Answer Options:</Typography>
+                {currentQuestion.options.map((option, index) => (
+                  <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Checkbox
+                      checked={option.isCorrect}
+                      onChange={(e) => handleOptionChange(index, 'isCorrect', e.target.checked)}
+                      color="success"
+                    />
+                    <TextField
+                      fullWidth
+                      label={`Option ${index + 1}`}
+                      value={option.text}
+                      onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
+                      sx={{ ml: 1 }}
+                    />
+                  </Box>
+                ))}
+                <Typography variant="caption" color="text.secondary">
+                  Check the box next to correct answers. At least one option must be marked as correct.
+                </Typography>
+              </Box>
+            )}
+
+            {/* True/False Options */}
+            {currentQuestion.questionType === 'true_false' && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>Correct Answer:</Typography>
+                <FormControl component="fieldset">
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControlLabel
+                      control={
+                        <Radio
+                          checked={currentQuestion.correctAnswer === true}
+                          onChange={() => handleQuestionChange('correctAnswer', true)}
+                        />
+                      }
+                      label="True"
+                    />
+                    <FormControlLabel
+                      control={
+                        <Radio
+                          checked={currentQuestion.correctAnswer === false}
+                          onChange={() => handleQuestionChange('correctAnswer', false)}
+                        />
+                      }
+                      label="False"
+                    />
+                  </Box>
+                </FormControl>
+              </Box>
+            )}
+
+            {/* Explanation */}
+            <TextField
+              fullWidth
+              label="Explanation (Optional)"
+              value={currentQuestion.explanation}
+              onChange={(e) => handleQuestionChange('explanation', e.target.value)}
+              multiline
+              rows={2}
+              sx={{ mb: 3 }}
+            />
+
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={addQuestionToQuiz}
+              disabled={!currentQuestion.questionText.trim()}
+              sx={{ mb: 4 }}
+            >
+              Add Question to Quiz
+            </Button>
+
+            {/* Questions List */}
+            {manualQuiz.questions.length > 0 && (
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  Quiz Questions ({manualQuiz.questions.length})
+                </Typography>
+                
+                {manualQuiz.questions.map((question, index) => (
+                  <Card key={question.id} sx={{ mb: 2, border: '1px solid', borderColor: 'divider' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                            {index + 1}. {question.questionText}
+                          </Typography>
+                          
+                          <Chip 
+                            size="small" 
+                            label={question.questionType.replace('_', ' ')} 
+                            sx={{ mb: 1 }}
+                          />
+                          
+                          {question.questionType === 'multiple_choice' && (
+                            <Box sx={{ ml: 2 }}>
+                              {question.options.map((option, optIndex) => (
+                                <Typography 
+                                  key={optIndex} 
+                                  variant="body2" 
+                                  sx={{ 
+                                    color: option.isCorrect ? 'success.main' : 'text.secondary',
+                                    fontWeight: option.isCorrect ? 600 : 400
+                                  }}
+                                >
+                                  {option.isCorrect ? '✓' : '○'} {option.text}
+                                </Typography>
+                              ))}
+                            </Box>
+                          )}
+                          
+                          {question.explanation && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
+                              Explanation: {question.explanation}
+                            </Typography>
+                          )}
+                        </Box>
+                        
+                        <IconButton 
+                          color="error" 
+                          onClick={() => removeQuestionFromQuiz(question.id)}
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+            )}
+
+            {/* Submit Button */}
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setManualQuiz({
+                    title: '',
+                    description: '',
+                    courseId: '',
+                    videoId: '',
+                    difficulty: 'intermediate',
+                    passingScore: 70,
+                    language: 'en',
+                    questions: []
+                  });
+                  setCurrentQuestion({
+                    questionText: '',
+                    questionType: 'multiple_choice',
+                    options: [
+                      { text: '', isCorrect: false },
+                      { text: '', isCorrect: false },
+                      { text: '', isCorrect: false },
+                      { text: '', isCorrect: false }
+                    ],
+                    explanation: ''
+                  });
+                }}
+              >
+                Reset Form
+              </Button>
+              
+              <Button
+                variant="contained"
+                startIcon={loading ? <CircularProgress size={20} /> : <SaveIcon />}
+                onClick={submitManualQuiz}
+                disabled={loading || manualQuiz.questions.length === 0 || !manualQuiz.title.trim() || !manualQuiz.description.trim()}
+                sx={{
+                  background: 'linear-gradient(45deg, #4CAF50 30%, #8BC34A 90%)',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #388E3C 30%, #689F38 90%)',
+                  }
+                }}
+              >
+                {loading ? 'Creating...' : 'Create Quiz'}
+              </Button>
+            </Box>
+          </Paper>
+        )}
 
         {/* Queue section with enhanced design */}
           <Paper

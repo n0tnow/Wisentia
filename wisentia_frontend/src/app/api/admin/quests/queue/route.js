@@ -112,4 +112,39 @@ export async function POST(request) {
     console.error('Error adding to quest queue:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
+}
+
+// PUT: Process next quest in queue
+export async function PUT(request) {
+  // API_URL kontrolü - undefined ise varsayılan değer kullan
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  
+  try {
+    // Verify admin status
+    const adminCheck = await verifyAdmin(request);
+    
+    if (!adminCheck.isAdmin) {
+      return NextResponse.json({ error: adminCheck.error }, { status: 403 });
+    }
+    
+    // Process next quest in queue on backend
+    const response = await fetch(`${API_URL}/ai/quest-queue/process/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': request.headers.get('authorization')
+      }
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      return NextResponse.json({ error: errorData.error || 'Failed to process quest queue' }, { status: response.status });
+    }
+    
+    const data = await response.json();
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error processing quest queue:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
 } 

@@ -2110,3 +2110,467 @@ def nft_statistics(request):
         'typeDistribution': type_distribution,
         'activities': activities
     })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_quiz(request):
+    """Manuel quiz oluşturmak için API endpoint'i"""
+    user_id = request.user.id
+    
+    if not is_admin(user_id):
+        return Response({'error': 'You do not have permission to access this resource'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        data = request.data
+        
+        # Gerekli alanları kontrol et
+        required_fields = ['title', 'description', 'questions']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return Response({'error': f'Missing required field: {field}'}, 
+                               status=status.HTTP_400_BAD_REQUEST)
+        
+        if not isinstance(data['questions'], list) or len(data['questions']) == 0:
+            return Response({'error': 'At least one question is required'}, 
+                           status=status.HTTP_400_BAD_REQUEST)
+        
+        with connection.cursor() as cursor:
+            # Quiz'i oluştur - yapay zeka fonksiyonuna benzer şekilde
+            course_id = data.get('course_id')
+            video_id = data.get('video_id')
+            
+            # CourseID'yi integer'a çevir
+            if course_id:
+                try:
+                    course_id = int(course_id)
+                    # Kursun varlığını kontrol et
+                    cursor.execute("SELECT COUNT(*) FROM Courses WHERE CourseID = %s", [course_id])
+                    if cursor.fetchone()[0] == 0:
+                        return Response({'error': f'Course ID {course_id} not found'}, 
+                                       status=status.HTTP_404_NOT_FOUND)
+                except (ValueError, TypeError):
+                    return Response({'error': f'Invalid course ID format: {course_id}'}, 
+                                   status=status.HTTP_400_BAD_REQUEST)
+            
+            # VideoID'yi integer'a çevir
+            if video_id:
+                try:
+                    video_id = int(video_id)
+                    # Videonun varlığını kontrol et
+                    cursor.execute("SELECT COUNT(*) FROM CourseVideos WHERE VideoID = %s", [video_id])
+                    if cursor.fetchone()[0] == 0:
+                        return Response({'error': f'Video ID {video_id} not found'}, 
+                                       status=status.HTTP_404_NOT_FOUND)
+                except (ValueError, TypeError):
+                    return Response({'error': f'Invalid video ID format: {video_id}'}, 
+                                   status=status.HTTP_400_BAD_REQUEST)
+            
+            # Quiz'i oluştur
+            if course_id and video_id:
+                cursor.execute("""
+                    INSERT INTO Quizzes 
+                    (Title, Description, PassingScore, CourseID, VideoID, IsActive)
+                    VALUES (%s, %s, %s, %s, %s, 1)
+                """, [
+                    data['title'],
+                    data['description'],
+                    data.get('passing_score', 70),
+                    course_id,
+                    video_id
+                ])
+            elif course_id:
+                cursor.execute("""
+                    INSERT INTO Quizzes 
+                    (Title, Description, PassingScore, CourseID, IsActive)
+                    VALUES (%s, %s, %s, %s, 1)
+                """, [
+                    data['title'],
+                    data['description'],
+                    data.get('passing_score', 70),
+                    course_id
+                ])
+            elif video_id:
+                cursor.execute("""
+                    INSERT INTO Quizzes 
+                    (Title, Description, PassingScore, VideoID, IsActive)
+                    VALUES (%s, %s, %s, %s, 1)
+                """, [
+                    data['title'],
+                    data['description'],
+                    data.get('passing_score', 70),
+                    video_id
+                ])
+            else:
+                cursor.execute("""
+                    INSERT INTO Quizzes 
+                    (Title, Description, PassingScore, IsActive)
+                    VALUES (%s, %s, %s, 1)
+                """, [
+                    data['title'],
+                    data['description'],
+                    data.get('passing_score', 70)
+                ])
+            
+            # Quiz ID'yi al - yapay zeka fonksiyonuna benzer şekilde
+            quiz_id = None
+            
+            # Method 1: SCOPE_IDENTITY() kullan
+            try:
+                cursor.execute("SELECT SCOPE_IDENTITY()")
+                result = cursor.fetchone()
+                if result and result[0] is not None:
+                    quiz_id = result[0]
+                    print(f"Manual quiz created with ID: {quiz_id}")
+            except Exception as e:
+                print(f"SCOPE_IDENTITY() failed: {str(e)}")
+            
+            # Method 2: Alternatif yöntem
+            if quiz_id is None:
+                try:
+                    cursor.execute("""
+                        SELECT TOP 1 QuizID FROM Quizzes 
+                        WHERE Title = %s
+                        ORDER BY QuizID DESC
+                    """, [data['title']])
+                    result = cursor.fetchone()
+                    if result and result[0] is not None:
+                        quiz_id = result[0]
+                        print(f"Got quiz ID using alternative method: {quiz_id}")
+                except Exception as e:
+                    print(f"Alternative method failed: {str(e)}")
+            
+            if quiz_id is None:
+                raise Exception("Failed to get quiz ID")
+            
+            # Soruları ekle - yapay zeka fonksiyonuna benzer şekilde
+            print(f"Processing {len(data['questions'])} questions for quiz {quiz_id}")
+            
+            for i, question_data in enumerate(data['questions']):
+                if not question_data.get('question_text'):
+                    return Response({
+                        'error': f'Question {i+1} is missing question text. Please add question text for all questions.',
+                        'details': f'Available fields: {list(question_data.keys())}'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                try:
+                    with connection.cursor() as question_cursor:
+                        question_text = question_data['question_text']
+                        question_type = question_data.get('question_type', 'multiple_choice')
+                        
+                        # Soruyu ekle
+                        try:
+                            question_cursor.execute("""
+                                INSERT INTO QuizQuestions 
+                                (QuizID, QuestionText, QuestionType, OrderInQuiz)
+                                VALUES (%s, %s, %s, %s)
+                            """, [
+                                quiz_id,
+                                question_text,
+                                question_type,
+                                i + 1
+                            ])
+                            
+                            # Question ID'yi al
+                            question_cursor.execute("SELECT SCOPE_IDENTITY()")
+                            result = question_cursor.fetchone()
+                            if not result or result[0] is None:
+                                # Alternatif yöntem
+                                question_cursor.execute("""
+                                    SELECT TOP 1 QuestionID FROM QuizQuestions 
+                                    WHERE QuizID = %s AND OrderInQuiz = %s
+                                    ORDER BY QuestionID DESC
+                                """, [quiz_id, i + 1])
+                                result = question_cursor.fetchone()
+                                if not result or result[0] is None:
+                                    raise Exception("Could not retrieve question ID")
+                            
+                            question_id = result[0]
+                            
+                        except Exception as question_error:
+                            continue
+                        
+                        # Seçenekleri ekle
+                        if question_type == 'multiple_choice' and question_data.get('options'):
+                            for j, option_data in enumerate(question_data['options']):
+                                if not option_data.get('option_text'):
+                                    continue
+                                
+                                try:
+                                    option_text = option_data['option_text']
+                                    is_correct = option_data.get('is_correct', False)
+                                    
+                                    question_cursor.execute("""
+                                        INSERT INTO QuestionOptions 
+                                        (QuestionID, OptionText, IsCorrect, OrderInQuestion)
+                                        VALUES (%s, %s, %s, %s)
+                                    """, [
+                                        question_id,
+                                        option_text,
+                                        1 if is_correct else 0,
+                                        j + 1
+                                    ])
+                                    
+                                except Exception as option_error:
+                                    pass
+                        
+                        # True/False soruları için
+                        elif question_type == 'true_false':
+                            correct_answer = question_data.get('correct_answer', True)
+                            
+                            try:
+                                # True seçeneği
+                                question_cursor.execute("""
+                                    INSERT INTO QuestionOptions 
+                                    (QuestionID, OptionText, IsCorrect, OrderInQuestion)
+                                    VALUES (%s, %s, %s, %s)
+                                """, [
+                                    question_id, 'True', 1 if correct_answer else 0, 1
+                                ])
+                                
+                                # False seçeneği
+                                question_cursor.execute("""
+                                    INSERT INTO QuestionOptions 
+                                    (QuestionID, OptionText, IsCorrect, OrderInQuestion)
+                                    VALUES (%s, %s, %s, %s)
+                                """, [
+                                    question_id, 'False', 1 if not correct_answer else 0, 2
+                                ])
+                                
+                            except Exception as tf_error:
+                                pass
+                
+                except Exception as e:
+                    continue
+            
+            # Aktivite logunu kaydet
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp)
+                VALUES (%s, 'quiz_created', %s, GETDATE())
+            """, [
+                user_id,
+                f"Created manual quiz: {data['title']}"
+            ])
+        
+        return Response({
+            'success': True,
+            'message': 'Quiz created successfully',
+            'id': quiz_id,
+            'quiz_id': quiz_id
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Failed to create quiz',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def quiz_details(request, quiz_id):
+    """Quiz detaylarını getiren API endpoint'i"""
+    user_id = request.user.id
+    
+    if not is_admin(user_id):
+        return Response({'error': 'You do not have permission to access this resource'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        with connection.cursor() as cursor:
+            # Quiz bilgilerini getir
+            cursor.execute("""
+                SELECT q.QuizID, q.Title, q.Description, q.PassingScore, 
+                       q.IsActive, q.CourseID, q.VideoID,
+                       c.Title as CourseTitle, cv.Title as VideoTitle
+                FROM Quizzes q
+                LEFT JOIN Courses c ON q.CourseID = c.CourseID
+                LEFT JOIN CourseVideos cv ON q.VideoID = cv.VideoID
+                WHERE q.QuizID = %s
+            """, [quiz_id])
+            
+            quiz_row = cursor.fetchone()
+            if not quiz_row:
+                return Response({'error': 'Quiz not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            quiz_data = {
+                'QuizID': quiz_row[0],
+                'Title': quiz_row[1],
+                'Description': quiz_row[2],
+                'PassingScore': quiz_row[3],
+                'IsActive': quiz_row[4],
+                'CourseID': quiz_row[5],
+                'VideoID': quiz_row[6],
+                'course': {'CourseTitle': quiz_row[7]} if quiz_row[7] else None,
+                'video': {'VideoTitle': quiz_row[8]} if quiz_row[8] else None,
+                'questions': []
+            }
+            
+            # Soruları getir
+            cursor.execute("""
+                SELECT qq.QuestionID, qq.QuestionText, qq.QuestionType, qq.OrderInQuiz
+                FROM QuizQuestions qq
+                WHERE qq.QuizID = %s
+                ORDER BY qq.OrderInQuiz, qq.QuestionID
+            """, [quiz_id])
+            
+            questions = cursor.fetchall()
+            for question in questions:
+                question_data = {
+                    'QuestionID': question[0],
+                    'QuestionText': question[1],
+                    'QuestionType': question[2],
+                    'OrderInQuiz': question[3],
+                    'options': []
+                }
+                
+                # Seçenekleri getir
+                cursor.execute("""
+                    SELECT OptionID, OptionText, IsCorrect
+                    FROM QuestionOptions
+                    WHERE QuestionID = %s
+                    ORDER BY OptionID
+                """, [question[0]])
+                
+                options = cursor.fetchall()
+                for option in options:
+                    question_data['options'].append({
+                        'OptionID': option[0],
+                        'OptionText': option[1],
+                        'IsCorrect': bool(option[2])
+                    })
+                
+                quiz_data['questions'].append(question_data)
+        
+        return Response(quiz_data)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Failed to get quiz details',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_quiz(request, quiz_id):
+    """Quiz güncellemek için API endpoint'i"""
+    user_id = request.user.id
+    
+    if not is_admin(user_id):
+        return Response({'error': 'You do not have permission to access this resource'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        data = request.data
+        
+        with connection.cursor() as cursor:
+            # Quiz'in varlığını kontrol et
+            cursor.execute("""
+                SELECT COUNT(*) FROM Quizzes 
+                WHERE QuizID = %s
+            """, [quiz_id])
+            
+            if cursor.fetchone()[0] == 0:
+                return Response({'error': 'Quiz not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Quiz'i güncelle
+            update_fields = []
+            params = []
+            
+            if 'title' in data:
+                update_fields.append("Title = %s")
+                params.append(data['title'])
+            
+            if 'description' in data:
+                update_fields.append("Description = %s")
+                params.append(data['description'])
+            
+            if 'passing_score' in data:
+                update_fields.append("PassingScore = %s")
+                params.append(data['passing_score'])
+            
+            if 'is_active' in data:
+                update_fields.append("IsActive = %s")
+                params.append(1 if data['is_active'] else 0)
+            
+            if update_fields:
+                update_sql = f"""
+                    UPDATE Quizzes
+                    SET {", ".join(update_fields)}
+                    WHERE QuizID = %s
+                """
+                params.append(quiz_id)
+                cursor.execute(update_sql, params)
+            
+            # Aktivite logunu kaydet
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp)
+                VALUES (%s, 'quiz_updated', %s, GETDATE())
+            """, [
+                user_id,
+                f"Updated quiz: ID {quiz_id}"
+            ])
+        
+        return Response({
+            'success': True,
+            'message': 'Quiz updated successfully'
+        })
+        
+    except Exception as e:
+        print(f"Quiz update error: {str(e)}")
+        return Response({
+            'error': 'Failed to update quiz',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_quiz(request, quiz_id):
+    """Quiz silmek için API endpoint'i"""
+    user_id = request.user.id
+    
+    if not is_admin(user_id):
+        return Response({'error': 'You do not have permission to access this resource'}, 
+                       status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        with connection.cursor() as cursor:
+            # Quiz'in varlığını kontrol et
+            cursor.execute("""
+                SELECT Title FROM Quizzes 
+                WHERE QuizID = %s
+            """, [quiz_id])
+            
+            quiz_row = cursor.fetchone()
+            if not quiz_row:
+                return Response({'error': 'Quiz not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            quiz_title = quiz_row[0]
+            
+            # İlişkili verileri sil
+            cursor.execute("DELETE FROM QuestionOptions WHERE QuestionID IN (SELECT QuestionID FROM QuizQuestions WHERE QuizID = %s)", [quiz_id])
+            cursor.execute("DELETE FROM QuizQuestions WHERE QuizID = %s", [quiz_id])
+            cursor.execute("DELETE FROM Quizzes WHERE QuizID = %s", [quiz_id])
+            
+            # Aktivite logunu kaydet
+            cursor.execute("""
+                INSERT INTO ActivityLogs
+                (UserID, ActivityType, Description, Timestamp)
+                VALUES (%s, 'quiz_deleted', %s, GETDATE())
+            """, [
+                user_id,
+                f"Deleted quiz: {quiz_title}"
+            ])
+        
+        return Response({
+            'success': True,
+            'message': 'Quiz deleted successfully'
+        })
+        
+    except Exception as e:
+        print(f"Quiz deletion error: {str(e)}")
+        return Response({
+            'error': 'Failed to delete quiz',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

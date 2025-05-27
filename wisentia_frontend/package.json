@@ -12,9 +12,11 @@
     "@emotion/cache": "^11.11.0",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
+    "@metamask/detect-provider": "^2.0.0",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.12.1",
     "@mui/system": "^7.1.0",
+    "@react-hook/window-size": "^3.1.1",
     "@tiptap/extension-color": "^2.1.13",
     "@tiptap/extension-font-family": "^2.1.13",
     "@tiptap/extension-highlight": "^2.1.13",
@@ -38,9 +40,11 @@
     "framer-motion": "^10.16.4",
     "next": "14.1.0",
     "react": "^18.2.0",
+    "react-confetti": "^6.4.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.5.2",
-    "react-markdown": "^9.0.1"
+    "react-markdown": "^9.0.1",
+    "recharts": "^2.15.3"
   },
   "devDependencies": {
     "eslint": "^8",

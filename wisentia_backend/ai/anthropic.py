@@ -169,12 +169,36 @@ def generate_with_anthropic(prompt, system_prompt=None, history=None, stream=Fal
         else:
             result = response.json()
             
+            # Extract usage information for cost tracking
+            usage_info = result.get('usage', {})
+            input_tokens = usage_info.get('input_tokens', 0)
+            output_tokens = usage_info.get('output_tokens', 0)
+            
+            # Calculate cost
+            cost_info = None
+            if input_tokens > 0 or output_tokens > 0:
+                cost_info = estimate_cost({
+                    "input": input_tokens,
+                    "output": output_tokens
+                }, data.get("model", CLAUDE_MODEL))
+            
             # Extract the content from Claude's response
             if 'content' in result and len(result['content']) > 0:
                 content_blocks = [block for block in result['content'] if block['type'] == 'text']
                 if content_blocks:
                     text_content = ''.join([block['text'] for block in content_blocks])
-                    return text_content
+                    
+                    # Return structured response with cost information
+                    return {
+                        'success': True,
+                        'content': text_content,
+                        'model': data.get("model", CLAUDE_MODEL),
+                        'usage': {
+                            'input_tokens': input_tokens,
+                            'output_tokens': output_tokens
+                        },
+                        'cost': cost_info
+                    }
                 else:
                     logger.warning("No text content in Claude response")
                     return {

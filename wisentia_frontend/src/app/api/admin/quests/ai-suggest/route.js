@@ -41,7 +41,7 @@ export async function POST(request) {
     
     // Set a timeout to avoid hanging requests
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for AI
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for AI
     
     // Make API request to backend
     const response = await fetch(backendUrl, {
@@ -79,13 +79,16 @@ export async function POST(request) {
     
     // Get JSON response
     const data = await response.json();
-    console.log('AI quest suggestion successful, content ID:', data.contentId);
+    console.log('AI quest suggestion successful:', data);
     
-    // Return formatted response
+    // Return the response as-is since backend now formats it correctly
     return NextResponse.json({
-      success: true,
-      contentId: data.contentId,
-      quest: data.quest
+      success: data.success,
+      quest: data.quest,
+      suggestions: data.suggestions,
+      cost: data.cost,
+      usage: data.usage,
+      message: data.message
     });
     
   } catch (error) {

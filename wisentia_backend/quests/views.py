@@ -207,6 +207,136 @@ def quest_detail(request, quest_id):
     
     return Response(quest)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_quest_detail(request, quest_id):
+    """Admin için görev detaylarını gösteren API endpoint'i (IsActive kontrolü yok)"""
+    
+    with connection.cursor() as cursor:
+        # Görev bilgilerini al (IsActive kontrolü olmadan)
+        cursor.execute("""
+            SELECT q.QuestID, q.Title, q.Description, q.RequiredPoints, 
+                   q.RewardPoints, q.DifficultyLevel, q.IsAIGenerated, q.IsActive,
+                   q.StartDate, q.EndDate, q.CreationDate,
+                   n.NFTID as RewardNFTID, n.Title as RewardNFTTitle,
+                   n.ImageURI as RewardNFTImage, n.Description as RewardNFTDescription
+            FROM Quests q
+            LEFT JOIN NFTs n ON q.RewardNFTID = n.NFTID
+            WHERE q.QuestID = %s
+        """, [quest_id])
+        
+        columns = [col[0] for col in cursor.description]
+        quest_data = cursor.fetchone()
+        
+        if not quest_data:
+            return Response({'error': 'Quest not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        quest = dict(zip(columns, quest_data))
+        
+        # Görev koşullarını al
+        cursor.execute("""
+            SELECT ConditionID, ConditionType, TargetID, TargetValue, Description
+            FROM QuestConditions
+            WHERE QuestID = %s
+        """, [quest_id])
+        
+        columns = [col[0] for col in cursor.description]
+        conditions = []
+        
+        for row in cursor.fetchall():
+            condition = dict(zip(columns, row))
+            condition_type = condition['ConditionType']
+            target_id = condition['TargetID']
+            
+            # Koşul tipine göre ek bilgileri al
+            if condition_type == 'course_completion':
+                cursor.execute("""
+                    SELECT Title, Description, ThumbnailURL
+                    FROM Courses WHERE CourseID = %s
+                """, [target_id])
+                
+                course_data = cursor.fetchone()
+                if course_data:
+                    condition['targetTitle'] = course_data[0]
+                    condition['targetDescription'] = course_data[1]
+                    condition['targetImage'] = course_data[2]
+                    condition['displayText'] = f"Complete the course: {course_data[0]}"
+            
+            elif condition_type == 'quiz_score':
+                cursor.execute("""
+                    SELECT q.Title, q.Description, cv.Title as VideoTitle, c.Title as CourseTitle, c.CourseID
+                    FROM Quizzes q
+                    LEFT JOIN CourseVideos cv ON q.VideoID = cv.VideoID
+                    LEFT JOIN Courses c ON q.CourseID = c.CourseID OR cv.CourseID = c.CourseID
+                    WHERE q.QuizID = %s
+                """, [target_id])
+                
+                quiz_data = cursor.fetchone()
+                if quiz_data:
+                    condition['targetTitle'] = quiz_data[0]
+                    condition['targetDescription'] = quiz_data[1]
+                    condition['videoTitle'] = quiz_data[2]
+                    condition['courseTitle'] = quiz_data[3]
+                    condition['courseId'] = quiz_data[4]
+                    condition['displayText'] = f"Get at least {condition['TargetValue']}% score in quiz: {quiz_data[0]}"
+            
+            elif condition_type == 'take_quiz':
+                cursor.execute("""
+                    SELECT q.Title, q.Description, cv.Title as VideoTitle, c.Title as CourseTitle, c.CourseID
+                    FROM Quizzes q
+                    LEFT JOIN CourseVideos cv ON q.VideoID = cv.VideoID
+                    LEFT JOIN Courses c ON q.CourseID = c.CourseID OR cv.CourseID = c.CourseID
+                    WHERE q.QuizID = %s
+                """, [target_id])
+                
+                quiz_data = cursor.fetchone()
+                if quiz_data:
+                    condition['targetTitle'] = quiz_data[0]
+                    condition['targetDescription'] = quiz_data[1]
+                    condition['videoTitle'] = quiz_data[2]
+                    condition['courseTitle'] = quiz_data[3]
+                    condition['courseId'] = quiz_data[4]
+                    condition['displayText'] = f"Take the quiz: {quiz_data[0]}"
+            
+            elif condition_type == 'watch_videos':
+                cursor.execute("""
+                    SELECT cv.Title, cv.Description, c.Title as CourseTitle, c.CourseID
+                    FROM CourseVideos cv
+                    LEFT JOIN Courses c ON cv.CourseID = c.CourseID
+                    WHERE cv.VideoID = %s
+                """, [target_id])
+                
+                video_data = cursor.fetchone()
+                if video_data:
+                    condition['targetTitle'] = video_data[0]
+                    condition['targetDescription'] = video_data[1]
+                    condition['courseTitle'] = video_data[2]
+                    condition['courseId'] = video_data[3]
+                    condition['displayText'] = f"Watch the video: {video_data[0]}"
+            
+            elif condition_type == 'start_discussion':
+                cursor.execute("""
+                    SELECT Title, Description
+                    FROM CommunityPosts
+                    WHERE PostID = %s
+                """, [target_id])
+                
+                topic_data = cursor.fetchone()
+                if topic_data:
+                    condition['targetTitle'] = topic_data[0]
+                    condition['targetDescription'] = topic_data[1]
+                    condition['displayText'] = f"Start a discussion: {topic_data[0]}"
+            
+            elif condition_type == 'total_points':
+                condition['displayText'] = f"Earn at least {condition['TargetValue']} total points"
+                condition['targetTitle'] = f"{condition['TargetValue']} Points"
+            
+            conditions.append(condition)
+        
+        quest['conditions'] = conditions
+    
+    return Response(quest)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def claim_quest_reward(request, quest_id):
@@ -1045,15 +1175,48 @@ def create_quest(request):
         if not user_role or user_role[0] != 'admin':
             return Response({'error': 'Only administrators can create quests'}, 
                        status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if Category column exists in Quests table, if not add it
+        cursor.execute("""
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = 'Quests' 
+            AND COLUMN_NAME = 'Category'
+        """)
+        
+        category_column_exists = cursor.fetchone() is not None
+        
+        if not category_column_exists:
+            print("Adding Category column to Quests table...")
+            cursor.execute("""
+                ALTER TABLE Quests 
+                ADD Category NVARCHAR(100) NULL
+            """)
+            print("Category column added successfully")
     
     try:
         # Get request data
         title = request.data.get('title')
         description = request.data.get('description')
+        category = request.data.get('category', 'General Learning')
         difficulty_level = request.data.get('difficultyLevel', 'intermediate')
-        required_points = request.data.get('requiredPoints', 0)
-        reward_points = request.data.get('rewardPoints', 50)
-        reward_nft_id = request.data.get('rewardNftId')
+        
+        # Convert string values to integers
+        try:
+            required_points = int(request.data.get('requiredPoints', 0))
+        except (ValueError, TypeError):
+            required_points = 0
+            
+        try:
+            reward_points = int(request.data.get('rewardPoints', 50))
+        except (ValueError, TypeError):
+            reward_points = 50
+            
+        try:
+            reward_nft_id = int(request.data.get('rewardNftId')) if request.data.get('rewardNftId') else None
+        except (ValueError, TypeError):
+            reward_nft_id = None
+            
         is_active = request.data.get('isActive', True)
         conditions = request.data.get('conditions', [])
         
@@ -1067,24 +1230,44 @@ def create_quest(request):
             # First create the quest
             cursor.execute("""
                 INSERT INTO Quests
-                (Title, Description, RequiredPoints, RewardPoints, RewardNFTID, DifficultyLevel, 
+                (Title, Description, Category, RequiredPoints, RewardPoints, RewardNFTID, DifficultyLevel, 
                  IsActive, IsAIGenerated, CreationDate)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, 0, GETDATE())
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, GETDATE())
             """, [
-                title, description, required_points, reward_points, reward_nft_id, difficulty_level,
+                title, description, category, required_points, reward_points, reward_nft_id, difficulty_level,
                 1 if is_active else 0
             ])
             
-            # Get the new quest ID
+            # Get the new quest ID using a separate query
             cursor.execute("SELECT SCOPE_IDENTITY()")
-            quest_id = cursor.fetchone()[0]
+            result = cursor.fetchone()
+            print(f"Quest creation result: {result}")
+            
+            if not result or result[0] is None:
+                # Try alternative method to get the last inserted ID
+                cursor.execute("SELECT MAX(QuestID) FROM Quests WHERE Title = %s AND CreationDate >= DATEADD(second, -10, GETDATE())", [title])
+                result = cursor.fetchone()
+                print(f"Alternative quest ID fetch result: {result}")
+                
+                if not result or result[0] is None:
+                    return Response({'error': 'Failed to create quest - no ID returned'}, 
+                                  status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            quest_id = int(result[0])
+            print(f"Created quest with ID: {quest_id}")
             
             # Add quest conditions if provided
             if conditions:
                 for condition in conditions:
                     condition_type = condition.get('conditionType', 'total_points')
                     target_id = condition.get('targetId')
-                    target_value = condition.get('targetValue', 1)
+                    
+                    # Convert targetValue to integer
+                    try:
+                        target_value = int(condition.get('targetValue', 1))
+                    except (ValueError, TypeError):
+                        target_value = 1
+                        
                     condition_description = condition.get('description', '')
                     
                     # Validate condition type
@@ -1116,7 +1299,7 @@ def create_quest(request):
             
             # Get the created quest details
             cursor.execute("""
-                SELECT q.QuestID, q.Title, q.Description, q.RequiredPoints, 
+                SELECT q.QuestID, q.Title, q.Description, q.Category, q.RequiredPoints, 
                        q.RewardPoints, q.DifficultyLevel, q.IsActive, q.IsAIGenerated,
                        q.CreationDate
                 FROM Quests q
@@ -1145,6 +1328,13 @@ def create_quest(request):
             })
             
     except Exception as e:
+        import traceback
+        error_details = {
+            'error': str(e),
+            'traceback': traceback.format_exc(),
+            'request_data': request.data
+        }
+        print(f"Quest creation error: {error_details}")
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])

@@ -130,7 +130,7 @@ def call_llm(system_prompt, user_prompt, max_tokens=4000, temperature=0.7, timeo
             'content': ''
         }
 
-def generate_response(prompt, system_prompt=None, history=None, stream=False, timeout=1800):
+def generate_response(prompt, system_prompt=None, history=None, stream=False, timeout=30):
     """Llama 3 modeli ile yanıt üretir"""
     try:
         if history is None:
@@ -348,152 +348,393 @@ def generate_response(prompt, system_prompt=None, history=None, stream=False, ti
                 'error': str(e)
             }
 
-def generate_quest(difficulty, category, points_required, points_reward=None):
-    """Yapay zeka ile yeni quest oluşturur"""
-    system_prompt = (
-        "Sen görev (quest) oluşturmaya yardımcı bir yapay zekasın. Eğitim platformu için görevler "
-        "oluşturuyorsun. Görevler, kullanıcıların belirli eğitim hedeflerine ulaşmasını sağlar. "
-        "Görevler ilgi çekici, net ve gerçekleştirilebilir olmalıdır. "
-        "SADECE geçerli JSON formatında yanıt ver, başka açıklama ekleme. "
-        "JSON syntax'ına dikkat et: tüm alanlar tırnak içinde olmalı, virgüller doğru kullanılmalı."
-    )
+def generate_quest_with_anthropic(difficulty, category, points_required, points_reward=None):
+    """Generate quest using existing Anthropic integration with real database data"""
+    import json
+    import logging
+    from .anthropic import generate_with_anthropic
     
-    user_prompt = f"""
-    Aşağıdaki kriterlere göre bir görev (quest) oluştur:
+    logger = logging.getLogger(__name__)
     
-    Zorluk seviyesi: {difficulty}
-    Kategori: {category}
-    Gereken puan: {points_required}
-    Ödül puanı: {points_reward if points_reward else 'Otomatik hesaplanacak'}
-    
-    SADECE aşağıdaki formatta JSON döndür:
-    {{
-        "title": "Görev başlığı",
-        "description": "Görev açıklaması",
-        "conditions": [
-            {{
-                "type": "condition type",
-                "name": "condition name",
-                "description": "condition description",
-                "points": 10
-            }}
-        ],
-        "estimated_completion_time": 30
-    }}
-    
-    DİKKAT: Sadece JSON döndür, başka açıklama ekleme.
-    """
-    
-    result = generate_response(user_prompt, system_prompt)
-    
-    if result['success']:
-        try:
-            response_text = result['response']
-            logger.info(f"LLM raw response: {response_text[:200]}...")
-            
-            # Metni temizle - başındaki ve sonundaki boşlukları kaldır
-            response_text = response_text.strip()
-            
-            # Eğer markdown code block içindeyse, onu temizle
-            if response_text.startswith('```json'):
-                response_text = response_text[7:]  # ```json kısmını kaldır
-            if response_text.startswith('```'):
-                response_text = response_text[3:]  # ``` kısmını kaldır
-            if response_text.endswith('```'):
-                response_text = response_text[:-3]  # sondaki ``` kısmını kaldır
-            
-            # Metinden JSON kısmını bulmaya çalış
-            import re
-            json_match = re.search(r'(\{[\s\S]*\})', response_text)
-            
-            if json_match:
-                json_str = json_match.group(1)
-                # JSON string'i düzelt - yaygın hataları gider
-                json_str = json_str.replace('\n', ' ')  # Yeni satırları boşluğa çevir
-                json_str = re.sub(r',\s*}', '}', json_str)  # Sondaki virgülleri kaldır
-                json_str = re.sub(r',\s*]', ']', json_str)  # Array sonundaki virgülleri kaldır
-                
-                try:
-                    quest_data = json.loads(json_str)
-                    
-                    # Gerekli alanları kontrol et ve varsayılan değerler ekle
-                    if 'title' not in quest_data:
-                        quest_data['title'] = f"AI Quest - {category}"
-                    if 'description' not in quest_data:
-                        quest_data['description'] = f"Complete this {difficulty} level quest in {category}"
-                    if 'conditions' not in quest_data:
-                        quest_data['conditions'] = []
-                    if 'estimated_completion_time' not in quest_data:
-                        quest_data['estimated_completion_time'] = 30
-                    
-                    # Conditions'ın array olduğundan emin ol
-                    if not isinstance(quest_data['conditions'], list):
-                        quest_data['conditions'] = []
-                    
-                    return {
-                        'success': True,
-                        'data': quest_data
-                    }
-                except json.JSONDecodeError as e:
-                    logger.error(f"JSON parse error after cleanup: {str(e)}")
-                    logger.error(f"Cleaned JSON string: {json_str[:200]}...")
-                    
-                    # Fallback - basit bir quest oluştur
-                    fallback_quest = {
-                        'title': f"{category} Quest",
-                        'description': f"Complete this {difficulty} level quest in {category} to earn {points_reward} points.",
-                        'conditions': [
-                            {
-                                'type': 'complete',
-                                'name': 'Complete Quest',
-                                'description': 'Complete the quest requirements',
-                                'points': points_reward or 50
-                            }
-                        ],
-                        'estimated_completion_time': 30
-                    }
-                    
-                    return {
-                        'success': True,
-                        'data': fallback_quest,
-                        'warning': 'Used fallback quest due to JSON parse error'
-                    }
-            else:
-                # JSON bulunamadı, fallback kullan
-                logger.warning("No JSON found in response, using fallback")
-                fallback_quest = {
-                    'title': f"{category} Quest",
-                    'description': f"Complete this {difficulty} level quest in {category} to earn {points_reward} points.",
-                    'conditions': [
-                        {
-                            'type': 'complete',
-                            'name': 'Complete Quest',
-                            'description': 'Complete the quest requirements',
-                            'points': points_reward or 50
-                        }
-                    ],
-                    'estimated_completion_time': 30
-                }
-                
-                return {
-                    'success': True,
-                    'data': fallback_quest,
-                    'warning': 'No JSON found, used fallback quest'
-                }
-                
-        except Exception as e:
-            logger.error(f"Error processing quest generation: {str(e)}")
+    try:
+        # Get real database data for the category
+        database_data = get_quest_database_data(category)
+        
+        # Create detailed prompt with real data
+        system_prompt = """You are an educational quest designer for a learning platform. Create engaging, achievable quests that help users learn and progress. You must return ONLY valid JSON without any markdown formatting or explanations."""
+        
+        user_prompt = f"""
+Create an educational quest with these specifications:
+- Difficulty: {difficulty}
+- Category: {category}
+- Required Points: {points_required}
+- Reward Points: {points_reward or 'Auto-calculate based on difficulty'}
+
+Available real data for quest conditions:
+{json.dumps(database_data, indent=2)}
+
+Create a quest that uses REAL data from the database. The quest should include:
+1. An engaging title related to {category}
+2. A clear description explaining what the user needs to accomplish
+3. 2-4 realistic conditions using the available courses, quizzes, and videos
+4. Appropriate difficulty level: {difficulty}
+
+Return ONLY this JSON structure:
+{{
+    "title": "Quest title here",
+    "description": "Detailed quest description",
+    "difficultyLevel": "{difficulty}",
+    "requiredPoints": {points_required},
+    "rewardPoints": {points_reward or 'auto'},
+    "category": "{category}",
+    "conditions": [
+        {{
+            "type": "course_completion",
+            "name": "Complete Course",
+            "description": "Complete a specific course",
+            "targetId": 123,
+            "targetValue": 1
+        }},
+        {{
+            "type": "quiz_score",
+            "name": "Quiz Achievement",
+            "description": "Score at least X% on a quiz",
+            "targetId": 456,
+            "targetValue": 80
+        }}
+    ],
+    "estimatedCompletionTime": 60
+}}
+
+Use real IDs from the database data provided. Make conditions challenging but achievable for {difficulty} level.
+"""
+        
+        # Use existing Anthropic integration
+        result = generate_with_anthropic(user_prompt, system_prompt, timeout=30)
+        
+        if not result.get('success'):
             return {
                 'success': False,
-                'error': f"Error processing quest: {str(e)}",
-                'raw_response': result['response']
+                'error': result.get('error', 'Failed to generate quest'),
+                'raw_response': result.get('response', '')
             }
+        
+        # Extract response text
+        response_text = result.get('content', '').strip()
+        logger.info(f"Anthropic response: {response_text[:200]}...")
+        
+        # Clean and parse JSON
+        try:
+            # Remove any markdown formatting
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            
+            response_text = response_text.strip()
+            
+            # Parse JSON
+            quest_data = json.loads(response_text)
+            
+            # Validate required fields
+            required_fields = ['title', 'description', 'conditions']
+            for field in required_fields:
+                if field not in quest_data:
+                    return {
+                        'success': False,
+                        'error': f'Missing required field: {field}',
+                        'raw_response': response_text
+                    }
+            
+            # Ensure conditions is a list
+            if not isinstance(quest_data['conditions'], list):
+                quest_data['conditions'] = []
+            
+            # Add missing fields with defaults
+            quest_data.setdefault('difficultyLevel', difficulty)
+            quest_data.setdefault('requiredPoints', points_required)
+            quest_data.setdefault('rewardPoints', points_reward or 50)
+            quest_data.setdefault('category', category)
+            quest_data.setdefault('estimatedCompletionTime', 60)
+            
+            # Add cost information if available
+            response_data = {
+                'success': True,
+                'data': quest_data
+            }
+            
+            if result.get('cost'):
+                response_data['cost'] = result['cost']
+            if result.get('usage'):
+                response_data['usage'] = result['usage']
+            
+            return response_data
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {str(e)}")
+            logger.error(f"Response text: {response_text}")
+            return {
+                'success': False,
+                'error': f'Invalid JSON response from AI: {str(e)}',
+                'raw_response': response_text
+            }
+            
+    except Exception as e:
+        logger.error(f"Quest generation error: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Quest generation error: {str(e)}'
+        }
+
+
+def suggest_quest_conditions_with_anthropic(difficulty, category, points_required, points_reward=None):
+    """Suggest quest conditions using existing Anthropic integration with real database data"""
+    import json
+    import logging
+    from .anthropic import generate_with_anthropic
     
-    return {
-        'success': False,
-        'error': result.get('error', 'Unknown error'),
-        'raw_response': result.get('response', '')
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Get real database data for the category
+        database_data = get_quest_database_data(category)
+        
+        # Create detailed prompt for condition suggestions
+        system_prompt = """You are an educational quest condition advisor. Based on available learning content, suggest realistic and engaging quest conditions. You must return ONLY valid JSON without any markdown formatting or explanations."""
+        
+        user_prompt = f"""
+Based on these quest parameters, suggest 3-5 quest conditions:
+- Difficulty: {difficulty}
+- Category: {category}
+- Required Points: {points_required}
+- Reward Points: {points_reward or 'Auto-calculate based on difficulty'}
+
+Available real data for quest conditions:
+{json.dumps(database_data, indent=2)}
+
+Suggest realistic quest conditions using REAL data from the database. Each condition should:
+1. Use actual course/quiz/video IDs from the provided data
+2. Be appropriate for {difficulty} difficulty level
+3. Be relevant to {category} category
+4. Have realistic target values
+
+Return ONLY this JSON structure:
+{{
+    "suggestedConditions": [
+        {{
+            "type": "course_completion",
+            "name": "Complete Course",
+            "description": "Complete a specific course",
+            "targetId": 123,
+            "targetValue": 1,
+            "targetName": "Course Title Here"
+        }},
+        {{
+            "type": "quiz_score",
+            "name": "Quiz Achievement",
+            "description": "Score at least X% on a quiz",
+            "targetId": 456,
+            "targetValue": 80,
+            "targetName": "Quiz Title Here"
+        }},
+        {{
+            "type": "watch_videos",
+            "name": "Watch Video",
+            "description": "Watch a specific video",
+            "targetId": 789,
+            "targetValue": 1,
+            "targetName": "Video Title Here"
+        }}
+    ]
+}}
+
+Use real IDs and names from the database data provided. Make conditions challenging but achievable for {difficulty} level.
+"""
+        
+        # Use existing Anthropic integration
+        result = generate_with_anthropic(user_prompt, system_prompt, timeout=30)
+        
+        if not result.get('success'):
+            return {
+                'success': False,
+                'error': result.get('error', 'Failed to generate condition suggestions'),
+                'raw_response': result.get('response', '')
+            }
+        
+        # Extract response text
+        response_text = result.get('content', '').strip()
+        logger.info(f"Anthropic condition suggestions: {response_text[:200]}...")
+        
+        # Clean and parse JSON
+        try:
+            # Remove any markdown formatting
+            if response_text.startswith('```json'):
+                response_text = response_text[7:]
+            if response_text.startswith('```'):
+                response_text = response_text[3:]
+            if response_text.endswith('```'):
+                response_text = response_text[:-3]
+            
+            response_text = response_text.strip()
+            
+            # Parse JSON
+            suggestions_data = json.loads(response_text)
+            
+            # Validate required fields
+            if 'suggestedConditions' not in suggestions_data:
+                return {
+                    'success': False,
+                    'error': 'Missing suggestedConditions field',
+                    'raw_response': response_text
+                }
+            
+            # Ensure suggestedConditions is a list
+            if not isinstance(suggestions_data['suggestedConditions'], list):
+                suggestions_data['suggestedConditions'] = []
+            
+            # Add cost information if available
+            response_data = {
+                'success': True,
+                'data': suggestions_data
+            }
+            
+            if result.get('cost'):
+                response_data['cost'] = result['cost']
+            if result.get('usage'):
+                response_data['usage'] = result['usage']
+            
+            return response_data
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {str(e)}")
+            logger.error(f"Response text: {response_text}")
+            return {
+                'success': False,
+                'error': f'Invalid JSON response from AI: {str(e)}',
+                'raw_response': response_text
+            }
+            
+    except Exception as e:
+        logger.error(f"Condition suggestion error: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Condition suggestion error: {str(e)}'
+        }
+
+
+def get_quest_database_data(category=None):
+    """Get real database data for quest generation"""
+    from django.db import connection
+    
+    data = {
+        'courses': [],
+        'quizzes': [],
+        'videos': [],
+        'nfts': []
     }
+    
+    try:
+        with connection.cursor() as cursor:
+            # Get courses for the category
+            if category and category != 'General Learning':
+                cursor.execute("""
+                    SELECT TOP 10 CourseID, Title, Category, Difficulty, TotalVideos
+                    FROM Courses 
+                    WHERE IsActive = 1 AND Category = %s
+                    ORDER BY CreationDate DESC
+                """, [category])
+            else:
+                cursor.execute("""
+                    SELECT TOP 10 CourseID, Title, Category, Difficulty, TotalVideos
+                    FROM Courses 
+                    WHERE IsActive = 1
+                    ORDER BY CreationDate DESC
+                """)
+            
+            for row in cursor.fetchall():
+                data['courses'].append({
+                    'id': row[0],
+                    'title': row[1],
+                    'category': row[2],
+                    'difficulty': row[3],
+                    'totalVideos': row[4] or 0
+                })
+            
+            # Get quizzes
+            if category and category != 'General Learning':
+                cursor.execute("""
+                    SELECT TOP 10 q.QuizID, q.Title, q.PassingScore, c.Category
+                    FROM Quizzes q
+                    LEFT JOIN Courses c ON q.CourseID = c.CourseID
+                    WHERE q.IsActive = 1 AND c.Category = %s
+                    ORDER BY q.QuizID DESC
+                """, [category])
+            else:
+                cursor.execute("""
+                    SELECT TOP 10 q.QuizID, q.Title, q.PassingScore, c.Category
+                    FROM Quizzes q
+                    LEFT JOIN Courses c ON q.CourseID = c.CourseID
+                    WHERE q.IsActive = 1
+                    ORDER BY q.QuizID DESC
+                """)
+            
+            for row in cursor.fetchall():
+                data['quizzes'].append({
+                    'id': row[0],
+                    'title': row[1],
+                    'passingScore': row[2] or 70,
+                    'category': row[3] or 'General'
+                })
+            
+            # Get videos
+            if category and category != 'General Learning':
+                cursor.execute("""
+                    SELECT TOP 10 cv.VideoID, cv.Title, cv.Duration, c.Category
+                    FROM CourseVideos cv
+                    LEFT JOIN Courses c ON cv.CourseID = c.CourseID
+                    WHERE c.IsActive = 1 AND c.Category = %s
+                    ORDER BY cv.VideoID DESC
+                """, [category])
+            else:
+                cursor.execute("""
+                    SELECT TOP 10 cv.VideoID, cv.Title, cv.Duration, c.Category
+                    FROM CourseVideos cv
+                    LEFT JOIN Courses c ON cv.CourseID = c.CourseID
+                    WHERE c.IsActive = 1
+                    ORDER BY cv.VideoID DESC
+                """)
+            
+            for row in cursor.fetchall():
+                data['videos'].append({
+                    'id': row[0],
+                    'title': row[1],
+                    'duration': row[2] or 0,
+                    'category': row[3] or 'General'
+                })
+            
+            # Get available NFTs for rewards
+            cursor.execute("""
+                SELECT TOP 5 NFTID, Title, Description, TradeValue, Rarity
+                FROM NFTs 
+                WHERE IsActive = 1
+                ORDER BY TradeValue ASC
+            """)
+            
+            for row in cursor.fetchall():
+                data['nfts'].append({
+                    'id': row[0],
+                    'title': row[1],
+                    'description': row[2],
+                    'tradeValue': float(row[3]) if row[3] else 10.0,
+                    'rarity': row[4] or 'Common'
+                })
+                
+    except Exception as e:
+        print(f"Error getting database data: {str(e)}")
+    
+    return data
 
 def generate_quiz(video_id, video_title, video_content, num_questions=5, difficulty='intermediate', passing_score=70, language='en', target_audience='general', instructional_approach='conceptual'):
     """

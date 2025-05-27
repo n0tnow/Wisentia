@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,7 +48,8 @@ import {
   Subscriptions as SubscriptionIcon,
   Delete as DeleteIcon,
   Warning as WarningIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  Token as TokenIcon
 } from '@mui/icons-material';
 
 // Form Validators
@@ -75,7 +75,7 @@ const validateForm = (formData) => {
 };
 
 export default function EditNFTPage({ params }) {
-  const nftId = use(params).id;
+  const nftId = params.id;
   const theme = useTheme();
   const router = useRouter();
   const { user } = useAuth();
@@ -795,126 +795,330 @@ export default function EditNFTPage({ params }) {
               elevation={3}
               sx={{
                 p: { xs: 2, md: 3 },
-                borderRadius: 2,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                borderRadius: 3,
+                background: theme => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+                border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
                 position: 'sticky',
                 top: 90,
               }}
             >
-              <Typography variant="h6" mb={2} fontWeight={600}>
+              <Typography 
+                variant="h6" 
+                mb={3} 
+                fontWeight={700}
+                sx={{
+                  background: theme => `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                <NFTIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
                 NFT Preview
               </Typography>
               
               <Card 
                 sx={{ 
                   maxWidth: '100%',
-                  boxShadow: `0 6px 16px ${alpha(getRarityColor(formData.rarity), 0.4)}`,
-                  borderRadius: 2,
-                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  background: theme => `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.9)} 0%, ${alpha(theme.palette.background.paper, 0.7)} 100%)`,
+                  backdropFilter: 'blur(20px)',
+                  border: theme => `2px solid ${getRarityColor(formData.rarity)}`,
+                  borderRadius: 3,
+                  boxShadow: theme => `0 12px 40px ${alpha(getRarityColor(formData.rarity), 0.3)}, 0 0 0 1px ${alpha(getRarityColor(formData.rarity), 0.1)}`,
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '4px',
+                    background: theme => `linear-gradient(90deg, ${getRarityColor(formData.rarity)}, ${alpha(getRarityColor(formData.rarity), 0.6)})`,
+                    zIndex: 1
+                  },
                   '&:hover': {
-                    transform: 'scale(1.02)',
-                    boxShadow: `0 8px 24px ${alpha(getRarityColor(formData.rarity), 0.5)}`,
+                    transform: 'translateY(-8px) scale(1.02)',
+                    boxShadow: theme => `0 20px 60px ${alpha(getRarityColor(formData.rarity), 0.4)}, 0 0 0 1px ${alpha(getRarityColor(formData.rarity), 0.2)}`,
                   }
                 }}
               >
-                <CardMedia
-                  component="img"
-                  height="260"
-                  image={formData.imageUrl || 'https://via.placeholder.com/300/0a192f/64ffda?text=NFT'}
-                  alt={formData.title}
-                  sx={{
-                    objectFit: 'contain',
-                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'
-                  }}
-                />
+                <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+                  <CardMedia
+                    component="img"
+                    height="280"
+                    image={formData.imageUrl || `https://via.placeholder.com/400x400/${theme.palette.mode === 'dark' ? '1a1a1a' : 'f5f5f5'}/${theme.palette.primary.main.replace('#', '')}?text=${encodeURIComponent(formData.title || 'NFT')}`}
+                    alt={formData.title}
+                    sx={{
+                      objectFit: 'cover',
+                      background: theme => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)`,
+                      transition: 'transform 0.4s ease',
+                      '&:hover': {
+                        transform: 'scale(1.05)'
+                      }
+                    }}
+                  />
+                  
+                  {/* Rarity Badge */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 12,
+                      right: 12,
+                      background: theme => `linear-gradient(135deg, ${getRarityColor(formData.rarity)}, ${alpha(getRarityColor(formData.rarity), 0.8)})`,
+                      color: 'white',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: 2,
+                      fontWeight: 'bold',
+                      fontSize: '0.75rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      boxShadow: theme => `0 4px 12px ${alpha(getRarityColor(formData.rarity), 0.4)}`,
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    {formData.rarity || 'Common'}
+                  </Box>
+                  
+                  {/* Limited Edition Badge */}
+                  {formData.isLimited && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 12,
+                        left: 12,
+                        background: theme => `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`,
+                        color: 'white',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 2,
+                        fontWeight: 'bold',
+                        fontSize: '0.7rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        boxShadow: theme => `0 4px 12px ${alpha(theme.palette.warning.main, 0.4)}`,
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    >
+                      Limited
+                    </Box>
+                  )}
+                </Box>
                 
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="h6" component="div" fontWeight={600} noWrap sx={{ maxWidth: '70%' }}>
+                <CardContent sx={{ p: 3 }}>
+                  {/* Title and Status */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                    <Typography 
+                      variant="h6" 
+                      component="div" 
+                      fontWeight={700}
+                      sx={{ 
+                        maxWidth: '70%',
+                        background: theme => `linear-gradient(45deg, ${theme.palette.text.primary}, ${alpha(theme.palette.primary.main, 0.8)})`,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        lineHeight: 1.2
+                      }}
+                    >
                       {formData.title || 'NFT Title'}
                     </Typography>
                     
                     <Chip 
-                      label={formData.rarity || 'Common'} 
+                      label={formData.isActive ? 'Active' : 'Inactive'} 
+                      color={formData.isActive ? 'success' : 'error'}
                       size="small"
-                      sx={{ 
-                        bgcolor: alpha(getRarityColor(formData.rarity), 0.1),
-                        color: getRarityColor(formData.rarity),
-                        borderColor: getRarityColor(formData.rarity),
-                        fontWeight: 'medium'
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.7rem'
                       }}
-                      variant="outlined"
                     />
                   </Box>
                   
-                  <Typography variant="body2" color="text.secondary" sx={{ 
-                    mb: 2,
-                    display: '-webkit-box',
-                    WebkitBoxOrient: 'vertical',
-                    WebkitLineClamp: 3,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    minHeight: '3em'
-                  }}>
-                    {formData.description || 'NFT description will appear here.'}
+                  {/* Description */}
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ 
+                      mb: 3,
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 2,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      lineHeight: 1.5,
+                      fontStyle: !formData.description ? 'italic' : 'normal'
+                    }}
+                  >
+                    {formData.description || 'NFT description will appear here...'}
                   </Typography>
                   
-                  <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                    <Chip 
-                      icon={<WalletIcon fontSize="small" />}
-                      label={`${formData.tradeValue || 0} EDU`} 
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                    />
+                  {/* Price and Type */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    p: 2,
+                    borderRadius: 2,
+                    background: theme => `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.secondary.main, 0.08)} 100%)`,
+                    border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                    mb: 2
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <WalletIcon 
+                        sx={{ 
+                          color: theme.palette.primary.main, 
+                          mr: 1,
+                          fontSize: '1.2rem'
+                        }} 
+                      />
+                      <Typography 
+                        variant="h6" 
+                        fontWeight={700}
+                        sx={{
+                          background: theme => `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent'
+                        }}
+                      >
+                        {formData.tradeValue || 0} EDU
+                      </Typography>
+                    </Box>
                     
                     <Chip 
                       label={formData.nftType || 'Type'} 
                       size="small"
-                      color="secondary"
-                      variant="outlined"
+                      sx={{
+                        background: theme => `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
+                        color: 'white',
+                        fontWeight: 'bold',
+                        textTransform: 'capitalize'
+                      }}
                     />
-                    
-                    {formData.isLimited && (
-                      <Chip 
-                        label="Limited" 
-                        size="small" 
-                        color="warning" 
-                      />
-                    )}
-                  </Stack>
+                  </Box>
                   
+                  {/* Subscription Info */}
                   {formData.nftType === 'subscription' && Number(formData.subscriptionDays) > 0 && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <SubscriptionIcon color="primary" fontSize="small" sx={{ mr: 0.5 }} />
-                      <Typography variant="body2">
-                        {formData.subscriptionDays} days subscription
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      p: 2,
+                      borderRadius: 2,
+                      background: theme => `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.05)} 100%)`,
+                      border: theme => `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+                      mb: 2
+                    }}>
+                      <SubscriptionIcon 
+                        sx={{ 
+                          color: theme.palette.info.main, 
+                          mr: 1,
+                          fontSize: '1.1rem'
+                        }} 
+                      />
+                      <Typography 
+                        variant="body2" 
+                        fontWeight={600}
+                        color="info.main"
+                      >
+                        {formData.subscriptionDays} days premium access
                       </Typography>
                     </Box>
                   )}
                   
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                  {/* NFT Features */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: 1,
+                    pt: 1
+                  }}>
                     <Chip 
-                      label={formData.isActive ? 'Active' : 'Inactive'} 
-                      color={formData.isActive ? 'success' : 'error'}
+                      icon={<TokenIcon fontSize="small" />}
+                      label="Digital Asset" 
                       size="small"
+                      variant="outlined"
+                      sx={{
+                        borderColor: theme => alpha(theme.palette.primary.main, 0.3),
+                        color: theme.palette.primary.main,
+                        '&:hover': {
+                          background: theme => alpha(theme.palette.primary.main, 0.1)
+                        }
+                      }}
                     />
+                    
+                    {formData.nftType === 'tradable' && (
+                      <Chip 
+                        label="Tradable" 
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          borderColor: theme => alpha(theme.palette.success.main, 0.3),
+                          color: theme.palette.success.main,
+                          '&:hover': {
+                            background: theme => alpha(theme.palette.success.main, 0.1)
+                          }
+                        }}
+                      />
+                    )}
+                    
+                    {formData.nftType === 'special' && (
+                      <Chip 
+                        label="Special Edition" 
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          borderColor: theme => alpha(theme.palette.warning.main, 0.3),
+                          color: theme.palette.warning.main,
+                          '&:hover': {
+                            background: theme => alpha(theme.palette.warning.main, 0.1)
+                          }
+                        }}
+                      />
+                    )}
                   </Box>
                 </CardContent>
               </Card>
               
-              <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
-                <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
-                  <WarningIcon fontSize="small" sx={{ mr: 1, color: theme.palette.warning.main }} />
+              {/* Preview Notes */}
+              <Box sx={{ 
+                mt: 3, 
+                p: 3, 
+                borderRadius: 2,
+                background: theme => `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.05)} 0%, ${alpha(theme.palette.info.main, 0.02)} 100%)`,
+                border: theme => `1px solid ${alpha(theme.palette.info.main, 0.1)}`
+              }}>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    fontWeight: 600,
+                    color: theme.palette.info.main,
+                    mb: 1
+                  }}
+                >
+                  <WarningIcon fontSize="small" sx={{ mr: 1 }} />
                   Preview Notes
                 </Typography>
-                <Typography variant="body2" color="text.secondary" mt={1}>
-                  This is how your NFT will appear to users. Make sure the image and details accurately represent what users will receive.
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                  This preview shows how your NFT will appear to users in the marketplace. Ensure all details are accurate before saving.
                 </Typography>
                 
                 {!formData.imageUrl && (
-                  <Alert severity="info" sx={{ mt: 2 }}>
-                    Please upload an image for a complete preview.
+                  <Alert 
+                    severity="warning" 
+                    sx={{ 
+                      mt: 2,
+                      borderRadius: 2,
+                      '& .MuiAlert-icon': {
+                        color: theme.palette.warning.main
+                      }
+                    }}
+                  >
+                    Upload an image to see the complete NFT preview
                   </Alert>
                 )}
               </Box>

@@ -42,6 +42,7 @@ import {
   Assignment as QuestIcon,
   TokenOutlined as NFTIcon,
   Forum as ForumIcon,
+  Quiz as QuizIcon,
   Add as AddIcon,
   Visibility as ViewIcon,
   CheckCircle as ActivateIcon,
@@ -71,7 +72,7 @@ export default function ContentManagementPage() {
 
   useEffect(() => {
     // Set content type from URL if available
-    if (contentTypeParam && ['courses', 'quests', 'nfts', 'community'].includes(contentTypeParam)) {
+    if (contentTypeParam && ['courses', 'quizzes', 'quests', 'nfts', 'community'].includes(contentTypeParam)) {
       setContentType(contentTypeParam);
     }
   }, [contentTypeParam]);
@@ -125,6 +126,10 @@ export default function ContentManagementPage() {
     router.push('/admin/courses/create');
   };
 
+  const handleCreateQuiz = () => {
+    router.push('/admin/content/quizzes/create');
+  };
+
   const handleCreateQuest = () => {
     router.push('/admin/quests/create');
   };
@@ -143,6 +148,9 @@ export default function ContentManagementPage() {
       switch (contentType) {
         case 'courses':
           endpoint = `/api/courses/${id}`;
+          break;
+        case 'quizzes':
+          endpoint = `/api/admin/quizzes/${id}`;
           break;
         case 'quests':
           endpoint = `/api/quests/${id}`;
@@ -175,6 +183,7 @@ export default function ContentManagementPage() {
       setItems(items.map(item => {
         if (
           (contentType === 'courses' && item.CourseID === id) ||
+          (contentType === 'quizzes' && item.QuizID === id) ||
           (contentType === 'quests' && item.QuestID === id) ||
           (contentType === 'nfts' && item.NFTID === id) ||
           (contentType === 'community' && item.PostID === id)
@@ -192,6 +201,9 @@ export default function ContentManagementPage() {
     switch (contentType) {
       case 'courses':
         router.push(`/courses/${id}`);
+        break;
+      case 'quizzes':
+        router.push(`/admin/content/quizzes/view/${id}`);
         break;
       case 'quests':
         router.push(`/quests/${id}`);
@@ -324,6 +336,27 @@ export default function ContentManagementPage() {
                 </Button>
               </Zoom>
             )}
+            {contentType === 'quizzes' && (
+              <Zoom in={true} style={{ transitionDelay: '300ms' }}>
+                <Button
+                  variant="contained"
+                  color="warning"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateQuiz}
+                  sx={{ 
+                    px: 3,
+                    py: 1.2,
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    background: `linear-gradient(45deg, ${theme.palette.warning.main} 30%, ${theme.palette.warning.dark} 90%)`,
+                    textTransform: 'none',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Create Quiz
+                </Button>
+              </Zoom>
+            )}
             {contentType === 'quests' && (
               <Zoom in={true} style={{ transitionDelay: '300ms' }}>
                 <Button
@@ -412,6 +445,13 @@ export default function ContentManagementPage() {
               iconPosition="start" 
               label="Courses" 
               value="courses" 
+              sx={{ borderRadius: '8px 8px 0 0' }}
+            />
+            <Tab 
+              icon={<QuizIcon />} 
+              iconPosition="start" 
+              label="Quizzes" 
+              value="quizzes" 
               sx={{ borderRadius: '8px 8px 0 0' }}
             />
             <Tab 
@@ -567,6 +607,139 @@ export default function ContentManagementPage() {
                             sx={{ mt: 2 }}
                           >
                             Create Course
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Fade>
+          )}
+
+          {/* Quizzes Table */}
+          {contentType === 'quizzes' && (
+            <Fade in={true} timeout={500}>
+              <TableContainer>
+                <Table sx={{ minWidth: 650 }}>
+                  <TableHead sx={{ bgcolor: alpha(theme.palette.warning.main, 0.1) }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Title</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Course</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Questions</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Passing Score</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Created</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Attempts</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {items.length > 0 ? (
+                      items.map((quiz) => (
+                        <TableRow 
+                          key={quiz.QuizID}
+                          hover
+                          sx={{ '&:hover': { bgcolor: alpha(theme.palette.warning.main, 0.05) } }}
+                        >
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Avatar 
+                                sx={{ 
+                                  width: 40, 
+                                  height: 40, 
+                                  mr: 2,
+                                  bgcolor: theme.palette.warning.main
+                                }}
+                              >
+                                <QuizIcon />
+                              </Avatar>
+                              <Typography 
+                                variant="body1" 
+                                fontWeight="medium"
+                                sx={{ '&:hover': { color: theme.palette.warning.main }, cursor: 'pointer' }}
+                                onClick={() => handleViewItem(quiz.QuizID)}
+                              >
+                                {quiz.Title}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {quiz.CourseTitle || 'N/A'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={quiz.QuestionCount || 0} 
+                              size="small"
+                              color="warning"
+                              variant="outlined"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {quiz.PassingScore}%
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(quiz.CreationDate).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={quiz.IsActive ? 'Active' : 'Inactive'} 
+                              color={quiz.IsActive ? 'success' : 'error'}
+                              size="small"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={quiz.AttemptCount || 0} 
+                              variant="outlined" 
+                              size="small"
+                              color="primary"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip title="View Details">
+                              <IconButton 
+                                size="small" 
+                                color="warning"
+                                onClick={() => handleViewItem(quiz.QuizID)}
+                                sx={{ mr: 1 }}
+                              >
+                                <ViewIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={quiz.IsActive ? "Deactivate" : "Activate"}>
+                              <IconButton 
+                                size="small"
+                                color={quiz.IsActive ? "error" : "success"}
+                                onClick={() => handleToggleActive(quiz.QuizID, quiz.IsActive)}
+                              >
+                                {quiz.IsActive ? <DeactivateIcon /> : <ActivateIcon />}
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                          <Typography variant="h6" color="text.secondary">
+                            No quizzes found
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            Start by creating a new quiz
+                          </Typography>
+                          <Button
+                            variant="outlined"
+                            color="warning"
+                            startIcon={<AddIcon />}
+                            onClick={handleCreateQuiz}
+                            sx={{ mt: 2 }}
+                          >
+                            Create Quiz
                           </Button>
                         </TableCell>
                       </TableRow>

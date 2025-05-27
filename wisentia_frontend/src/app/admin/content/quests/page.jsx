@@ -221,7 +221,7 @@ export default function QuestsManagementPage() {
   };
   
   const handleGenerateQuest = () => {
-    router.push('/admin/quests/ai-generator');
+    router.push('/admin/generate-quest');
   };
 
   const handleToggleActive = async (questId) => {
