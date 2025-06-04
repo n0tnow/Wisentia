@@ -1,11 +1,16 @@
-from django.urls import path
+from django.urls import path, re_path
 from . import views
 
 urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    path('analytics/', views.admin_analytics, name='admin-analytics'),
     path('users/', views.user_management, name='user-management'),
+    path('users/create/', views.create_user, name='create-user'),
     path('users/<int:user_id>/', views.user_details, name='user-details'),
     path('users/<int:user_id>/update/', views.update_user, name='update-user'),
+    path('users/<int:user_id>/activity/', views.get_user_activity, name='user-activity'),
+    # FIX: Alternative pattern for debugging
+    re_path(r'^users/(?P<user_id>\d+)/activity/$', views.get_user_activity, name='user-activity-alt'),
     path('content/', views.content_management, name='content-management'),
     path('subscriptions/', views.subscription_management, name='subscription-management'),
     path('courses/create/', views.create_course, name='create-course'),
@@ -31,4 +36,11 @@ urlpatterns = [
     path('quizzes/<int:quiz_id>/', views.quiz_details, name='admin-quiz-details'),
     path('quizzes/<int:quiz_id>/update/', views.update_quiz, name='admin-update-quiz'),
     path('quizzes/<int:quiz_id>/delete/', views.delete_quiz, name='admin-delete-quiz'),
+    
+    # User Analytics endpoints (analytics modülünden taşındı)
+    path('user-analytics/stats/', views.user_analytics_stats, name='user-analytics-stats'),
+    path('user-analytics/learning-progress/', views.user_learning_progress, name='user-learning-progress'),
+    path('user-analytics/time-spent/', views.user_time_spent, name='user-time-spent'),
+    path('user-analytics/activity-summary/', views.user_activity_summary, name='user-activity-summary'),
+    path('user-analytics/track-event/', views.track_user_event, name='track-user-event'),
 ]

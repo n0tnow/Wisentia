@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -7,19 +7,17 @@ import {
   Button,
   Card,
   CardContent,
-  CardHeader,
   Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  FormControlLabel,
   Grid,
   IconButton,
   Paper,
   Snackbar,
   Alert,
+  AlertTitle,
   Switch,
   Table,
   TableBody,
@@ -30,254 +28,325 @@ import {
   TextField,
   Tooltip,
   Typography,
-  useTheme,
   CircularProgress,
   Tab,
   Tabs,
   Stack,
   Avatar,
-  LinearProgress,
   Skeleton,
   Fade,
-  Zoom
+  Container,
+  useMediaQuery,
+  useTheme as useMuiTheme,
+  LinearProgress,
+  FormControlLabel,
+  styled,
+  alpha,
+  Divider,
+  Badge
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import DonutLargeIcon from '@mui/icons-material/DonutLarge';
-import PeopleIcon from '@mui/icons-material/People';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import PaymentIcon from '@mui/icons-material/Payment';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import { alpha } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Block as BlockIcon,
+  CheckCircle as CheckCircleIcon,
+  InfoOutlined as InfoIcon,
+  DonutLarge as DonutIcon,
+  People as PeopleIcon,
+  TrendingUp as TrendingUpIcon,
+  Payment as PaymentIcon,
+  CalendarToday as CalendarIcon,
+  AttachMoney as MoneyIcon,
+  ErrorOutline as ErrorIcon,
+  Refresh as RefreshIcon,
+  CheckCircleOutline as CheckIcon,
+  Science as ScienceIcon,
+  DataUsage as DataIcon,
+  Analytics as AnalyticsIcon,
+  ShowChart as ChartIcon,
+  Timeline as TimelineIcon,
+  Monitor as MonitorIcon,
+  Equalizer as EqualizerIcon,
+  PieChart as PieChartIcon,
+  AccountBalance as WalletIcon,
+  CreditCard as CreditCardIcon,
+  Toll as TokenIcon,
+  Security as SecurityIcon,
+  Speed as SpeedIcon
+} from '@mui/icons-material';
 
-// Animated stat card component
-const StatCard = ({ icon, title, value, trend, trendValue, color, delay = 0 }) => {
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
-  
-  // Format trend dynamically
-  let formattedTrend = trend;
-  if (trendValue !== undefined) {
-    formattedTrend = trendValue >= 0 ? `+${trendValue.toFixed(1)}%` : `${trendValue.toFixed(1)}%`;
+// Scientific Subscription Colors
+const SUB_COLORS = {
+  primary: '#00F5FF',     // Cyan
+  secondary: '#FF1493',   // Deep Pink  
+  accent: '#00FF00',      // Lime Green
+  warning: '#FFD700',     // Gold
+  success: '#32CD32',     // Lime Green
+  info: '#1E90FF',        // Dodger Blue
+  neutral: '#6B7280',     // Gray
+  premium: '#8A2BE2',     // Blue Violet
+  glass: 'rgba(0, 245, 255, 0.1)',
+  gradients: {
+    primary: 'linear-gradient(135deg, #00F5FF 0%, #0080FF 100%)',
+    secondary: 'linear-gradient(135deg, #FF1493 0%, #FF69B4 100%)',
+    accent: 'linear-gradient(135deg, #00FF00 0%, #32CD32 100%)',
+    warning: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+    success: 'linear-gradient(135deg, #32CD32 0%, #90EE90 100%)',
+    premium: 'linear-gradient(135deg, #8A2BE2 0%, #DA70D6 100%)',
+    data: 'linear-gradient(135deg, #1E90FF 0%, #87CEEB 100%)'
   }
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-    >
-      <Card 
-        sx={{ 
-          borderRadius: 3,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+};
+
+// Scientific Style Components
+const SubCard = styled(Card)(({ theme, variant = 'default' }) => ({
+  background: theme.palette.mode === 'dark' 
+    ? 'rgba(15, 23, 42, 0.8)' 
+    : 'rgba(255, 255, 255, 0.9)',
+  backdropFilter: 'blur(10px)',
+  border: `1px solid ${alpha(SUB_COLORS.primary, 0.2)}`,
+  borderRadius: 12,
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+  transition: 'all 0.2s ease-in-out',
+  position: 'relative',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+    border: `1px solid ${alpha(SUB_COLORS.primary, 0.4)}`,
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '3px',
+    background: variant === 'primary' ? SUB_COLORS.gradients.primary : 
+                variant === 'secondary' ? SUB_COLORS.gradients.secondary :
+                variant === 'premium' ? SUB_COLORS.gradients.premium :
+                SUB_COLORS.gradients.data,
+  }
+}));
+
+const ScientificTab = styled(Tab)(({ theme }) => ({
+  color: alpha(theme.palette.text.primary, 0.7),
+  fontSize: '0.875rem',
+  fontWeight: 600,
+  minHeight: 56,
+  textTransform: 'none',
+  borderRadius: 0,
+  margin: 0,
+  transition: 'all 0.2s ease-in-out',
           position: 'relative',
-          overflow: 'hidden',
-          transition: 'all 0.3s',
-          height: '100%',
+  minWidth: 120,
+  '&.Mui-selected': {
+    color: SUB_COLORS.primary,
+    fontWeight: 700,
+    background: alpha(SUB_COLORS.primary, 0.08),
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      width: '100%',
+      height: '3px',
+      background: SUB_COLORS.gradients.primary,
+    }
+  },
           '&:hover': {
-            transform: 'translateY(-5px)',
-            boxShadow: theme.palette.mode === 'dark' 
-              ? `0 8px 32px ${alpha(color, 0.3)}` 
-              : `0 8px 32px ${alpha(color, 0.2)}`
-          }
-        }}
-      >
-        <Box sx={{ 
+    color: SUB_COLORS.primary,
+    background: alpha(SUB_COLORS.primary, 0.04),
+  },
+}));
+
+const DataMetric = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(3),
+  textAlign: 'center',
+  borderRadius: 12,
+  background: alpha(SUB_COLORS.primary, 0.04),
+  border: `1px solid ${alpha(SUB_COLORS.primary, 0.1)}`,
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    background: alpha(SUB_COLORS.primary, 0.08),
+    transform: 'scale(1.02)',
+  }
+}));
+
+const MetricValue = styled(Typography)(({ theme }) => ({
+  fontWeight: 800,
+  fontSize: '2.5rem',
+  fontFamily: 'monospace',
+  color: SUB_COLORS.primary,
+  lineHeight: 1,
+  marginBottom: theme.spacing(0.5),
+  [theme.breakpoints.down('md')]: {
+    fontSize: '2rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.75rem',
+  }
+}));
+
+const MetricLabel = styled(Typography)(({ theme }) => ({
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  color: theme.palette.text.secondary,
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+}));
+
+const SubAvatar = styled(Avatar)(({ color, size = 48 }) => ({
+  width: size,
+  height: size,
+  background: color || SUB_COLORS.gradients.primary,
+  boxShadow: `0 4px 12px ${alpha(SUB_COLORS.primary, 0.3)}`,
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: `0 6px 16px ${alpha(SUB_COLORS.primary, 0.4)}`,
+  }
+}));
+
+const HeaderContainer = styled(Box)(({ theme }) => ({
+  background: `linear-gradient(135deg, ${SUB_COLORS.primary} 0%, ${SUB_COLORS.secondary} 100%)`,
+  borderRadius: 16,
+  padding: theme.spacing(4),
+  color: 'white',
+  position: 'relative',
+  overflow: 'hidden',
+  marginBottom: theme.spacing(4),
+  '&::before': {
+    content: '""',
           position: 'absolute', 
-          width: 150, 
-          height: 150, 
-          borderRadius: '50%', 
-          background: alpha(color, isDarkMode ? 0.15 : 0.08), 
-          top: -30, 
-          right: -30,
-          zIndex: 0
-        }} />
-        <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Avatar 
-              sx={{ 
-                bgcolor: alpha(color, isDarkMode ? 0.2 : 0.1), 
-                color: color,
-                width: 48,
-                height: 48,
-                boxShadow: `0 4px 8px ${alpha(color, 0.3)}`
-              }}
-            >
-              {icon}
-            </Avatar>
-            <Typography variant="h6" fontWeight="medium" sx={{ ml: 2 }}>
-              {title}
-            </Typography>
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+    opacity: 0.1,
+  }
+}));
+
+const TabPanel = ({ children, value, index, ...other }) => (
+  <div
+    role="tabpanel"
+    hidden={value !== index}
+    id={`subscription-tabpanel-${index}`}
+    aria-labelledby={`subscription-tab-${index}`}
+    {...other}
+  >
+    {value === index && (
+      <Fade in={true} timeout={300}>
+        <Box sx={{ pt: 3 }}>
+          {children}
           </Box>
-          <Typography 
-            variant="h4" 
-            component="div" 
-            fontWeight="bold" 
-            sx={{ 
-              mb: 0.5,
-              background: `linear-gradient(90deg, ${color}, ${alpha(color, 0.7)})`,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            {value}
-          </Typography>
-          {formattedTrend && (
-            <Typography 
-              variant="body2" 
-              color={!formattedTrend.startsWith('-') ? 'success.main' : 'error.main'}
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              {!formattedTrend.startsWith('-') ? 
-                <CheckCircleOutlineIcon sx={{ fontSize: 16, mr: 0.5 }}/> : 
-                <ErrorOutlineIcon sx={{ fontSize: 16, mr: 0.5 }}/>
-              }
-              {formattedTrend} from previous month
-            </Typography>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-};
+      </Fade>
+    )}
+  </div>
+);
 
-// Table loading skeleton
-const TableSkeleton = ({ rowCount = 3, colCount = 7 }) => {
-  return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          {[...Array(colCount)].map((_, index) => (
-            <TableCell key={`header-${index}`}>
-              <Skeleton animation="wave" height={24} width="80%" />
-            </TableCell>
-          ))}
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {[...Array(rowCount)].map((_, rowIndex) => (
-          <TableRow key={`row-${rowIndex}`}>
-            {[...Array(colCount)].map((_, colIndex) => (
-              <TableCell key={`cell-${rowIndex}-${colIndex}`}>
-                <Skeleton 
-                  animation="wave" 
-                  height={colIndex === 0 ? 48 : 24} 
-                  width={colIndex === 0 ? "90%" : (colIndex === colCount - 1 ? "30%" : "60%")} 
-                />
-                {colIndex === 0 && (
-                  <Skeleton animation="wave" height={16} width="60%" sx={{ mt: 1 }} />
-                )}
-              </TableCell>
-            ))}
-          </TableRow>
+// Scientific Skeleton
+const SubscriptionSkeleton = () => (
+  <Box sx={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
+    <Box sx={{ p: 4 }}>
+      <Skeleton variant="text" width={400} height={60} sx={{ bgcolor: 'rgba(0, 245, 255, 0.1)' }} />
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 3, mt: 4 }}>
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} variant="rectangular" height={140} sx={{ bgcolor: 'rgba(0, 245, 255, 0.1)', borderRadius: 2 }} />
         ))}
-      </TableBody>
-    </Table>
-  );
-};
-
-// Empty state component
-const EmptyState = ({ icon, title, message, action }) => {
-  return (
-    <Box sx={{ py: 8, textAlign: 'center' }}>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Avatar
-          sx={{
-            width: 80,
-            height: 80,
-            mx: 'auto',
-            mb: 2,
-            bgcolor: alpha('#6A82FB', 0.1),
-            color: '#6A82FB',
-          }}
-        >
-          {icon}
-        </Avatar>
-        <Typography variant="h5" fontWeight="bold" sx={{ mb: 1 }}>
-          {title}
-        </Typography>
-        <Typography color="text.secondary" sx={{ mb: 3, maxWidth: 500, mx: 'auto' }}>
-          {message}
-        </Typography>
-        {action}
-      </motion.div>
+      </Box>
+    </Box>
     </Box>
   );
-};
 
 export default function SubscriptionManagementPage() {
-  const [plans, setPlans] = useState([]);
-  const [subscriptionStats, setSubscriptionStats] = useState({
-    totalSubscribers: 0,
-    activeSubscribers: 0,
-    monthlyRevenue: 0,
-    yearlyRevenue: 0,
-    conversionRate: 0,
-    trends: {
-      totalSubscribers: 0,
-      activeSubscribers: 0,
-      monthlyRevenue: 0,
-      conversionRate: 0
-    },
-    planStats: {}
-  });
-  const [recentSubscriptions, setRecentSubscriptions] = useState([]);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    planName: '',
-    description: '',
-    durationDays: 30,
-    price: 0,
-    nftId: '',
-    features: '',
-    isActive: true,
-  });
-  const [editingPlanId, setEditingPlanId] = useState(null);
+  // States
+  const [subscriptionData, setSubscriptionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [formSubmitting, setFormSubmitting] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  
-  // Snackbar states
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [formData, setFormData] = useState({
+    PlanName: '',
+    Description: '',
+    DurationDays: '',
+    Price: '',
+    Features: '',
+    IsActive: true
+  });
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'info'
   });
   
-  const { user } = useAuth();
-  const router = useRouter();
-  const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
+  // Safe auth hook usage with error handling
+  let user = null;
+  let isAuthenticated = false;
+  
+  try {
+    const authContext = useAuth();
+    user = authContext.user;
+    isAuthenticated = authContext.isAuthenticated;
+  } catch (authError) {
+    console.warn('Auth context not available, checking localStorage for admin access');
+    // Fallback: localStorage'dan kullanıcı bilgilerini kontrol et
+    if (typeof window !== 'undefined') {
+      try {
+        const storedUser = localStorage.getItem('user');
+        const accessToken = localStorage.getItem('access_token');
+        if (storedUser && accessToken) {
+          user = JSON.parse(storedUser);
+          isAuthenticated = true;
+        }
+      } catch (e) {
+        console.error('Error checking stored auth:', e);
+      }
+    }
+  }
 
-  // Function to handle tab change
+  const router = useRouter();
+  const theme = useMuiTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Auth check useEffect
+  useEffect(() => {
+    if (!isAuthenticated || (user && user.role !== 'admin')) {
+      console.log('Admin access denied, redirecting to login');
+      router.push('/login?redirect=/admin/subscriptions');
+      return;
+    }
+  }, [isAuthenticated, user, router]);
+
+  // Memoized calculations for performance
+  const metrics = useMemo(() => {
+    if (!subscriptionData) return {
+      totalSubscribers: 0,
+      activeSubscribers: 0,
+      monthlyRevenue: 0,
+      conversionRate: 0
+    };
+    
+    return {
+      totalSubscribers: subscriptionData.totalSubscribers || 0,
+      activeSubscribers: subscriptionData.activeSubscribers || 0,
+      monthlyRevenue: subscriptionData.monthlyRevenue || 0,
+      conversionRate: subscriptionData.conversionRate || 0
+    };
+  }, [subscriptionData]);
+
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
 
-  // Function to close snackbar
   const handleCloseSnackbar = (event, reason) => {
     if (reason === 'clickaway') {
       return;
     }
-    setSnackbar({...snackbar, open: false});
+    setSnackbar({ ...snackbar, open: false });
   };
 
-  // Helper function to show snackbar
   const showSnackbar = (message, severity = 'info') => {
     setSnackbar({
       open: true,
@@ -286,369 +355,373 @@ export default function SubscriptionManagementPage() {
     });
   };
 
-  // Function to refresh data
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchSubscriptionData().finally(() => {
-      setRefreshing(false);
-    });
+    fetchSubscriptionData().finally(() => setRefreshing(false));
   };
 
-  // Function to fetch subscription data from API
   const fetchSubscriptionData = async () => {
     try {
       setLoading(true);
-      setError(null);
+      const token = localStorage.getItem('access_token');
       
-      console.log("Fetching subscription data...");
-      
-      // Make API request to fetch subscription data
-      const response = await fetch('/api/admin/subscriptions');
-      
-      // Process response data
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch('/api/admin/subscriptions', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      console.log("API response:", data);
       
-      // Check for error in response
-      if (data.error) {
-        console.warn("API returned error:", data.error);
-        showSnackbar(`Warning: ${data.error}. Using available data.`, 'warning');
-      }
-      
-      // Set plans data
-      if (Array.isArray(data.plans)) {
-        setPlans(data.plans);
+      // Set subscription data
+      if (data) {
+        setSubscriptionData(data);
       } else {
-        console.warn("API didn't return plans array, using empty array");
-        setPlans([]);
+        console.warn("API didn't return subscriptionData, using empty object");
+        setSubscriptionData({});
       }
       
-      // Set subscription stats
-      if (data.stats) {
-        setSubscriptionStats({
-          totalSubscribers: data.stats.totalSubscribers || 0,
-          activeSubscribers: data.stats.activeSubscribers || 0,
-          monthlyRevenue: data.stats.monthlyRevenue || 0,
-          yearlyRevenue: data.stats.yearlyRevenue || 0,
-          conversionRate: data.stats.conversionRate || 0,
-          trends: data.stats.trends || {
-            totalSubscribers: 0,
-            activeSubscribers: 0,
-            monthlyRevenue: 0,
-            conversionRate: 0
-          },
-          planStats: data.stats.planStats || {}
-        });
-      }
-      
-      // Set recent subscriptions
-      if (Array.isArray(data.recentSubscriptions)) {
-        setRecentSubscriptions(data.recentSubscriptions);
-      } else {
-        console.warn("API didn't return recentSubscriptions array, using empty array");
-        setRecentSubscriptions([]);
-      }
-      
+      setError(null);
     } catch (err) {
-      console.error('Error loading subscription data:', err);
-      setError(err.message || 'Failed to load subscription data');
-      showSnackbar(`Error: ${err.message || 'Failed to load subscription data'}`, 'error');
+      console.error('Subscription data fetch error:', err);
+      setError(err.message);
       
-      // If error occurs, make another attempt with fallback API
-      try {
-        console.log("Trying fallback API...");
-        const fallbackResponse = await fetch('/api/admin/subscriptions?fallback=true');
-        const fallbackData = await fallbackResponse.json();
-        
-        if (Array.isArray(fallbackData.plans)) {
-          setPlans(fallbackData.plans);
-          setSubscriptionStats(fallbackData.stats || {
-            totalSubscribers: 0,
-            activeSubscribers: 0,
-            monthlyRevenue: 0,
-            yearlyRevenue: 0,
-            conversionRate: 0,
-            trends: {
+      // Set fallback empty data
+      setSubscriptionData({
+        plans: [],
+        recentSubscriptions: [],
               totalSubscribers: 0,
               activeSubscribers: 0,
               monthlyRevenue: 0,
               conversionRate: 0
-            },
-            planStats: {}
-          });
-          setRecentSubscriptions(fallbackData.recentSubscriptions || []);
-          
-          showSnackbar('Using fallback data due to API error', 'info');
-        }
-      } catch (fallbackErr) {
-        console.error('Fallback API also failed:', fallbackErr);
-        // Keep error state
-      }
+      });
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Admin check
-    if (user && user.role !== 'admin') {
-      router.push('/');
-      return;
-    }
-
-    if (user && user.role === 'admin') {
       fetchSubscriptionData();
-    }
-  }, [user, router]);
+  }, []);
 
   const handleCreatePlan = () => {
     // Reset form data
     setFormData({
-      planName: '',
-      description: '',
-      durationDays: 30,
-      price: 0,
-      nftId: '',
-      features: '',
-      isActive: true,
+      PlanName: '',
+      Description: '',
+      DurationDays: '',
+      Price: '',
+      Features: '',
+      IsActive: true
     });
-    setEditingPlanId('new');
-    setOpenDialog(true);
+    setEditingPlan('new');
+    setDialogOpen(true);
   };
 
   const handleEditPlan = (plan) => {
     setFormData({
-      planName: plan.PlanName || '',
-      description: plan.Description || '',
-      durationDays: plan.DurationDays || 30,
-      price: plan.Price || 0,
-      nftId: plan.NFTID || '',
-      features: plan.Features || '',
-      isActive: plan.IsActive === undefined ? true : Boolean(plan.IsActive),
+      PlanName: plan.PlanName || '',
+      Description: plan.Description || '',
+      DurationDays: plan.DurationDays || '',
+      Price: plan.Price || '',
+      Features: plan.Features || '',
+      IsActive: plan.IsActive === undefined ? true : Boolean(plan.IsActive),
     });
-    setEditingPlanId(plan.PlanID);
-    setOpenDialog(true);
+    setEditingPlan(plan.PlanID);
+    setDialogOpen(true);
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, checked, type } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? checked : value
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setFormSubmitting(true);
+      setLoading(true);
       
       // Convert to correct types
       const dataToSend = {
-        planName: formData.planName.trim(),
-        description: formData.description.trim(),
-        durationDays: parseInt(formData.durationDays),
-        price: parseFloat(formData.price),
-        nftId: formData.nftId ? parseInt(formData.nftId) : null,
-        features: formData.features.trim(),
-        isActive: formData.isActive
+        PlanName: formData.PlanName.trim(),
+        Description: formData.Description.trim(),
+        DurationDays: parseInt(formData.DurationDays),
+        Price: parseFloat(formData.Price),
+        Features: formData.Features.trim(),
+        IsActive: formData.IsActive
       };
 
-      const isNewPlan = editingPlanId === 'new';
+      const isNewPlan = editingPlan === 'new';
       
       // Select the correct API endpoint
       const url = isNewPlan 
         ? '/api/admin/subscriptions/plans/create' 
-        : `/api/admin/subscriptions/plans/${editingPlanId}/update`;
+        : `/api/admin/subscriptions/plans/${editingPlan}/update`;
 
       console.log(`Sending ${isNewPlan ? 'POST' : 'PUT'} request to ${url} with data:`, dataToSend);
+      
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
       const response = await fetch(url, {
         method: isNewPlan ? 'POST' : 'PUT',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
         body: JSON.stringify(dataToSend),
       });
 
-      // Process response data
       const responseData = await response.json();
-      
-      if (responseData.error) {
-        throw new Error(responseData.error || `Failed to save plan`);
-      }
-      
-      console.log('API Response:', responseData);
+      console.log('Response from server:', responseData);
 
-      // Handle simulated response
-      if (responseData.message && responseData.message.includes('simülasyon')) {
-        console.log('Received simulated success response');
-        
-        // In simulation mode, update UI directly with the provided data
+      if (response.ok) {
         if (isNewPlan) {
           // Add the new plan to the list
           const newPlan = {
             PlanID: responseData.plan?.PlanID || Date.now(),
-            PlanName: dataToSend.planName,
-            Description: dataToSend.description,
-            DurationDays: dataToSend.durationDays,
-            Price: dataToSend.price,
-            NFTID: dataToSend.nftId,
-            Features: dataToSend.features,
-            IsActive: dataToSend.isActive
+            PlanName: dataToSend.PlanName,
+            Description: dataToSend.Description,
+            DurationDays: dataToSend.DurationDays,
+            Price: dataToSend.Price,
+            Features: dataToSend.Features,
+            IsActive: dataToSend.IsActive
           };
           
-          setPlans([...plans, newPlan]);
+          setSubscriptionData({...subscriptionData, plans: [...(subscriptionData.plans || []), newPlan]});
         } else {
           // Update the existing plan in the list
-          setPlans(plans.map(plan => 
-            plan.PlanID === editingPlanId ? 
+          setSubscriptionData({
+            ...subscriptionData,
+            plans: subscriptionData.plans.map(plan => 
+              plan.PlanID === editingPlan ? 
             { 
               ...plan, 
-              PlanName: dataToSend.planName,
-              Description: dataToSend.description,
-              DurationDays: dataToSend.durationDays,
-              Price: dataToSend.price,
-              NFTID: dataToSend.nftId,
-              Features: dataToSend.features,
-              IsActive: dataToSend.isActive
+                  PlanName: dataToSend.PlanName,
+                  Description: dataToSend.Description,
+                  DurationDays: dataToSend.DurationDays,
+                  Price: dataToSend.Price,
+                  Features: dataToSend.Features,
+                  IsActive: dataToSend.IsActive
             } : plan
-          ));
+            )
+          });
         }
       } else {
-        // If not simulation, refresh all data from API
-        await fetchSubscriptionData();
+        throw new Error(responseData.message || `Failed to ${isNewPlan ? 'create' : 'update'} plan`);
       }
 
-      setOpenDialog(false);
-      setEditingPlanId(null);
+      setDialogOpen(false);
+      setEditingPlan(null);
       
       // Show success message
       showSnackbar(
-        isNewPlan ? 'Subscription plan created successfully' : 'Subscription plan updated successfully', 
+        `Plan ${isNewPlan ? 'created' : 'updated'} successfully`, 
         'success'
       );
+
+      // Refresh data after successful operation
+      await fetchSubscriptionData();
+      
     } catch (err) {
       console.error('Form submission error:', err);
-      showSnackbar(`Error: ${err.message}`, 'error');
+      showSnackbar(err.message, 'error');
       
       // Even in error case, close dialog to avoid confusion
-      setOpenDialog(false);
+      setDialogOpen(false);
     } finally {
-      setFormSubmitting(false);
+      setLoading(false);
     }
   };
 
   const handleToggleActive = async (planId, isActive) => {
     try {
-      const url = `/api/admin/subscriptions/plans/${planId}/update`;
-      
-      console.log(`Sending PUT request to ${url} to toggle active status to ${!isActive}`);
-      
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          isActive: !isActive,
-        }),
-      });
-
-      // Process response data
-      const responseData = await response.json();
-      
-      if (responseData.error) {
-        throw new Error(responseData.error);
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
       
-      console.log('Toggle active response:', responseData);
+      const response = await fetch(`/api/admin/subscriptions/plans/${planId}/toggle`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ IsActive: !isActive }),
+      });
 
+      if (response.ok) {
       // Always update the UI regardless of whether it's a simulated response or not
-      setPlans(plans.map(plan => 
+        setSubscriptionData({
+          ...subscriptionData,
+          plans: subscriptionData.plans.map(plan => 
         plan.PlanID === planId ? { ...plan, IsActive: !isActive } : plan
-      ));
+          )
+        });
       
       const actionText = !isActive ? 'activated' : 'deactivated';
-      const messageText = responseData.message?.includes('simülasyon') 
-        ? `Plan ${actionText} successfully (simulated)` 
-        : `Plan ${actionText} successfully`;
-        
-      showSnackbar(messageText, 'success');
+        showSnackbar(`Plan ${actionText} successfully`, 'success');
+      } else {
+        throw new Error('Failed to toggle plan status');
+      }
     } catch (err) {
-      console.error('Toggle active error:', err);
-      showSnackbar(`Error: ${err.message}`, 'error');
+      console.error('Toggle plan error:', err);
       
       // In case of error, still update UI for better user experience
-      setPlans(plans.map(plan => 
+      setSubscriptionData({
+        ...subscriptionData,
+        plans: subscriptionData.plans.map(plan => 
         plan.PlanID === planId ? { ...plan, IsActive: !isActive } : plan
-      ));
+        )
+      });
       
       showSnackbar(`Plan ${!isActive ? 'activated' : 'deactivated'} (UI only, backend error)`, 'warning');
     }
   };
 
+  // Show loading skeleton
+  if (loading && !subscriptionData) {
+    return <SubscriptionSkeleton />;
+  }
+
   return (
-    <Box sx={{ 
-      p: { xs: 2, md: 3 }, 
-      maxWidth: '100%',
-      backgroundColor: isDarkMode ? 'background.default' : 'background.paper'
-    }}>
-      {/* Header with title and create button */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+    <>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between', 
-          alignItems: { xs: 'flex-start', sm: 'center' }, 
-          mb: 4,
-          gap: 2
-        }}>
-          <Box>
-            <Typography 
-              variant="h4" 
-              component="h1" 
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity}
+          variant="filled"
               sx={{ 
-                fontWeight: 'bold', 
-                mb: 0.5,
-                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              Subscription Management
+            width: '100%',
+            borderRadius: 2,
+            fontFamily: 'monospace'
+          }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+
+      <Container maxWidth="xl" sx={{ py: 4, minHeight: '100vh' }}>
+        {/* Scientific Header */}
+        <HeaderContainer>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            <Box display="flex" alignItems="center" gap={3}>
+              <SubAvatar size={72} sx={{ background: 'rgba(255, 255, 255, 0.2)' }}>
+                <PaymentIcon sx={{ fontSize: 36 }} />
+              </SubAvatar>
+              <Box sx={{ position: 'relative', zIndex: 1 }}>
+                <Typography variant="h2" component="h1" fontWeight={800} sx={{ 
+                  fontSize: { xs: '2rem', md: '3rem' },
+                  fontFamily: 'monospace',
+                  letterSpacing: '2px'
+                }}>
+                  SUBSCRIPTION LAB
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Manage subscription plans and view subscription statistics
+                <Typography variant="h6" sx={{ opacity: 0.9, mt: 1, fontFamily: 'monospace' }}>
+                  Advanced Subscription Management System
             </Typography>
+                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                  <Chip 
+                    label="🔄 REAL-TIME DATA" 
+                    icon={<SpeedIcon sx={{ color: '#10b981 !important' }} />}
+                    sx={{
+                      bgcolor: 'rgba(16, 185, 129, 0.25)', 
+                      color: '#10b981',
+                      fontFamily: 'monospace',
+                      fontWeight: 700,
+                      fontSize: '0.75rem',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.2)',
+                      backdropFilter: 'blur(10px)',
+                      '& .MuiChip-icon': {
+                        color: '#10b981'
+                      },
+                      '&:hover': {
+                        bgcolor: 'rgba(16, 185, 129, 0.35)',
+                        transform: 'scale(1.05)',
+                        boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  />
+                  <Chip 
+                    label={`📊 PLANS: ${subscriptionData?.plans?.length || 0}`} 
+                    sx={{ 
+                      bgcolor: 'rgba(255, 255, 255, 0.15)', 
+                      color: 'white',
+                      fontFamily: 'monospace',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      border: '1px solid rgba(255, 255, 255, 0.25)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.25)',
+                        transform: 'scale(1.05)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  />
+                  <Chip 
+                    label={`👥 USERS: ${metrics.totalSubscribers || 0}`} 
+                    sx={{ 
+                      bgcolor: `rgba(0, 245, 255, 0.15)`, 
+                      color: SUB_COLORS.primary,
+                      fontFamily: 'monospace',
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      border: `1px solid ${alpha(SUB_COLORS.primary, 0.25)}`,
+                      boxShadow: `0 2px 8px ${alpha(SUB_COLORS.primary, 0.1)}`,
+                      backdropFilter: 'blur(10px)',
+                      '&:hover': {
+                        bgcolor: `rgba(0, 245, 255, 0.25)`,
+                        transform: 'scale(1.05)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  />
+                </Stack>
           </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Tooltip title={refreshing ? "Refreshing..." : "Refresh data"}>
-              <span>
+            </Box>
+            
+            <Box display="flex" alignItems="center" gap={2}>
                 <IconButton 
-                  color="primary" 
                   onClick={handleRefresh} 
                   disabled={refreshing}
                   sx={{ 
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                     '&:hover': {
-                      bgcolor: alpha(theme.palette.primary.main, 0.2)
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                    transform: 'rotate(180deg)',
+                    transition: 'all 0.3s ease'
                     }
                   }}
                 >
-                  <RefreshIcon sx={{ animation: refreshing ? 'spin 1s linear infinite' : 'none' }} />
+                <RefreshIcon />
                 </IconButton>
-              </span>
-            </Tooltip>
             <Button
               variant="contained"
-              color="primary"
               startIcon={<AddIcon />}
               onClick={handleCreatePlan}
               sx={{ 
@@ -656,19 +729,20 @@ export default function SubscriptionManagementPage() {
                 px: 3,
                 py: 1.2,
                 boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
-                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                transition: 'all 0.3s',
+                  background: SUB_COLORS.gradients.accent,
+                  fontFamily: 'monospace',
+                  fontWeight: 700,
                 '&:hover': {
-                  boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                    boxShadow: `0 6px 20px ${alpha(SUB_COLORS.accent, 0.4)}`,
                   transform: 'translateY(-2px)'
                 }
               }}
             >
-              Create New Plan
+                CREATE PLAN
             </Button>
           </Box>
         </Box>
-      </motion.div>
+        </HeaderContainer>
 
       {/* Error Alert */}
       {error && (
@@ -679,7 +753,10 @@ export default function SubscriptionManagementPage() {
             sx={{ 
               mb: 3, 
               borderRadius: 2,
-              boxShadow: '0 4px 12px rgba(211, 47, 47, 0.15)'
+                background: 'rgba(255, 20, 147, 0.1)',
+                border: '1px solid #FF1493',
+                color: '#FFFFFF',
+                '& .MuiAlert-icon': { color: '#FF1493' }
             }}
             action={
               <Button color="inherit" size="small" onClick={handleRefresh}>
@@ -687,333 +764,293 @@ export default function SubscriptionManagementPage() {
               </Button>
             }
           >
+              <AlertTitle>Subscription Data Error</AlertTitle>
             {error}
           </Alert>
         </Fade>
       )}
 
-      {/* Statistics Cards */}
+        {/* Scientific Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {loading ? (
           // Loading skeletons
           [...Array(4)].map((_, index) => (
             <Grid item xs={12} md={6} lg={3} key={`stat-skeleton-${index}`}>
-              <Skeleton variant="rounded" height={140} animation="wave" />
+                <Skeleton variant="rounded" height={140} animation="wave" sx={{ bgcolor: 'rgba(0, 245, 255, 0.1)' }} />
             </Grid>
           ))
         ) : (
           <>
             <Grid item xs={12} md={6} lg={3}>
-              <StatCard 
-                icon={<PeopleIcon />}
-                title="Total Subscribers"
-                value={subscriptionStats.totalSubscribers.toLocaleString()}
-                trendValue={subscriptionStats.trends?.totalSubscribers || 0}
-                color={theme.palette.primary.main}
-                delay={0.1}
-              />
+                <DataMetric>
+                  <SubAvatar sx={{ width: 48, height: 48, mx: 'auto', mb: 2 }}>
+                    <PeopleIcon />
+                  </SubAvatar>
+                  <MetricValue>
+                    {metrics.totalSubscribers.toLocaleString()}
+                  </MetricValue>
+                  <MetricLabel>Total Subscribers</MetricLabel>
+                </DataMetric>
             </Grid>
+              
             <Grid item xs={12} md={6} lg={3}>
-              <StatCard 
-                icon={<AttachMoneyIcon />}
-                title="Monthly Revenue"
-                value={`$${subscriptionStats.monthlyRevenue.toLocaleString()}`}
-                trendValue={subscriptionStats.trends?.monthlyRevenue || 0}
-                color={theme.palette.success.main}
-                delay={0.2}
-              />
+                <DataMetric>
+                  <SubAvatar sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    mx: 'auto', 
+                    mb: 2,
+                    background: SUB_COLORS.gradients.success
+                  }}>
+                    <MoneyIcon />
+                  </SubAvatar>
+                  <MetricValue sx={{ color: SUB_COLORS.success }}>
+                    ${metrics.monthlyRevenue.toLocaleString()}
+                  </MetricValue>
+                  <MetricLabel>Monthly Revenue</MetricLabel>
+                </DataMetric>
             </Grid>
+              
             <Grid item xs={12} md={6} lg={3}>
-              <StatCard 
-                icon={<TrendingUpIcon />}
-                title="Conversion Rate"
-                value={`${subscriptionStats.conversionRate.toFixed(1)}%`}
-                trendValue={subscriptionStats.trends?.conversionRate || 0}
-                color={theme.palette.info.main}
-                delay={0.3}
-              />
+                <DataMetric>
+                  <SubAvatar sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    mx: 'auto', 
+                    mb: 2,
+                    background: SUB_COLORS.gradients.info
+                  }}>
+                    <ChartIcon />
+                  </SubAvatar>
+                  <MetricValue sx={{ color: SUB_COLORS.info }}>
+                    {metrics.conversionRate.toFixed(1)}%
+                  </MetricValue>
+                  <MetricLabel>Conversion Rate</MetricLabel>
+                </DataMetric>
             </Grid>
+              
             <Grid item xs={12} md={6} lg={3}>
-              <StatCard 
-                icon={<DonutLargeIcon />}
-                title="Active Subscribers"
-                value={subscriptionStats.activeSubscribers.toLocaleString()}
-                trendValue={subscriptionStats.trends?.activeSubscribers || 0}
-                color={theme.palette.warning.main}
-                delay={0.4}
-              />
+                <DataMetric>
+                  <SubAvatar sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    mx: 'auto', 
+                    mb: 2,
+                    background: SUB_COLORS.gradients.warning
+                  }}>
+                    <DonutIcon />
+                  </SubAvatar>
+                  <MetricValue sx={{ color: SUB_COLORS.warning }}>
+                    {metrics.activeSubscribers.toLocaleString()}
+                  </MetricValue>
+                  <MetricLabel>Active Users</MetricLabel>
+                </DataMetric>
             </Grid>
           </>
         )}
       </Grid>
 
-      {/* Tab Navigation */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        <Box sx={{ width: '100%', mb: 3 }}>
-          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        {/* Scientific Tabs */}
+        <SubCard sx={{ mb: 4 }}>
             <Tabs 
               value={tabValue} 
               onChange={handleTabChange} 
-              aria-label="subscription management tabs"
-              textColor="primary"
-              indicatorColor="primary"
+            variant={isMobile ? "scrollable" : "fullWidth"}
+            scrollButtons={isMobile ? "auto" : false}
+            allowScrollButtonsMobile={isMobile}
               sx={{ 
-                '& .MuiTab-root': { 
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  py: 2
-                } 
-              }}
-            >
-              <Tab label="Subscription Plans" icon={<PaymentIcon />} iconPosition="start" />
-              <Tab label="Recent Subscriptions" icon={<CalendarTodayIcon />} iconPosition="start" />
-            </Tabs>
-          </Box>
-        </Box>
-      </motion.div>
-
-      {/* Subscription Plans Tab */}
-      <Fade in={tabValue === 0}>
-        <div style={{ display: tabValue === 0 ? 'block' : 'none' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+              '& .MuiTabs-indicator': {
+                display: 'none'
+              },
+              borderBottom: `1px solid ${alpha(SUB_COLORS.primary, 0.1)}`
+            }}
           >
-            <Card sx={{ 
-              mb: 4, 
-              borderRadius: 3,
-              overflow: 'hidden',
-              boxShadow: isDarkMode 
-                ? '0 4px 20px rgba(0,0,0,0.2)' 
-                : '0 4px 20px rgba(0,0,0,0.08)'
-            }}>
-              <CardHeader 
-                title={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <PaymentIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                    <Typography variant="h5" component="span" fontWeight={600}>
-                      Subscription Plans
+            <ScientificTab 
+              icon={<PaymentIcon />} 
+              label="SUBSCRIPTION PLANS" 
+              iconPosition="start"
+            />
+            <ScientificTab 
+              icon={<CalendarIcon />} 
+              label="RECENT SUBSCRIPTIONS" 
+              iconPosition="start"
+            />
+            </Tabs>
+        </SubCard>
+
+        {/* Tab Content */}
+        <TabPanel value={tabValue} index={0}>
+          <SubCard variant="primary">
+            <CardContent sx={{ p: 3 }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <PaymentIcon sx={{ color: SUB_COLORS.primary }} />
+                  <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                    SUBSCRIPTION PLANS CONTROL
                     </Typography>
                   </Box>
-                }
-                action={
                   <Tooltip title="Manage your subscription plans here">
                     <IconButton>
-                      <InfoOutlinedIcon />
+                    <InfoIcon />
                     </IconButton>
                   </Tooltip>
-                }
-                sx={{ 
-                  borderBottom: `1px solid ${theme.palette.divider}`,
-                  backgroundColor: isDarkMode 
-                    ? alpha(theme.palette.primary.dark, 0.1) 
-                    : alpha(theme.palette.primary.light, 0.1),
-                  px: 3,
-                  py: 2
-                }}
-              />
-              <CardContent sx={{ p: 0 }}>
-                <TableContainer sx={{ maxHeight: 600 }}>
+              </Box>
+              
+              <TableContainer>
                   {loading ? (
-                    <TableSkeleton rowCount={4} colCount={7} />
-                  ) : (
-                    plans.length === 0 ? (
-                      <EmptyState 
-                        icon={<PaymentIcon fontSize="large" />}
-                        title="No subscription plans found"
-                        message="Create your first subscription plan to start offering premium content to your users."
-                        action={
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        {['Plan Name', 'Duration', 'Price', 'Features', 'Active Subs', 'Status', 'Actions'].map((header, index) => (
+                          <TableCell key={`header-${index}`} sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
+                            <Skeleton animation="wave" height={24} width="80%" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {[...Array(3)].map((_, rowIndex) => (
+                        <TableRow key={`row-${rowIndex}`}>
+                          {[...Array(7)].map((_, colIndex) => (
+                            <TableCell key={`cell-${rowIndex}-${colIndex}`}>
+                              <Skeleton 
+                                animation="wave" 
+                                height={colIndex === 0 ? 48 : 24} 
+                                width={colIndex === 0 ? "90%" : (colIndex === 6 ? "30%" : "60%")} 
+                              />
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  subscriptionData.plans?.length === 0 ? (
+                    <Box sx={{ py: 8, textAlign: 'center' }}>
+                      <SubAvatar
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          mx: 'auto',
+                          mb: 2,
+                          background: alpha(SUB_COLORS.primary, 0.1),
+                        }}
+                      >
+                        <PaymentIcon fontSize="large" />
+                      </SubAvatar>
+                      <Typography variant="h5" fontWeight="bold" sx={{ mb: 1, fontFamily: 'monospace' }}>
+                        No subscription plans
+                      </Typography>
+                      <Typography color="text.secondary" sx={{ mb: 3, maxWidth: 500, mx: 'auto', fontFamily: 'monospace' }}>
+                        Create your first subscription plan to start managing user subscriptions.
+                      </Typography>
                           <Button
                             variant="contained"
-                            color="primary"
                             startIcon={<AddIcon />}
                             onClick={handleCreatePlan}
                             sx={{ 
-                              mt: 2,
-                              borderRadius: 8,
-                              px: 3,
-                              py: 1.2,
-                              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                          background: SUB_COLORS.gradients.primary,
+                          fontFamily: 'monospace'
                             }}
                           >
                             Create First Plan
                           </Button>
-                        }
-                      />
+                    </Box>
                     ) : (
-                      <Table sx={{ '& .MuiTableCell-root': { px: 3, py: 2 } }} stickyHeader>
+                    <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>Plan Name</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Duration</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Price</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>NFT</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Active Subscribers</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Actions</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.primary }}>PLAN NAME</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.primary }}>DURATION</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.primary }}>PRICE</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.primary }}>FEATURES</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.primary }}>ACTIVE SUBS</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.primary }}>STATUS</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.primary }}>ACTIONS</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {plans.map((plan, index) => (
+                        {subscriptionData.plans.map((plan, index) => (
                             <TableRow 
                               key={plan.PlanID}
                               sx={{ 
                                 transition: 'all 0.2s',
-                                position: 'relative',
                                 '&:hover': { 
-                                  backgroundColor: isDarkMode 
-                                    ? alpha(theme.palette.primary.dark, 0.05) 
-                                    : alpha(theme.palette.primary.light, 0.05),
-                                  transform: 'translateY(-2px)',
-                                  boxShadow: `0 4px 10px ${alpha(theme.palette.primary.main, 0.1)}`
-                                },
-                                '&:after': {
-                                  content: '""',
-                                  position: 'absolute',
-                                  left: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  width: 3,
-                                  backgroundColor: plan.IsActive 
-                                    ? theme.palette.success.main 
-                                    : theme.palette.error.main,
-                                  opacity: 0.7,
-                                  transition: 'opacity 0.2s',
-                                },
-                                '&:hover:after': {
-                                  opacity: 1
-                                }
-                              }}
-                            >
-                              <TableCell>
-                                <Typography 
-                                  variant="subtitle2" 
-                                  fontWeight="medium"
-                                  sx={{ 
-                                    color: plan.IsActive 
-                                      ? 'text.primary' 
-                                      : 'text.disabled'
-                                  }}
-                                >
+                                backgroundColor: alpha(SUB_COLORS.primary, 0.05),
+                                transform: 'scale(1.01)'
+                              }
+                            }}
+                          >
+                            <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                              <Box display="flex" alignItems="center" gap={2}>
+                                <SubAvatar size={32} sx={{ background: SUB_COLORS.gradients.primary }}>
+                                  <SecurityIcon sx={{ fontSize: 16 }} />
+                                </SubAvatar>
                                   {plan.PlanName}
-                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ fontFamily: 'monospace' }}>
+                              <Chip 
+                                label={`${plan.DurationDays} days`}
+                                size="small"
+                                sx={{ fontFamily: 'monospace', bgcolor: alpha(SUB_COLORS.info, 0.1) }}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600, color: SUB_COLORS.success }}>
+                              ${plan.Price}
+                            </TableCell>
+                            <TableCell sx={{ fontFamily: 'monospace', maxWidth: 200 }}>
                                 <Typography 
                                   variant="body2" 
-                                  color={plan.IsActive ? "text.secondary" : "text.disabled"} 
                                   sx={{ 
-                                    maxWidth: 300, 
                                     overflow: 'hidden', 
                                     textOverflow: 'ellipsis', 
-                                    whiteSpace: 'nowrap'
+                                  fontFamily: 'monospace'
                                   }}
                                 >
-                                  {plan.Description || 'No description'}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>{plan.DurationDays} days</TableCell>
-                              <TableCell>
-                                <Typography 
-                                  fontWeight="medium"
-                                  sx={{ 
-                                    color: plan.IsActive 
-                                      ? 'text.primary' 
-                                      : 'text.disabled'
-                                  }}
-                                >
-                                  ${parseFloat(plan.Price).toFixed(2)}
+                                {plan.Features || 'N/A'}
                                 </Typography>
                               </TableCell>
                               <TableCell>
-                                {plan.NFTTitle ? (
-                                  <Chip 
-                                    label={plan.NFTTitle} 
-                                    size="small" 
-                                    variant="outlined"
+                              <Badge 
+                                badgeContent={subscriptionData.planStats?.[plan.PlanID]?.activeCount || 0}
                                     color="primary"
                                     sx={{ 
-                                      borderRadius: 1.5,
-                                      opacity: plan.IsActive ? 1 : 0.6
-                                    }}
-                                  />
-                                ) : (
-                                  <Typography 
-                                    variant="body2" 
-                                    color={plan.IsActive ? "text.secondary" : "text.disabled"}
-                                  >
-                                    None
-                                  </Typography>
-                                )}
+                                  '& .MuiBadge-badge': { 
+                                    fontFamily: 'monospace',
+                                    background: SUB_COLORS.gradients.primary
+                                  } 
+                                }}
+                              >
+                                <PeopleIcon />
+                              </Badge>
                               </TableCell>
                               <TableCell>
                                 <Chip
-                                  label={plan.IsActive ? 'Active' : 'Inactive'}
-                                  color={plan.IsActive ? 'success' : 'error'}
+                                label={plan.IsActive ? 'ACTIVE' : 'INACTIVE'}
+                                color={plan.IsActive ? 'success' : 'default'}
                                   size="small"
-                                  sx={{ 
-                                    fontWeight: 500,
-                                    borderRadius: '12px',
-                                  }}
+                                sx={{ fontFamily: 'monospace', fontWeight: 700 }}
                                 />
-                              </TableCell>
-                              <TableCell>
-                                <Typography 
-                                  fontWeight="medium"
-                                  sx={{ 
-                                    color: plan.IsActive 
-                                      ? 'text.primary' 
-                                      : 'text.disabled'
-                                  }}
-                                >
-                                  {subscriptionStats.planStats && subscriptionStats.planStats[plan.PlanID]
-                                    ? subscriptionStats.planStats[plan.PlanID].activeCount || 0
-                                    : 0}
-                                </Typography>
                               </TableCell>
                               <TableCell>
                                 <Stack direction="row" spacing={1}>
                                   <Tooltip title="Edit Plan">
                                     <IconButton
                                       size="small"
-                                      color="primary"
                                       onClick={() => handleEditPlan(plan)}
-                                      sx={{ 
-                                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                                        transition: 'transform 0.2s, background-color 0.2s',
-                                        '&:hover': {
-                                          backgroundColor: alpha(theme.palette.primary.main, 0.2),
-                                          transform: 'scale(1.1)'
-                                        }
-                                      }}
-                                    >
-                                      <EditIcon fontSize="small" />
+                                    sx={{ color: SUB_COLORS.info }}
+                                  >
+                                    <EditIcon />
                                     </IconButton>
                                   </Tooltip>
-                                  <Tooltip title={plan.IsActive ? 'Deactivate Plan' : 'Activate Plan'}>
+                                <Tooltip title={plan.IsActive ? 'Deactivate' : 'Activate'}>
                                     <IconButton
                                       size="small"
-                                      color={plan.IsActive ? 'error' : 'success'}
                                       onClick={() => handleToggleActive(plan.PlanID, plan.IsActive)}
-                                      sx={{ 
-                                        backgroundColor: alpha(
-                                          plan.IsActive ? theme.palette.error.main : theme.palette.success.main, 
-                                          0.1
-                                        ),
-                                        transition: 'transform 0.2s, background-color 0.2s',
-                                        '&:hover': {
-                                          backgroundColor: alpha(
-                                            plan.IsActive ? theme.palette.error.main : theme.palette.success.main, 
-                                            0.2
-                                          ),
-                                          transform: 'scale(1.1)'
-                                        }
-                                      }}
-                                    >
-                                      {plan.IsActive ? <BlockIcon fontSize="small" /> : <CheckCircleIcon fontSize="small" />}
+                                    sx={{ color: plan.IsActive ? SUB_COLORS.warning : SUB_COLORS.success }}
+                                  >
+                                    {plan.IsActive ? <BlockIcon /> : <CheckCircleIcon />}
                                     </IconButton>
                                   </Tooltip>
                                 </Stack>
@@ -1026,190 +1063,116 @@ export default function SubscriptionManagementPage() {
                   )}
                 </TableContainer>
               </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </Fade>
-      
-      {/* Recent Subscriptions Tab */}
-      <Fade in={tabValue === 1}>
-        <div style={{ display: tabValue === 1 ? 'block' : 'none' }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Card sx={{ 
-              mb: 4, 
-              borderRadius: 3,
-              overflow: 'hidden',
-              boxShadow: isDarkMode 
-                ? '0 4px 20px rgba(0,0,0,0.2)' 
-                : '0 4px 20px rgba(0,0,0,0.08)'
-            }}>
-              <CardHeader 
-                title={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CalendarTodayIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
-                    <Typography variant="h5" component="span" fontWeight={600}>
-                      Recent Subscriptions
+          </SubCard>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={1}>
+          <SubCard variant="secondary">
+            <CardContent sx={{ p: 3 }}>
+              <Box display="flex" alignItems="center" gap={2} mb={3}>
+                <CalendarIcon sx={{ color: SUB_COLORS.secondary }} />
+                <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                  RECENT SUBSCRIPTION ACTIVITY
                     </Typography>
                   </Box>
-                }
+              
+              <TableContainer>
+                {loading ? (
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        {['User', 'Plan', 'Start Date', 'Status', 'Payment'].map((header, index) => (
+                          <TableCell key={`header-${index}`} sx={{ fontFamily: 'monospace', fontWeight: 700 }}>
+                            <Skeleton animation="wave" height={24} width="80%" />
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {[...Array(4)].map((_, rowIndex) => (
+                        <TableRow key={`row-${rowIndex}`}>
+                          {[...Array(5)].map((_, colIndex) => (
+                            <TableCell key={`cell-${rowIndex}-${colIndex}`}>
+                              <Skeleton animation="wave" height={24} width="60%" />
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  subscriptionData.recentSubscriptions?.length === 0 ? (
+                    <Box sx={{ py: 8, textAlign: 'center' }}>
+                      <SubAvatar
                 sx={{ 
-                  borderBottom: `1px solid ${theme.palette.divider}`,
-                  backgroundColor: isDarkMode 
-                    ? alpha(theme.palette.primary.dark, 0.1) 
-                    : alpha(theme.palette.primary.light, 0.1),
-                  px: 3,
-                  py: 2
-                }}
-              />
-              <CardContent sx={{ p: 0 }}>
-                <TableContainer sx={{ maxHeight: 600 }}>
-                  {loading ? (
-                    <TableSkeleton rowCount={4} colCount={5} />
+                          width: 80,
+                          height: 80,
+                          mx: 'auto',
+                          mb: 2,
+                          background: alpha(SUB_COLORS.secondary, 0.1),
+                        }}
+                      >
+                        <CalendarIcon fontSize="large" />
+                      </SubAvatar>
+                      <Typography variant="h5" fontWeight="bold" sx={{ mb: 1, fontFamily: 'monospace' }}>
+                        No recent subscriptions
+                      </Typography>
+                      <Typography color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                        Users' subscription activities will appear here once they purchase subscription plans.
+                      </Typography>
+                    </Box>
                   ) : (
-                    recentSubscriptions.length === 0 ? (
-                      <EmptyState 
-                        icon={<CalendarTodayIcon fontSize="large" />}
-                        title="No recent subscriptions"
-                        message="Users' subscription activities will appear here once they purchase subscription plans."
-                        action={null}
-                      />
-                    ) : (
-                      <Table sx={{ '& .MuiTableCell-root': { px: 3, py: 2 } }} stickyHeader>
+                    <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>User</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Plan</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Start Date</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>End Date</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.secondary }}>USER</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.secondary }}>PLAN</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.secondary }}>START DATE</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.secondary }}>STATUS</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, color: SUB_COLORS.secondary }}>PAYMENT</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {recentSubscriptions.map((subscription, index) => (
-                            <Zoom 
-                              in={true} 
-                              style={{ transitionDelay: `${index * 50}ms` }}
-                              key={subscription.SubscriptionID}
-                            >
+                        {subscriptionData.recentSubscriptions.map((subscription, index) => (
                               <TableRow 
+                            key={subscription.SubscriptionID}
                                 sx={{ 
                                   transition: 'all 0.2s',
-                                  position: 'relative',
                                   '&:hover': { 
-                                    backgroundColor: isDarkMode 
-                                      ? alpha(theme.palette.primary.dark, 0.05) 
-                                      : alpha(theme.palette.primary.light, 0.05),
-                                    transform: 'translateY(-2px)',
-                                    boxShadow: `0 4px 10px ${alpha(theme.palette.primary.main, 0.1)}`
-                                  },
-                                  '&:after': {
-                                    content: '""',
-                                    position: 'absolute',
-                                    left: 0,
-                                    top: 0,
-                                    bottom: 0,
-                                    width: 3,
-                                    backgroundColor: subscription.IsActive 
-                                      ? theme.palette.success.main 
-                                      : theme.palette.grey[500],
-                                    opacity: 0.7,
-                                    transition: 'opacity 0.2s',
-                                  },
-                                  '&:hover:after': {
-                                    opacity: 1
-                                  }
-                                }}
-                              >
-                                <TableCell>
-                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <Avatar 
-                                      sx={{ 
-                                        width: 36, 
-                                        height: 36, 
-                                        mr: 1.5,
-                                        fontSize: '0.9rem',
-                                        boxShadow: `0 3px 6px ${alpha(theme.palette.primary.main, 0.2)}`,
-                                        background: subscription.IsActive
-                                          ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
-                                          : `linear-gradient(135deg, ${theme.palette.grey[600]}, ${theme.palette.grey[400]})`
-                                      }}
-                                    >
-                                      {subscription.Username && subscription.Username.charAt(0).toUpperCase()}
-                                    </Avatar>
-                                    <Typography 
-                                      variant="subtitle2"
-                                      sx={{ 
-                                        color: subscription.IsActive 
-                                          ? 'text.primary' 
-                                          : 'text.disabled'
-                                      }}
-                                    >
+                                backgroundColor: alpha(SUB_COLORS.secondary, 0.05),
+                                transform: 'scale(1.01)'
+                              }
+                            }}
+                          >
+                            <TableCell sx={{ fontFamily: 'monospace' }}>
+                              <Box display="flex" alignItems="center" gap={2}>
+                                <SubAvatar size={32} sx={{ background: SUB_COLORS.gradients.secondary }}>
+                                  <PeopleIcon sx={{ fontSize: 16 }} />
+                                </SubAvatar>
                                       {subscription.Username}
-                                    </Typography>
                                   </Box>
                                 </TableCell>
-                                <TableCell>
-                                  <Typography 
-                                    variant="body2"
-                                    fontWeight="medium"
-                                    sx={{ 
-                                      color: subscription.IsActive 
-                                        ? 'text.primary' 
-                                        : 'text.disabled'
-                                    }}
-                                  >
+                            <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
                                     {subscription.PlanName}
-                                  </Typography>
                                 </TableCell>
-                                <TableCell>
-                                  <Typography 
-                                    variant="body2"
-                                    sx={{ 
-                                      color: subscription.IsActive 
-                                        ? 'text.primary' 
-                                        : 'text.disabled'
-                                    }}
-                                  >
-                                    {new Date(subscription.StartDate).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric'
-                                    })}
-                                  </Typography>
-                                </TableCell>
-                                <TableCell>
-                                  <Typography 
-                                    variant="body2"
-                                    sx={{ 
-                                      color: subscription.IsActive 
-                                        ? 'text.primary' 
-                                        : 'text.disabled'
-                                    }}
-                                  >
-                                    {new Date(subscription.EndDate).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'long',
-                                      day: 'numeric'
-                                    })}
-                                  </Typography>
+                            <TableCell sx={{ fontFamily: 'monospace' }}>
+                              {new Date(subscription.StartDate).toLocaleDateString()}
                                 </TableCell>
                                 <TableCell>
                                   <Chip
-                                    label={subscription.IsActive ? 'Active' : 'Expired'}
-                                    color={subscription.IsActive ? 'success' : 'default'}
+                                label={subscription.IsActive ? 'ACTIVE' : 'EXPIRED'}
+                                color={subscription.IsActive ? 'success' : 'error'}
                                     size="small"
-                                    sx={{ 
-                                      fontWeight: 500,
-                                      borderRadius: '12px',
-                                    }}
+                                sx={{ fontFamily: 'monospace', fontWeight: 700 }}
                                   />
                                 </TableCell>
+                            <TableCell sx={{ fontFamily: 'monospace' }}>
+                              <Stack direction="row" alignItems="center" gap={1}>
+                                {subscription.PaymentMethod === 'wallet' ? <WalletIcon /> : <CreditCardIcon />}
+                                {subscription.PaymentMethod}
+                              </Stack>
+                            </TableCell>
                               </TableRow>
-                            </Zoom>
                           ))}
                         </TableBody>
                       </Table>
@@ -1217,61 +1180,56 @@ export default function SubscriptionManagementPage() {
                   )}
                 </TableContainer>
               </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </Fade>
+          </SubCard>
+        </TabPanel>
 
-      {/* Plan Form Dialog */}
+        {/* Scientific Plan Form Dialog */}
       <Dialog 
-        open={openDialog} 
-        onClose={() => !formSubmitting && setOpenDialog(false)}
+          open={dialogOpen} 
+          onClose={() => !loading && setDialogOpen(false)}
         maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
             borderRadius: 3,
-            boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-            overflow: 'hidden'
-          }
-        }}
-        TransitionComponent={Zoom}
+              background: theme.palette.mode === 'dark' 
+                ? 'rgba(15, 23, 42, 0.95)' 
+                : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: `1px solid ${alpha(SUB_COLORS.primary, 0.2)}`
+            }
+          }}
       >
         <DialogTitle sx={{ 
           px: 3, 
           py: 2.5, 
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          backgroundColor: isDarkMode 
-            ? alpha(theme.palette.primary.dark, 0.1) 
-            : alpha(theme.palette.primary.light, 0.1)
-        }}>
-          <Typography 
-            variant="h5" 
-            component="div" 
-            fontWeight="bold" 
-            sx={{ display: 'flex', alignItems: 'center' }}
-          >
-            <PaymentIcon sx={{ mr: 1.5 }} />
-            {editingPlanId === 'new' ? 'Create New Subscription Plan' : 'Edit Subscription Plan'}
+            borderBottom: `1px solid ${alpha(SUB_COLORS.primary, 0.1)}`,
+            background: alpha(SUB_COLORS.primary, 0.05)
+          }}>
+            <Typography variant="h5" fontWeight={700} sx={{ display: 'flex', alignItems: 'center', fontFamily: 'monospace' }}>
+              <PaymentIcon sx={{ mr: 1.5, color: SUB_COLORS.primary }} />
+              {editingPlan === 'new' ? 'CREATE NEW SUBSCRIPTION PLAN' : 'EDIT SUBSCRIPTION PLAN'}
           </Typography>
         </DialogTitle>
-        <DialogContent sx={{ p: 3, mt: 1 }}>
+          <DialogContent sx={{ p: 3 }}>
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <TextField
                 label="Plan Name"
-                name="planName"
-                value={formData.planName}
+                    name="PlanName"
+                    value={formData.PlanName}
                 onChange={handleInputChange}
                 fullWidth
                 required
                 margin="normal"
-                error={formData.planName === ''}
-                helperText={formData.planName === '' ? 'Plan name is required' : ''}
+                    error={formData.PlanName === ''}
+                    helperText={formData.PlanName === '' ? 'Plan name is required' : ''}
                 InputLabelProps={{ shrink: true }}
                 sx={{ 
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
+                        borderRadius: 2,
+                        fontFamily: 'monospace'
                   }
                 }}
               />
@@ -1279,20 +1237,21 @@ export default function SubscriptionManagementPage() {
             <Grid item xs={12} md={6}>
               <TextField
                 label="Duration (days)"
-                name="durationDays"
+                    name="DurationDays"
                 type="number"
-                value={formData.durationDays}
+                    value={formData.DurationDays}
                 onChange={handleInputChange}
                 fullWidth
                 required
                 margin="normal"
                 inputProps={{ min: 1 }}
-                error={!formData.durationDays || formData.durationDays < 1}
-                helperText={!formData.durationDays || formData.durationDays < 1 ? 'Duration must be at least 1 day' : ''}
+                    error={!formData.DurationDays || formData.DurationDays < 1}
+                    helperText={!formData.DurationDays || formData.DurationDays < 1 ? 'Duration must be at least 1 day' : ''}
                 InputLabelProps={{ shrink: true }}
                 sx={{ 
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
+                        borderRadius: 2,
+                        fontFamily: 'monospace'
                   }
                 }}
               />
@@ -1300,37 +1259,39 @@ export default function SubscriptionManagementPage() {
             <Grid item xs={12} md={6}>
               <TextField
                 label="Price ($)"
-                name="price"
+                    name="Price"
                 type="number"
-                value={formData.price}
+                    value={formData.Price}
                 onChange={handleInputChange}
                 fullWidth
                 required
                 margin="normal"
                 inputProps={{ step: 0.01, min: 0 }}
-                error={formData.price < 0}
-                helperText={formData.price < 0 ? 'Price cannot be negative' : ''}
+                    error={formData.Price < 0}
+                    helperText={formData.Price < 0 ? 'Price cannot be negative' : ''}
                 InputLabelProps={{ shrink: true }}
                 sx={{ 
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
+                        borderRadius: 2,
+                        fontFamily: 'monospace'
                   }
                 }}
               />
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
-                label="NFT ID"
-                name="nftId"
-                value={formData.nftId}
+                    label="Features (comma separated)"
+                    name="Features"
+                    value={formData.Features}
                 onChange={handleInputChange}
                 fullWidth
                 margin="normal"
-                helperText="Leave empty if no NFT is associated"
+                    placeholder="e.g., Premium courses, Advanced analytics"
                 InputLabelProps={{ shrink: true }}
                 sx={{ 
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
+                        borderRadius: 2,
+                        fontFamily: 'monospace'
                   }
                 }}
               />
@@ -1338,8 +1299,8 @@ export default function SubscriptionManagementPage() {
             <Grid item xs={12}>
               <TextField
                 label="Description"
-                name="description"
-                value={formData.description}
+                    name="Description"
+                    value={formData.Description}
                 onChange={handleInputChange}
                 fullWidth
                 multiline
@@ -1348,26 +1309,8 @@ export default function SubscriptionManagementPage() {
                 InputLabelProps={{ shrink: true }}
                 sx={{ 
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                label="Features (comma separated)"
-                name="features"
-                value={formData.features}
-                onChange={handleInputChange}
-                fullWidth
-                multiline
-                rows={3}
-                margin="normal"
-                placeholder="Feature 1, Feature 2, Feature 3"
-                InputLabelProps={{ shrink: true }}
-                sx={{ 
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
+                        borderRadius: 2,
+                        fontFamily: 'monospace'
                   }
                 }}
               />
@@ -1376,92 +1319,62 @@ export default function SubscriptionManagementPage() {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.isActive}
+                        checked={formData.IsActive}
                     onChange={handleInputChange}
-                    name="isActive"
+                        name="IsActive"
                     color="primary"
                   />
                 }
                 label={
-                  <Typography fontWeight="medium">
-                    {formData.isActive ? 'Active' : 'Inactive'}
+                      <Typography fontWeight="medium" sx={{ fontFamily: 'monospace' }}>
+                        {formData.IsActive ? 'ACTIVE' : 'INACTIVE'}
                   </Typography>
                 }
+                    sx={{ mt: 2 }}
               />
             </Grid>
           </Grid>
+            </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+          <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${alpha(SUB_COLORS.primary, 0.1)}` }}>
           <Button 
-            onClick={() => setOpenDialog(false)} 
+              onClick={() => setDialogOpen(false)} 
             color="inherit"
-            disabled={formSubmitting}
+              disabled={loading}
             sx={{ 
               borderRadius: 2,
-              px: 3
+                px: 3,
+                fontFamily: 'monospace'
             }}
           >
-            Cancel
+              CANCEL
           </Button>
           <Button 
+              type="submit"
             onClick={handleSubmit} 
             variant="contained" 
             color="primary"
-            disabled={formSubmitting || !formData.planName || !formData.durationDays || formData.durationDays < 1 || formData.price < 0}
+              disabled={loading || !formData.PlanName || !formData.DurationDays || formData.DurationDays < 1 || formData.Price < 0}
             sx={{ 
               borderRadius: 2,
               px: 3,
-              py: 1,
-              boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
-              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              '&:hover': {
-                boxShadow: '0 6px 20px rgba(0,0,0,0.15)'
-              }
-            }}
-          >
-            {formSubmitting ? (
+                background: SUB_COLORS.gradients.primary,
+                fontFamily: 'monospace',
+                fontWeight: 700
+              }}
+            >
+              {loading ? (
               <>
                 <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
-                Saving...
+                  PROCESSING...
               </>
             ) : (
-              'Save'
+                editingPlan === 'new' ? 'CREATE PLAN' : 'UPDATE PLAN'
             )}
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Snackbar for notifications */}
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={6000} 
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        TransitionComponent={Zoom}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbar.severity} 
-          sx={{ 
-            width: '100%', 
-            borderRadius: 2,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-          }}
-          variant="filled"
-          elevation={6}
-          icon={snackbar.severity === 'success' ? <CheckCircleOutlineIcon /> : undefined}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
-      {/* Global CSS for animations */}
-      <style jsx global>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </Box>
+      </Container>
+    </>
   );
 }

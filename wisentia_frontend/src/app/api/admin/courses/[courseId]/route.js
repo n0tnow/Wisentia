@@ -16,16 +16,21 @@ async function getToken() {
 export async function GET(request, { params }) {
   try {
     const courseId = params.courseId;
-    console.log(`GET COURSE API: Fetching course ID ${courseId}`);
+    const { searchParams } = new URL(request.url);
+    const includeVideos = searchParams.get('include_videos') === 'true';
+    
+    console.log(`GET COURSE API: Fetching course ID ${courseId}, include videos: ${includeVideos}`);
     
     const token = await getToken();
     
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const apiUrl = `${apiBaseUrl}/api/admin/content/?content_type=courses&course_id=${courseId}`;
     
-    console.log(`GET COURSE API: Calling backend at ${apiUrl}`);
+    // First get the course
+    const courseUrl = `${apiBaseUrl}/api/admin/content/?content_type=courses&course_id=${courseId}`;
     
-    const response = await fetch(apiUrl, {
+    console.log(`GET COURSE API: Calling backend at ${courseUrl}`);
+    
+    const courseResponse = await fetch(courseUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -35,28 +40,29 @@ export async function GET(request, { params }) {
       cache: 'no-store'
     });
     
-    console.log(`GET COURSE API: Backend response status: ${response.status}`);
+    console.log(`GET COURSE API: Backend response status: ${courseResponse.status}`);
     
-    const responseText = await response.text();
+    const courseResponseText = await courseResponse.text();
     
-    let responseData;
+    let courseData;
     try {
-      responseData = JSON.parse(responseText);
+      courseData = JSON.parse(courseResponseText);
     } catch (parseError) {
       console.error(`GET COURSE API: Error parsing response: ${parseError.message}`);
-      responseData = { message: responseText };
+      courseData = { message: courseResponseText };
     }
     
-    if (!response.ok) {
-      console.error("GET COURSE API ERROR:", responseData);
+    if (!courseResponse.ok) {
+      console.error("GET COURSE API ERROR:", courseData);
       return NextResponse.json({ 
-        error: responseData.error || 'Failed to fetch course' 
-      }, { status: response.status });
+        error: courseData.error || 'Failed to fetch course' 
+      }, { status: courseResponse.status });
     }
     
-    // If we got back a list of courses, find the one with matching ID
-    if (responseData.items && Array.isArray(responseData.items)) {
-      const course = responseData.items.find(item => 
+    // Find the course in the response
+    let course = null;
+    if (courseData.items && Array.isArray(courseData.items)) {
+      course = courseData.items.find(item => 
         item.CourseID == courseId || item.courseId == courseId || item.course_id == courseId
       );
       
@@ -66,14 +72,54 @@ export async function GET(request, { params }) {
           error: `Course with ID ${courseId} not found` 
         }, { status: 404 });
       }
-      
-      console.log("GET COURSE API: Success result:", course);
-      return NextResponse.json(course);
+    } else {
+      course = courseData;
     }
     
-    // If it's already a single course object
-    console.log("GET COURSE API: Success result:", responseData);
-    return NextResponse.json(responseData);
+    // If videos are requested, fetch them separately
+    if (includeVideos) {
+      try {
+        const videosUrl = `${apiBaseUrl}/api/courses/videos/?course_id=${courseId}`;
+        console.log(`GET COURSE API: Fetching videos from ${videosUrl}`);
+        
+        const videosResponse = await fetch(videosUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          },
+          cache: 'no-store'
+        });
+        
+        if (videosResponse.ok) {
+          const videosText = await videosResponse.text();
+          try {
+            const videosData = JSON.parse(videosText);
+            // The backend returns an array directly, not wrapped in an object
+            if (Array.isArray(videosData)) {
+              course.videos = videosData;
+              console.log(`GET COURSE API: Found ${videosData.length} videos for course`);
+            } else {
+              console.log('Videos response is not an array:', videosData);
+              course.videos = [];
+            }
+          } catch (videosParseError) {
+            console.error('Error parsing videos response:', videosParseError);
+            course.videos = [];
+          }
+        } else {
+          console.log('Videos API returned error status:', videosResponse.status);
+          course.videos = [];
+        }
+      } catch (videosError) {
+        console.error('Error fetching videos:', videosError);
+        course.videos = [];
+      }
+    }
+    
+    console.log("GET COURSE API: Success result:", course);
+    return NextResponse.json(course);
   } catch (error) {
     console.error('GET COURSE API EXCEPTION:', error);
     return NextResponse.json({ 

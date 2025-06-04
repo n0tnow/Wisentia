@@ -15,47 +15,53 @@ import {
   FormControl,
   InputLabel,
   Paper,
+  Chip,
+  Snackbar,
+  Alert,
+  AlertTitle,
+  styled,
+  Grid,
+  Avatar,
+  Container,
+  useMediaQuery,
+  useTheme as useMuiTheme,
+  Fade,
+  IconButton,
+  LinearProgress,
+  alpha,
+  Skeleton,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  Backdrop,
-  Snackbar,
-  Alert,
-  styled,
-  Grid,
-  Avatar,
-  CssBaseline,
-  useMediaQuery,
-  Container
+  Badge,
+  Tooltip,
+  Divider
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import { 
   Refresh as RefreshIcon,
   People as PeopleIcon,
   School as SchoolIcon,
   VideoLibrary as VideoIcon,
   TaskAlt as TaskIcon,
-  CurrencyBitcoin as NFTIcon,
-  EmojiEvents as TrophyIcon,
-  AccessTime as TimeIcon,
-  CalendarToday as CalendarIcon,
-  Timeline as TimelineIcon,
+  Toll as NFTIcon,
+  Assessment as AssessmentIcon,
   TrendingUp as TrendingUpIcon,
-  Category as CategoryIcon,
+  ShowChart as ShowChartIcon,
+  Analytics as AnalyticsIcon,
+  Science as ScienceIcon,
+  DataUsage as DataUsageIcon,
+  Equalizer as EqualizerIcon,
+  Timeline as TimelineIcon,
+  PieChart as PieChartIcon,
+  Monitor as MonitorIcon,
   QueryStats as StatsIcon,
-  WatchLater as WatchLaterIcon,
-  Check as CheckIcon,
-  Error as ErrorIcon,
-  Info as InfoIcon,
-  MoreVert as MoreIcon,
-  Warning as WarningIcon,
-  Equalizer as EqualizerIcon
+  AccessTime as TimeIcon,
+  LooksOne as NumberOneIcon
 } from '@mui/icons-material';
-import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   LineChart, 
@@ -69,1760 +75,1155 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  AreaChart,
+  Area,
+  ScatterChart,
+  Scatter,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar
 } from 'recharts';
 
-// Renk paleti
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a05195', '#d45087', '#f95d6a', '#ff7c43'];
-
-// StatCard bileşeni
-const StatCard = styled(({ gradientType, ...rest }) => <Card {...rest} />)(
-  ({ theme, gradientType = 'blue' }) => {
-    const gradients = {
-      blue: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)' 
-        : 'linear-gradient(135deg, rgba(33, 147, 176, 0.7) 0%, rgba(109, 213, 237, 0.7) 100%)',
-      purple: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-        : 'linear-gradient(135deg, rgba(102, 126, 234, 0.7) 0%, rgba(118, 75, 162, 0.7) 100%)',
-      orange: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, #f46b45 0%, #eea849 100%)' 
-        : 'linear-gradient(135deg, rgba(244, 107, 69, 0.7) 0%, rgba(238, 168, 73, 0.7) 100%)',
-      green: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' 
-        : 'linear-gradient(135deg, rgba(17, 153, 142, 0.7) 0%, rgba(56, 239, 125, 0.7) 100%)'
-    };
-
-    return {
-      background: gradients[gradientType],
-      borderRadius: 16,
-      overflow: 'visible',
-      height: '100%',
-      width: '100%',
-      transition: 'transform 0.3s, box-shadow 0.3s',
-      boxShadow: theme.palette.mode === 'dark' 
-        ? '0 4px 8px rgba(0, 0, 0, 0.4)' 
-        : '0 3px 6px rgba(0, 0, 0, 0.1)',
-      '&:hover': {
-        transform: 'translateY(-4px)',
-        boxShadow: theme.palette.mode === 'dark' 
-          ? '0 6px 12px rgba(0, 0, 0, 0.5)' 
-          : '0 5px 10px rgba(0, 0, 0, 0.15)'
-      }
-    };
+// Scientific Data Colors
+const DATA_COLORS = {
+  primary: '#00F5FF',     // Bright Cyan
+  secondary: '#FF1493',   // Deep Pink  
+  accent: '#00FF00',      // Lime Green
+  warning: '#FFD700',     // Gold
+  success: '#32CD32',     // Lime Green
+  info: '#1E90FF',        // Dodger Blue
+  neutral: '#6B7280',     // Gray
+  glass: 'rgba(0, 245, 255, 0.1)',
+  gradients: {
+    primary: 'linear-gradient(135deg, #00F5FF 0%, #0080FF 100%)',
+    secondary: 'linear-gradient(135deg, #FF1493 0%, #FF69B4 100%)',
+    accent: 'linear-gradient(135deg, #00FF00 0%, #32CD32 100%)',
+    warning: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+    success: 'linear-gradient(135deg, #32CD32 0%, #90EE90 100%)',
+    info: 'linear-gradient(135deg, #1E90FF 0%, #87CEEB 100%)',
+    data: 'linear-gradient(135deg, #8A2BE2 0%, #DA70D6 100%)'
   }
-);
+};
 
-// SectionCard bileşeni
-const SectionCard = styled(({ gradientType, ...rest }) => <Card {...rest} />)(
-  ({ theme, gradientType = 'none' }) => {
-    const gradients = {
-      none: theme.palette.mode === 'dark' ? '#1E2132' : '#f5f5f5',
-      blue: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, rgba(33, 147, 176, 0.3) 0%, rgba(109, 213, 237, 0.3) 100%)' 
-        : 'linear-gradient(135deg, rgba(33, 147, 176, 0.1) 0%, rgba(109, 213, 237, 0.1) 100%)',
-      purple: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%)' 
-        : 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-      orange: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, rgba(244, 107, 69, 0.3) 0%, rgba(238, 168, 73, 0.3) 100%)' 
-        : 'linear-gradient(135deg, rgba(244, 107, 69, 0.1) 0%, rgba(238, 168, 73, 0.1) 100%)',
-      green: theme.palette.mode === 'dark' 
-        ? 'linear-gradient(135deg, rgba(17, 153, 142, 0.3) 0%, rgba(56, 239, 125, 0.3) 100%)' 
-        : 'linear-gradient(135deg, rgba(17, 153, 142, 0.1) 0%, rgba(56, 239, 125, 0.1) 100%)'
-    };
+// OPTIMIZATION: Chart colors
+const CHART_COLORS = [
+  DATA_COLORS.primary,
+  DATA_COLORS.secondary,
+  DATA_COLORS.accent,
+  DATA_COLORS.warning,
+  DATA_COLORS.success,
+  '#8B5CF6',
+  '#F59E0B',
+  '#EF4444',
+  '#06B6D4',
+  '#84CC16'
+];
 
-    return {
-      background: typeof gradients[gradientType] === 'string' ? gradients[gradientType] : gradients.none,
-      borderRadius: 16,
-      overflow: 'hidden',
-      transition: 'all 0.3s ease',
-      height: '100%',
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      flex: '1 1 auto',
-      margin: 0,
-      boxShadow: theme.palette.mode === 'dark' 
-        ? '0 4px 8px rgba(0, 0, 0, 0.3)' 
-        : '0 3px 6px rgba(0, 0, 0, 0.08)',
+// OPTIMIZATION: Cache ve loading optimization
+const CACHE_DURATION = 5 * 60 * 1000; // 5 dakika cache
+let cachedData = null;
+let cacheTimestamp = null;
+
+const isCacheValid = () => {
+  return cachedData && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_DURATION);
+};
+
+// Scientific Style Components
+const DataCard = styled(Card)(({ theme, variant = 'default' }) => ({
+  background: theme.palette.mode === 'dark' 
+    ? 'rgba(15, 23, 42, 0.8)' 
+    : 'rgba(255, 255, 255, 0.9)',
+  backdropFilter: 'blur(10px)',
+  border: `1px solid ${alpha(DATA_COLORS.primary, 0.2)}`,
+  borderRadius: 8,
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+  transition: 'all 0.2s ease-in-out',
+  position: 'relative',
       '&:hover': {
-        boxShadow: theme.palette.mode === 'dark' 
-          ? '0 6px 12px rgba(0, 0, 0, 0.4)' 
-          : '0 4px 10px rgba(0, 0, 0, 0.12)'
-      }
-    };
+    transform: 'translateY(-2px)',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+    border: `1px solid ${alpha(DATA_COLORS.primary, 0.4)}`,
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '2px',
+    background: variant === 'primary' ? DATA_COLORS.gradients.primary : 
+                variant === 'secondary' ? DATA_COLORS.gradients.secondary :
+                variant === 'accent' ? DATA_COLORS.gradients.accent :
+                DATA_COLORS.gradients.data,
   }
-);
-
-// CardHeader bileşeni
-const CardHeader = styled(Box)(({ theme, color = 'primary.main' }) => ({
-  padding: theme.spacing(1.5, 2),
-  backgroundColor: theme.palette[color] ? theme.palette[color].main : color,
-  color: '#fff',
-  display: 'flex',
-  alignItems: 'center',
-  borderTopLeftRadius: 16,
-  borderTopRightRadius: 16,
-  minHeight: 48,
-  width: '100%'
 }));
 
-// Tab stil bileşeni
-const StyledTab = styled(Tab)(({ theme }) => ({
-  color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+const ScientificTab = styled(Tab)(({ theme }) => ({
+  color: alpha(theme.palette.text.primary, 0.7),
   fontSize: '0.875rem',
-  fontWeight: 500,
-  minHeight: 48,
+  fontWeight: 600,
+  minHeight: 56,
   textTransform: 'none',
+  borderRadius: 0,
+  margin: 0,
+  transition: 'all 0.2s ease-in-out',
+  position: 'relative',
+  minWidth: 120,
   '&.Mui-selected': {
-    color: theme.palette.primary.main,
+    color: DATA_COLORS.primary,
     fontWeight: 700,
-    position: 'relative',
+    background: alpha(DATA_COLORS.primary, 0.08),
     '&::after': {
       content: '""',
       position: 'absolute',
       bottom: 0,
       left: 0,
       width: '100%',
-      height: 3,
-      backgroundColor: theme.palette.primary.main,
-      borderRadius: '3px 3px 0 0'
+      height: '3px',
+      background: DATA_COLORS.gradients.primary,
     }
   },
   '&:hover': {
-    color: theme.palette.primary.main,
-    opacity: 1,
-  }
-}));
-
-// Tooltip stil bileşeni
-const StyledTooltip = styled(Box)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' 
-    ? 'rgba(40, 44, 52, 0.85)' 
-    : 'rgba(255, 255, 255, 0.85)',
-  border: `1px solid ${theme.palette.divider}`,
-  borderRadius: 8,
-  padding: theme.spacing(1.5),
-  boxShadow: theme.shadows[3],
-  '& .label': {
-    color: theme.palette.text.secondary,
-    marginBottom: 4,
-    fontSize: 12
+    color: DATA_COLORS.primary,
+    background: alpha(DATA_COLORS.primary, 0.04),
   },
-  '& .value': {
-    color: theme.palette.text.primary,
-    fontWeight: 700,
-    fontSize: 14
-  }
 }));
 
-// Refresh butonu stil bileşeni
-const GradientButton = styled(Button)(({ theme }) => ({
-  background: theme.palette.mode === 'dark' 
-    ? 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)' 
-    : 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-  borderRadius: 12,
-  textTransform: 'none',
-  padding: theme.spacing(1, 3),
-  color: 'white',
-  fontWeight: 600,
-  letterSpacing: 0.5,
-  boxShadow: theme.palette.mode === 'dark' 
-    ? '0 4px 8px rgba(33, 150, 243, 0.3)' 
-    : '0 3px 6px rgba(33, 150, 243, 0.2)',
-  transition: 'all 0.3s ease',
+const DataMetric = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2),
+  textAlign: 'center',
+  borderRadius: 8,
+  background: alpha(DATA_COLORS.primary, 0.04),
+  border: `1px solid ${alpha(DATA_COLORS.primary, 0.1)}`,
+  transition: 'all 0.2s ease-in-out',
   '&:hover': {
-    background: theme.palette.mode === 'dark' 
-      ? 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)' 
-      : 'linear-gradient(45deg, #21CBF3 30%, #2196F3 90%)',
-    boxShadow: theme.palette.mode === 'dark' 
-      ? '0 6px 12px rgba(33, 150, 243, 0.4)' 
-      : '0 4px 8px rgba(33, 150, 243, 0.3)',
-    transform: 'translateY(-2px)'
+    background: alpha(DATA_COLORS.primary, 0.08),
+    transform: 'scale(1.02)',
   }
 }));
 
-// Mock data generation functions
-const generateMockUserStats = () => ({
-  completedCourses: 0,
-  completedVideos: 0,
-  completedQuests: 0,
-  earnedNFTs: 0,
-  totalPoints: 0,
-  recentActivity: {
-    'token_refresh': 1
+const MetricValue = styled(Typography)(({ theme }) => ({
+  fontWeight: 800,
+  fontSize: '2.25rem',
+  fontFamily: 'monospace',
+  color: DATA_COLORS.primary,
+  lineHeight: 1,
+  marginBottom: theme.spacing(0.5),
+  [theme.breakpoints.down('md')]: {
+    fontSize: '1.75rem',
+  },
+  [theme.breakpoints.down('sm')]: {
+    fontSize: '1.5rem',
   }
-});
+}));
 
-// Ana Analytics bileşeni
+const MetricLabel = styled(Typography)(({ theme }) => ({
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  color: theme.palette.text.secondary,
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+}));
+
+const ChartContainer = styled(Paper)(({ theme }) => ({
+    background: theme.palette.mode === 'dark' 
+    ? 'rgba(15, 23, 42, 0.6)' 
+    : 'rgba(255, 255, 255, 0.8)',
+  backdropFilter: 'blur(10px)',
+  border: `1px solid ${alpha(DATA_COLORS.primary, 0.1)}`,
+  borderRadius: 8,
+  padding: theme.spacing(3),
+  height: '100%',
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    border: `1px solid ${alpha(DATA_COLORS.primary, 0.2)}`,
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+  }
+}));
+
+const DataAvatar = styled(Avatar)(({ color, size = 48 }) => ({
+  width: size,
+  height: size,
+  background: color || DATA_COLORS.gradients.primary,
+  boxShadow: `0 4px 12px ${alpha(DATA_COLORS.primary, 0.3)}`,
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: `0 6px 16px ${alpha(DATA_COLORS.primary, 0.4)}`,
+  }
+}));
+
+const HeaderContainer = styled(Box)(({ theme }) => ({
+  background: `linear-gradient(135deg, ${DATA_COLORS.primary} 0%, ${DATA_COLORS.secondary} 100%)`,
+  borderRadius: 16,
+  padding: theme.spacing(4),
+  color: 'white',
+  position: 'relative',
+  overflow: 'hidden',
+  marginBottom: theme.spacing(4),
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+    opacity: 0.1,
+  }
+}));
+
+const TabPanel = ({ children, value, index, ...other }) => (
+  <div
+    role="tabpanel"
+    hidden={value !== index}
+    id={`analytics-tabpanel-${index}`}
+    aria-labelledby={`analytics-tab-${index}`}
+    {...other}
+  >
+    {value === index && (
+      <Fade in={true} timeout={300}>
+        <Box sx={{ pt: 3 }}>
+          {children}
+        </Box>
+      </Fade>
+    )}
+  </div>
+);
+
+// OPTIMIZATION: Fast loading skeleton
+const AnalyticsSkeleton = () => (
+  <Box sx={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
+    <Box sx={{ p: 4 }}>
+      <Skeleton variant="text" width={300} height={60} sx={{ bgcolor: 'rgba(0, 245, 255, 0.1)' }} />
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mt: 4 }}>
+        {[...Array(8)].map((_, i) => (
+          <Skeleton key={i} variant="rectangular" height={120} sx={{ bgcolor: 'rgba(0, 245, 255, 0.1)', borderRadius: 2 }} />
+        ))}
+      </Box>
+    </Box>
+  </Box>
+);
+
 export default function AnalyticsPage() {
-  const [userStats, setUserStats] = useState(null);
-  const [learningProgress, setLearningProgress] = useState(null);
-  const [timeSpent, setTimeSpent] = useState(null);
-  const [activitySummary, setActivitySummary] = useState(null);
+  // OPTIMIZATION: Separated state management
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [tabValue, setTabValue] = useState(0);
-  const [activityDays, setActivityDays] = useState(30);
-  const [refreshing, setRefreshing] = useState(false);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  const [usingMockData, setUsingMockData] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const { user } = useAuth();
   const router = useRouter();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const theme = useMuiTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  // OPTIMIZATION: Memoized data calculations - MOVED UP
+  const metrics = useMemo(() => {
+    if (!data) return {
+      totalUsers: 0,
+      activeUsers: 0,
+      newUsersThisWeek: 0,
+      totalCourses: 0,
+      totalVideos: 0,
+      totalQuests: 0,
+      totalQuizzes: 0,
+      totalNFTs: 0,
+      activeSubscriptions: 0,
+      todayActivities: 0,
+      deviceTypes: []
+    };
+    
+    return {
+      totalUsers: data.userStats?.totalUsers || 0,
+      activeUsers: data.userStats?.activeUsers || 0,
+      newUsersThisWeek: data.userStats?.newUsersThisWeek || 0,
+      totalCourses: data.content?.courses || 0,
+      totalVideos: data.content?.videos || 0, // Fix: Artık doğru video sayısı
+      totalQuests: data.content?.quests || 0,
+      totalQuizzes: data.content?.quizzes || 0,
+      totalNFTs: data.content?.nfts || 0,
+      activeSubscriptions: data.subscriptions?.active || 0,
+      todayActivities: data.activitySummary?.todayTotal || 0,
+      deviceTypes: data.userStats?.deviceTypes || []
+    };
+  }, [data]);
+
+  // Data processors - MOVED UP to maintain hook order
+  const processUserGrowthData = useMemo(() => {
+    if (!data?.userStats?.userGrowth || Object.keys(data.userStats.userGrowth).length === 0) {
+      return []; // Boş array döndür, mock data değil
+    }
+    
+    return Object.entries(data.userStats.userGrowth).map(([date, users]) => ({
+      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      users,
+      cumulative: users,
+      growth: users
+    })).sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [data]);
+
+  const processActivityData = useMemo(() => {
+    if (!data?.activitySummary?.activitiesByType || data.activitySummary.activitiesByType.length === 0) {
+      return []; // Boş array döndür, mock data değil
+    }
+    
+    return data.activitySummary.activitiesByType.map((activity, index) => ({
+      name: activity.ActivityType.replace('_', ' ').toUpperCase(),
+      value: activity.Count,
+      color: CHART_COLORS[index % CHART_COLORS.length],
+      percentage: 0
+    }));
+  }, [data]);
+
+  const processDailyActivityData = useMemo(() => {
+    if (!data?.activitySummary?.dailyActivities || Object.keys(data.activitySummary.dailyActivities).length === 0) {
+      return []; // Boş array döndür, mock data değil
+    }
+    
+    return Object.entries(data.activitySummary.dailyActivities).map(([date, activityData]) => ({
+      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      activities: typeof activityData === 'object' ? activityData.activities : activityData,
+      users: typeof activityData === 'object' ? activityData.uniqueUsers : 0,
+      efficiency: typeof activityData === 'object' && activityData.uniqueUsers > 0 
+        ? Math.round(activityData.activities / activityData.uniqueUsers * 100) / 100 
+        : 0
+    })).sort((a, b) => new Date(a.date) - new Date(b.date));
+  }, [data]);
+
+  // Process real course completion data for charts (gerçek data)
+  const processCourseCompletionData = useMemo(() => {
+    if (!data?.learningProgress?.categoryStats || Object.keys(data.learningProgress.categoryStats).length === 0) {
+      return []; // Boş array döndür, mock data değil
+    }
+    
+    return Object.entries(data.learningProgress.categoryStats).map(([category, count], index) => ({
+      category: category,
+      completions: count,
+      color: CHART_COLORS[index % CHART_COLORS.length]
+    }));
+  }, [data]);
+
+  // OPTIMIZATION: Fast initial load with cache check
   useEffect(() => {
-    // Admin kontrolü
-    if (user && user.role !== 'admin') {
-      router.push('/');
-      return;
-    }
-
-    if (user && user.role === 'admin') {
-      fetchAllData();
-    }
-  }, [user, router]);
-
-  const fetchAllData = async () => {
-    try {
-      setRefreshing(true);
-      setError(null);
-      setUsingMockData(false);
-      
-      // Tüm verileri tek bir API çağrısı ile getir
-      const response = await fetch(`/api/admin/analytics?endpoint=all&days=${activityDays}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to retrieve data');
-      }
-      
-      const data = await response.json();
-      
-      setUserStats(data.userStats);
-      setLearningProgress(data.learningProgress);
-      setTimeSpent(data.timeSpent);
-      setActivitySummary(data.activitySummary);
-      setLastUpdated(new Date());
-      
-      setSnackbarMessage('Data updated successfully');
-      setSnackbarSeverity('success');
-      setOpenSnackbar(true);
-    } catch (err) {
-      console.error('Error fetching data:', err);
-      setError(err.message);
-      
-      // Hata durumunda mock data göster
-      setUserStats(generateMockUserStats());
-      setLearningProgress({
-        ongoingCourses: [],
-        completedCourses: [],
-        ongoingQuests: [],
-        categoryStats: {}
-      });
-      setTimeSpent({
-        dailyTimeSpent: {},
-        totalVideoTime: 1248,
-        lastSessionTime: 32
-      });
-      setActivitySummary({
-        activitiesByType: [],
-        hourlyActivity: {},
-        dailyActivities: {},
-        period: `Last ${activityDays} days`
-      });
-      setUsingMockData(true);
-      
-      setSnackbarMessage(`Error: ${err.message}. Showing demo data.`);
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
-    } finally {
+    const loadAnalyticsData = async () => {
+      try {
+        // Check cache first
+        if (isCacheValid()) {
+          console.log('📊 Using cached analytics data');
+          setData(cachedData);
+          setLastUpdated(cacheTimestamp);
       setLoading(false);
-      setRefreshing(false);
-    }
-  };
+          return;
+        }
 
-  const fetchActivitySummary = async () => {
-    try {
-      setRefreshing(true);
-      
-      const response = await fetch(`/api/admin/analytics?endpoint=user-activity-summary&days=${activityDays}`);
+        console.log('📊 Fetching fresh analytics data...');
+        setLoading(true);
+        
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const startTime = Date.now();
+        
+        const response = await fetch('/api/admin/analytics', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const loadTime = Date.now() - startTime;
+        console.log(`📊 Analytics API response time: ${loadTime}ms`);
       
       if (!response.ok) {
-        throw new Error('Could not retrieve activity data');
-      }
-      
-      const data = await response.json();
-      setActivitySummary(data);
-      setLastUpdated(new Date());
-      
-      setSnackbarMessage(`Activity data updated for the last ${activityDays} days`);
-      setSnackbarSeverity('success');
-      setOpenSnackbar(true);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const analyticsData = await response.json();
+        
+        // DEBUG: Analytics data'sını kontrol et
+        console.log('📊 Analytics Data Received:', analyticsData);
+        console.log('📊 User Growth Data:', analyticsData?.userStats?.userGrowth);
+        console.log('📊 Activity Data:', analyticsData?.activitySummary?.activitiesByType);
+        
+        // Cache the data
+        cachedData = analyticsData;
+        cacheTimestamp = Date.now();
+        
+        setData(analyticsData);
+        setLastUpdated(cacheTimestamp);
+        setError(null);
+
+        console.log('📊 Analytics data loaded successfully');
     } catch (err) {
-      console.error('Error fetching activity data:', err);
-      setSnackbarMessage(`Error: ${err.message}`);
-      setSnackbarSeverity('error');
-      setOpenSnackbar(true);
+        console.error('Analytics API Error:', err);
+        setError(err.message);
     } finally {
-      setRefreshing(false);
-    }
+        setLoading(false);
+      }
+    };
+
+    loadAnalyticsData();
+  }, []);
+
+  // OPTIMIZATION: Manual refresh function
+  const refreshData = async () => {
+    // Clear cache and reload
+    cachedData = null;
+    cacheTimestamp = null;
+    setLoading(true);
+    
+    // Trigger useEffect
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
+    setSelectedTab(newValue);
   };
 
-  const handleActivityDaysChange = (event) => {
-    setActivityDays(event.target.value);
-    fetchActivitySummary();
-  };
-
-  const handleRefresh = () => {
-    fetchAllData();
-  };
-
-  // Günlük zaman verilerini biçimlendir
-  const formatDailyTimeData = useMemo(() => {
-    if (!timeSpent || !timeSpent.dailyTimeSpent) return [];
-    
-    return Object.entries(timeSpent.dailyTimeSpent).map(([date, minutes]) => ({
-      date,
-      minutes
-    })).sort((a, b) => new Date(a.date) - new Date(b.date));
-  }, [timeSpent]);
-
-  // Aktivite tipleri verilerini biçimlendir
-  const formatActivityTypesData = useMemo(() => {
-    if (!activitySummary || !activitySummary.activitiesByType) return [];
-    
-    return activitySummary.activitiesByType.map(activity => ({
-      name: activity.ActivityType,
-      value: activity.Count
-    }));
-  }, [activitySummary]);
-
-  // Özel tooltip biçimlendirici
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <StyledTooltip>
-          <div className="label">{label}</div>
-          {payload.map((entry, index) => (
-            <div key={index} style={{ color: entry.color }} className="value">
-              {entry.name}: {entry.value}
-            </div>
-          ))}
-        </StyledTooltip>
-      );
-    }
-    return null;
-  };
-
-  // Uyarı ikonu getir
-  const getAlertIcon = (severity) => {
-    switch(severity) {
-      case 'success': return <CheckIcon />;
-      case 'error': return <ErrorIcon />;
-      case 'warning': return <WarningIcon />;
-      case 'info': return <InfoIcon />;
-      default: return <InfoIcon />;
-    }
-  };
-
-  // Yükleniyor durumu
+  // OPTIMIZATION: Show skeleton while loading
   if (loading) {
+    return <AnalyticsSkeleton />;
+  }
+
+  if (error) {
     return (
-      <MainLayout>
         <Box sx={{ 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
           display: 'flex', 
-          width: '100%', 
-          height: '100vh', 
           alignItems: 'center', 
-          justifyContent: 'center' 
+        justifyContent: 'center',
+        p: 4
         }}>
-          <Backdrop
+        <Alert 
+          severity="error" 
             sx={{ 
-              color: '#fff', 
-              zIndex: (theme) => theme.zIndex.drawer + 1,
-              backdropFilter: 'blur(4px)'
-            }}
-            open={true}
+            background: 'rgba(255, 20, 147, 0.1)',
+            border: '1px solid #FF1493',
+            color: '#FFFFFF',
+            '& .MuiAlert-icon': { color: '#FF1493' }
+          }}
+        >
+          <AlertTitle>Analytics Data Error</AlertTitle>
+          {error}
+          <Button 
+            onClick={refreshData} 
+          sx={{ 
+              mt: 2, 
+              color: DATA_COLORS.primary,
+              borderColor: DATA_COLORS.primary 
+            }} 
+            variant="outlined"
           >
-            <Box display="flex" flexDirection="column" alignItems="center">
-              <CircularProgress color="inherit" size={60} thickness={4} />
-              <Typography variant="h6" sx={{ mt: 3, color: 'white', fontWeight: 500 }}>
-                Loading data...
-              </Typography>
-              <Box sx={{ mt: 2, width: '200px', position: 'relative' }}>
-                <LinearProgress color="primary" />
-              </Box>
-            </Box>
-          </Backdrop>
-        </Box>
-      </MainLayout>
+            Retry
+          </Button>
+        </Alert>
+          </Box>
     );
   }
 
-  // Ana tasarım
+  if (!data) {
+    return <AnalyticsSkeleton />;
+  }
+
   return (
-    <MainLayout>
-      <CssBaseline />
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        height: '100vh', 
-        width: '100%',
-        overflow: 'hidden',
-        position: 'relative'
-      }}>
-        {/* Backdrop yenileme ekranı */}
-        <Backdrop
-          sx={{ 
-            color: '#fff', 
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-            backdropFilter: 'blur(4px)'
-          }}
-          open={refreshing}
-        >
-          <Box display="flex" flexDirection="column" alignItems="center">
-            <CircularProgress color="inherit" size={50} />
-            <Typography variant="subtitle1" sx={{ mt: 2 }}>
-              Refreshing data...
-            </Typography>
-          </Box>
-        </Backdrop>
-        
-        {/* Bildirim */}
+    <>
         <Snackbar
-          open={openSnackbar}
+        open={false}
           autoHideDuration={6000}
-          onClose={() => setOpenSnackbar(false)}
+        onClose={() => {}}
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
           <Alert 
-            onClose={() => setOpenSnackbar(false)} 
-            severity={snackbarSeverity}
+          onClose={() => {}} 
+          severity="success"
             variant="filled"
-            icon={getAlertIcon(snackbarSeverity)}
             sx={{ 
               width: '100%',
-              boxShadow: 3,
               borderRadius: 2,
-              '& .MuiAlert-icon': {
-                fontSize: 24,
-                opacity: 0.9,
-                mr: 1
-              }
-            }}
-          >
-            {snackbarMessage}
+            fontFamily: 'monospace'
+          }}
+        >
+          Analytics data synchronized successfully
           </Alert>
         </Snackbar>
         
-        {/* Header */}
-        <Box
-          sx={{
-            background: theme.palette.mode === 'dark' 
-              ? 'linear-gradient(to right, #2a2d3e, #151928)'
-              : 'linear-gradient(to right, #f9f9f9, #f2f2f2)',
-            borderBottom: 1,
-            borderColor: 'divider',
-            py: 2,
-            boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-            width: '100%',
-            flexShrink: 0
-          }}
-        >
-          <Container maxWidth="xl">
-            <Box 
-              sx={{ 
-                width: '100%', 
-                display: 'flex', 
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: { xs: 'wrap', md: 'nowrap' }
-              }}
-            >
-              <Box display="flex" alignItems="center">
-                <Box sx={{ 
-                  color: 'primary.main', 
-                  fontSize: { xs: 32, md: 40 }, 
-                  mr: 2, 
-                  display: 'flex', 
-                  alignItems: 'center'
+      <Container maxWidth="xl" sx={{ py: 4, minHeight: '100vh' }}>
+        {/* Scientific Header */}
+        <HeaderContainer>
+          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+            <Box display="flex" alignItems="center" gap={3}>
+              <DataAvatar size={72} color="rgba(255, 255, 255, 0.2)">
+                <ScienceIcon sx={{ fontSize: 36 }} />
+              </DataAvatar>
+              <Box sx={{ position: 'relative', zIndex: 1 }}>
+                <Typography variant="h2" component="h1" fontWeight={800} sx={{ 
+                  fontSize: { xs: '2rem', md: '3rem' },
+                  fontFamily: 'monospace',
+                  letterSpacing: '2px'
                 }}>
-                  <EqualizerIcon fontSize="inherit" />
-                </Box>
-                <Box>
-                  <Typography 
-                    variant="h4" 
-                    component="h1" 
-                    sx={{ 
-                      fontWeight: 700,
-                      fontSize: { xs: '1.5rem', md: '2rem' }
+                  DATA LABORATORY
+                </Typography>
+                <Typography variant="h6" sx={{ opacity: 0.9, mt: 1, fontFamily: 'monospace' }}>
+                  Real-time Analytics & Intelligence System
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                  <Chip 
+                    label="LIVE DATA" 
+          sx={{
+                      bgcolor: 'rgba(16, 185, 129, 0.2)', 
+                      color: '#10b981',
+                      fontFamily: 'monospace',
+                      fontWeight: 700
                     }}
-                  >
-                    Analytics Dashboard
-                  </Typography>
-                  {usingMockData && (
-                    <Typography variant="caption" color="warning.main" sx={{ fontWeight: 500 }}>
-                      * Showing demo data
-                    </Typography>
-                  )}
+                  />
+                  <Chip 
+                    label={`SYNCED: ${lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'N/A'}`} 
+              sx={{ 
+                      bgcolor: 'rgba(255, 255, 255, 0.1)', 
+                      color: 'white',
+                      fontFamily: 'monospace'
+                    }}
+                  />
+                </Stack>
                 </Box>
               </Box>
               
               <Box display="flex" alignItems="center" gap={2}>
-                <Box display={{ xs: 'none', md: 'flex' }} alignItems="center" mr={1}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                    Last updated:
-                  </Typography>
-                  <Typography variant="body2" fontWeight="medium">
-                    {lastUpdated.toLocaleTimeString()}
-                  </Typography>
-                </Box>
-                
-                <GradientButton 
-                  startIcon={<RefreshIcon />} 
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  size="medium"
-                >
-                  Refresh Data
-                </GradientButton>
-                
-                <Avatar 
+              <IconButton 
+                onClick={refreshData} 
+                disabled={loading}
                   sx={{ 
-                    display: { xs: 'none', sm: 'flex' },
-                    bgcolor: 'primary.main',
-                    width: 38,
-                    height: 38,
-                    boxShadow: 2
-                  }}
-                >
-                  {user?.username?.charAt(0) || 'A'}
-                </Avatar>
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  '&:hover': { 
+                    bgcolor: 'rgba(255, 255, 255, 0.2)',
+                    transform: 'rotate(180deg)',
+                    transition: 'all 0.3s ease'
+                  }
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
               </Box>
             </Box>
-          </Container>
-        </Box>
+        </HeaderContainer>
         
-        {/* Tabs */}
-        <Box sx={{ width: '100%', bgcolor: 'background.paper', flexShrink: 0 }}>
-          <Container maxWidth="xl">
+        {/* Scientific Tabs */}
+        <DataCard sx={{ mb: 4 }}>
             <Tabs 
-              value={tabValue} 
+            value={selectedTab} 
               onChange={handleTabChange} 
               variant={isMobile ? "scrollable" : "fullWidth"}
               scrollButtons={isMobile ? "auto" : false}
               allowScrollButtonsMobile={isMobile}
               sx={{ 
-                borderBottom: 1, 
-                borderColor: 'divider',
-                minHeight: 48,
                 '& .MuiTabs-indicator': {
-                  backgroundColor: 'primary.main',
-                  height: 3,
-                  borderRadius: '3px 3px 0 0'
-                }
-              }}
-            >
-              <StyledTab 
-                icon={<PeopleIcon />} 
-                label="USER STATISTICS" 
+                display: 'none'
+              },
+              borderBottom: `1px solid ${alpha(DATA_COLORS.primary, 0.1)}`
+            }}
+          >
+            <ScientificTab 
+              icon={<DataUsageIcon />} 
+              label="USER METRICS" 
                 iconPosition="start"
-                sx={{ minHeight: 48, py: 0 }}
-              />
-              <StyledTab 
-                icon={<SchoolIcon />} 
-                label="LEARNING PROGRESS" 
+            />
+            <ScientificTab 
+              icon={<AssessmentIcon />} 
+              label="CONTENT ANALYSIS" 
                 iconPosition="start"
-                sx={{ minHeight: 48, py: 0 }}
-              />
-              <StyledTab 
-                icon={<TimeIcon />} 
-                label="TIME ANALYSIS" 
+            />
+            <ScientificTab 
+              icon={<ShowChartIcon />} 
+              label="ACTIVITY TRACKING" 
                 iconPosition="start"
-                sx={{ minHeight: 48, py: 0 }}
-              />
-              <StyledTab 
-                icon={<StatsIcon />} 
-                label="ACTIVITY ANALYSIS" 
+            />
+            <ScientificTab 
+              icon={<AnalyticsIcon />} 
+              label="PERFORMANCE DATA" 
                 iconPosition="start"
-                sx={{ minHeight: 48, py: 0 }}
               />
             </Tabs>
-          </Container>
-        </Box>
+        </DataCard>
 
-        {/* Content Container */}
-        <Box sx={{ 
-          flex: '1 1 auto', 
-          width: '100%', 
-          overflow: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          py: 3
-        }}>
-          <Container maxWidth="xl">
-            {/* USER STATISTICS TAB */}
-            {tabValue === 0 && (
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  width: '100%', 
-                  height: '100%'
-                }}
-              >
-                {/* Stats Cards Row */}
-                <Grid container spacing={3} sx={{ mb: 3 }}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard gradientType="blue">
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            bgcolor: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '50%',
-                            width: { xs: 60, md: 70 },
-                            height: { xs: 60, md: 70 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 2,
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                          }}
-                        >
-                          <SchoolIcon sx={{ color: 'white', fontSize: { xs: 30, md: 36 } }} />
-                        </Box>
-                        <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '2rem', md: '2.5rem' } }}>
-                          {userStats?.completedCourses || 0}
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, mt: 1 }}>
-                          Completed Courses
-                        </Typography>
-                      </CardContent>
-                    </StatCard>
+        {/* Tab Content */}
+        <TabPanel value={selectedTab} index={0}>
+          {/* User Metrics Lab */}
+          <Grid container spacing={3}>
+            {/* Key Performance Indicators */}
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ width: 48, height: 48, mx: 'auto', mb: 2 }}>
+                  <PeopleIcon />
+                </DataAvatar>
+                <MetricValue>
+                  {metrics.totalUsers.toLocaleString()}
+                </MetricValue>
+                <MetricLabel>Total Users</MetricLabel>
+                <Chip 
+                  label={`+${metrics.newUsersThisWeek || 0} this week`} 
+                  size="small" 
+                  sx={{ mt: 1, fontSize: '0.6rem', fontFamily: 'monospace' }}
+                />
+              </DataMetric>
                   </Grid>
                   
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard gradientType="purple">
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            bgcolor: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '50%',
-                            width: { xs: 60, md: 70 },
-                            height: { xs: 60, md: 70 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  mx: 'auto', 
                             mb: 2,
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                          }}
-                        >
-                          <VideoIcon sx={{ color: 'white', fontSize: { xs: 30, md: 36 } }} />
-                        </Box>
-                        <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '2rem', md: '2.5rem' } }}>
-                          {userStats?.completedVideos || 0}
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, mt: 1 }}>
-                          Completed Videos
-                        </Typography>
-                      </CardContent>
-                    </StatCard>
+                  background: DATA_COLORS.gradients.accent
+                }}>
+                  <TrendingUpIcon />
+                </DataAvatar>
+                <MetricValue sx={{ color: DATA_COLORS.accent }}>
+                  {metrics.activeUsers.toLocaleString()}
+                </MetricValue>
+                <MetricLabel>Active Users (7d)</MetricLabel>
+                <Chip 
+                  label="TRACKING" 
+                  size="small" 
+                  color="success"
+                  sx={{ mt: 1, fontSize: '0.6rem', fontFamily: 'monospace' }}
+                />
+              </DataMetric>
                   </Grid>
                   
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard gradientType="green">
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            bgcolor: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '50%',
-                            width: { xs: 60, md: 70 },
-                            height: { xs: 60, md: 70 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  mx: 'auto', 
                             mb: 2,
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                          }}
-                        >
-                          <TaskIcon sx={{ color: 'white', fontSize: { xs: 30, md: 36 } }} />
-                        </Box>
-                        <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '2rem', md: '2.5rem' } }}>
-                          {userStats?.completedQuests || 0}
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, mt: 1 }}>
-                          Completed Quests
-                        </Typography>
-                      </CardContent>
-                    </StatCard>
+                  background: DATA_COLORS.gradients.secondary
+                }}>
+                  <TimeIcon />
+                </DataAvatar>
+                <MetricValue sx={{ color: DATA_COLORS.secondary }}>
+                  {(data?.userStats?.avgSessionTime || 0).toFixed(1)}m
+                </MetricValue>
+                <MetricLabel>Avg Session Time</MetricLabel>
+                <Chip 
+                  label="OPTIMAL" 
+                  size="small" 
+                  sx={{ mt: 1, fontSize: '0.6rem', fontFamily: 'monospace', bgcolor: alpha(DATA_COLORS.secondary, 0.1) }}
+                />
+              </DataMetric>
                   </Grid>
                   
-                  <Grid item xs={12} sm={6} md={3}>
-                    <StatCard gradientType="orange">
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            bgcolor: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '50%',
-                            width: { xs: 60, md: 70 },
-                            height: { xs: 60, md: 70 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  mx: 'auto', 
                             mb: 2,
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                          }}
-                        >
-                          <NFTIcon sx={{ color: 'white', fontSize: { xs: 30, md: 36 } }} />
-                        </Box>
-                        <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '2rem', md: '2.5rem' } }}>
-                          {userStats?.earnedNFTs || 0}
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, mt: 1 }}>
-                          Earned NFTs
-                        </Typography>
-                      </CardContent>
-                    </StatCard>
-                  </Grid>
+                  background: DATA_COLORS.gradients.data
+                }}>
+                  <StatsIcon />
+                </DataAvatar>
+                <MetricValue sx={{ color: DATA_COLORS.info }}>
+                  {metrics.todayActivities}
+                </MetricValue>
+                <MetricLabel>Active Today</MetricLabel>
+                <Chip 
+                  label="REAL-TIME" 
+                  size="small" 
+                  sx={{ mt: 1, fontSize: '0.6rem', fontFamily: 'monospace', bgcolor: alpha(DATA_COLORS.info, 0.1) }}
+                />
+              </DataMetric>
                 </Grid>
                 
-                {/* Points & Activity Row */}
-                <Grid container spacing={3} sx={{ height: { md: 'calc(100% - 240px)', minHeight: 400 } }}>
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="blue" sx={{ height: '100%' }}>
-                      <CardHeader color="primary.main">
-                        <TrophyIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Points Overview
+            {/* User Growth Chart */}
+            <Grid item xs={12} lg={8}>
+              <ChartContainer>
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <ShowChartIcon sx={{ color: DATA_COLORS.primary }} />
+                  <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                    USER GROWTH TRAJECTORY
                         </Typography>
-                      </CardHeader>
-                      <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', flex: 1 }}>
-                          <Box position="relative" display="inline-flex" sx={{ width: { xs: 180, sm: 220, md: 250 }, height: { xs: 180, sm: 220, md: 250 }, mb: 4 }}>
-                            <CircularProgress
-                              variant="determinate"
-                              value={100}
-                              size="100%"
-                              thickness={6}
-                              sx={{ color: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }}
-                            />
-                            <CircularProgress
-                              variant="determinate"
-                              value={75}
-                              size="100%"
-                              thickness={6}
-                              sx={{
-                                color: theme.palette.mode === 'dark' ? '#2196F3' : '#2196F3',
-                                position: 'absolute',
-                                left: 0,
-                                boxShadow: '0 0 8px rgba(33, 150, 243, 0.5)'
-                              }}
-                            />
+                  <Chip label="30-DAY ANALYSIS" size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />
+                </Box>
+                {processUserGrowthData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <AreaChart data={processUserGrowthData}>
+                      <defs>
+                        <linearGradient id="userGrowth" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={DATA_COLORS.primary} stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor={DATA_COLORS.primary} stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke={alpha(DATA_COLORS.neutral, 0.3)} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} style={{ fontFamily: 'monospace', fontSize: '12px' }} />
+                      <YAxis axisLine={false} tickLine={false} style={{ fontFamily: 'monospace', fontSize: '12px' }} />
+                      <RechartsTooltip 
+                        contentStyle={{ 
+                          background: 'rgba(15, 23, 42, 0.9)', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          fontFamily: 'monospace'
+                        }} 
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="users" 
+                        stroke={DATA_COLORS.primary}
+                        strokeWidth={3}
+                        fill="url(#userGrowth)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
                             <Box
                               sx={{
-                                top: 0,
-                                left: 0,
-                                bottom: 0,
-                                right: 0,
-                                position: 'absolute',
+                      height: 350, 
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                flexDirection: 'column'
-                              }}
-                            >
-                              <Typography variant="h2" color="primary" sx={{ fontWeight: 'bold', lineHeight: 1, fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' } }}>
-                                {userStats?.totalPoints || 0}
-                              </Typography>
-                              <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-                                Total Points
-                              </Typography>
-                            </Box>
-                          </Box>
-                          
-                          <Grid container spacing={3} sx={{ width: '100%', mt: 'auto' }}>
-                            <Grid item xs={6}>
-                              <Paper sx={{ 
-                                p: 3, 
-                                bgcolor: 'rgba(63, 81, 181, 0.08)', 
-                                borderRadius: 4,
-                                boxShadow: '0 4px 12px rgba(63, 81, 181, 0.1)',
-                                height: '100%',
-                                textAlign: 'center'
-                              }}>
-                                <Typography variant="body2" color="text.secondary">Points from Quests</Typography>
-                                <Typography variant="h5" color="primary" sx={{ fontWeight: 'bold', mt: 1 }}>
-                                  {userStats ? Math.round(userStats.totalPoints * 0.4) : 0}
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                            <Grid item xs={6}>
-                              <Paper sx={{ 
-                                p: 3, 
-                                bgcolor: 'rgba(171, 71, 188, 0.08)', 
-                                borderRadius: 4,
-                                boxShadow: '0 4px 12px rgba(171, 71, 188, 0.1)',
-                                height: '100%',
-                                textAlign: 'center'
-                              }}>
-                                <Typography variant="body2" color="text.secondary">Points from Courses</Typography>
-                                <Typography variant="h5" color="secondary" sx={{ fontWeight: 'bold', mt: 1 }}>
-                                  {userStats ? Math.round(userStats.totalPoints * 0.6) : 0}
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                          </Grid>
-                        </Box>
-                      </CardContent>
-                    </SectionCard>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="purple" sx={{ height: '100%' }}>
-                      <CardHeader color="secondary.main">
-                        <TimelineIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Recent Activities
-                        </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 0 }}>
-                        {userStats && userStats.recentActivity && Object.keys(userStats.recentActivity).length > 0 ? (
-                          <TableContainer sx={{ flex: 1, overflow: 'auto', height: '100%' }}>
-                            <Table stickyHeader>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Activity Type</TableCell>
-                                  <TableCell align="right" sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Count</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {Object.entries(userStats.recentActivity).map(([type, count], index) => (
-                                  <TableRow key={index} hover>
-                                    <TableCell sx={{ py: 2, fontSize: 15 }}>{type}</TableCell>
-                                    <TableCell align="right" sx={{ py: 2 }}>
-                                      <Chip
-                                        label={count}
-                                        color={
-                                          index % 4 === 0 ? "primary" :
-                                          index % 4 === 1 ? "secondary" :
-                                          index % 4 === 2 ? "success" :
-                                          "warning"
-                                        }
-                                        sx={{ 
-                                          fontWeight: 'bold',
-                                          px: 1,
-                                          height: 28
-                                        }}
-                                      />
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" flex={1} p={4}>
-                            <Typography color="text.secondary">No recent activity data available</Typography>
+                      color: 'text.secondary',
+                      fontFamily: 'monospace'
+                    }}
+                  >
+                    No user growth data available for the last 30 days
                           </Box>
                         )}
-                      </Box>
-                    </SectionCard>
+              </ChartContainer>
                   </Grid>
-                </Grid>
-              </Box>
-            )}
 
-            {/* LEARNING PROGRESS TAB */}
-            {tabValue === 1 && (
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                width: '100%', 
-                height: '100%',
-                gap: 3
-              }}>
-                {/* Top Row */}
-                <Grid container spacing={3} sx={{ mb: 0 }}>
-                  <Grid item xs={12} md={8}>
-                    <SectionCard gradientType="blue">
-                      <CardHeader color="primary.main">
-                        <SchoolIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Ongoing Courses
+            {/* Course Completion by Category */}
+            <Grid item xs={12} lg={4}>
+              <ChartContainer>
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <PieChartIcon sx={{ color: DATA_COLORS.secondary }} />
+                  <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                    COURSE COMPLETIONS
                         </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: 350 }}>
-                        {learningProgress && learningProgress.ongoingCourses && learningProgress.ongoingCourses.length > 0 ? (
-                          <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
-                            <Table stickyHeader>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Course Title</TableCell>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Category</TableCell>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Difficulty</TableCell>
-                                  <TableCell align="right" sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Progress</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {learningProgress.ongoingCourses.map((course, index) => (
-                                  <TableRow key={index} hover>
-                                    <TableCell sx={{ py: 2, fontSize: 15 }}>{course.Title}</TableCell>
-                                    <TableCell sx={{ py: 2 }}>
-                                      <Chip 
-                                        label={course.Category} 
-                                        size="medium" 
-                                        color="primary" 
-                                        variant="outlined"
-                                        sx={{ borderRadius: 8 }}
-                                      />
-                                    </TableCell>
-                                    <TableCell sx={{ py: 2 }}>
-                                      <Chip
-                                        label={course.Difficulty}
-                                        size="medium"
-                                        color={
-                                          course.Difficulty === 'Beginner' ? 'success' :
-                                          course.Difficulty === 'Intermediate' ? 'warning' : 'error'
-                                        }
-                                        sx={{ borderRadius: 8 }}
-                                      />
-                                    </TableCell>
-                                    <TableCell align="right" sx={{ py: 2 }}>
-                                      <Box display="flex" alignItems="center" justifyContent="flex-end">
-                                        <Typography variant="body1" sx={{ mr: 2, fontWeight: 600 }}>
-                                          {course.CompletionPercentage}%
-                                        </Typography>
-                                        <Box sx={{ position: 'relative', width: 100 }}>
-                                          <LinearProgress
-                                            variant="determinate"
-                                            value={course.CompletionPercentage}
-                                            sx={{ 
-                                              height: 10, 
-                                              borderRadius: 5,
-                                              bgcolor: 'rgba(0, 0, 0, 0.08)'
-                                            }}
-                                          />
                                         </Box>
-                                      </Box>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" flex={1} p={4}>
-                            <Typography color="text.secondary">No ongoing courses found</Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    </SectionCard>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={4}>
-                    <SectionCard gradientType="purple" sx={{ height: '100%' }}>
-                      <CardHeader color="secondary.main">
-                        <CategoryIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Course Categories
-                        </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', p: 3, height: 350 }}>
-                        {learningProgress && learningProgress.categoryStats && Object.keys(learningProgress.categoryStats).length > 0 ? (
-                          <Box sx={{ flex: 1, width: '100%', height: '100%' }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                {processCourseCompletionData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
                               <PieChart>
                                 <Pie
-                                  data={Object.entries(learningProgress.categoryStats).map(([category, count]) => ({
-                                    name: category,
-                                    value: count
-                                  }))}
+                        data={processCourseCompletionData}
                                   cx="50%"
                                   cy="50%"
-                                  labelLine={true}
-                                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                  outerRadius="75%"
+                        outerRadius={100}
+                        innerRadius={60}
                                   fill="#8884d8"
-                                  dataKey="value"
-                                  strokeWidth={1}
-                                >
-                                  {Object.entries(learningProgress.categoryStats).map(([_, count], index) => (
-                                    <Cell 
-                                      key={`cell-${index}`} 
-                                      fill={COLORS[index % COLORS.length]} 
-                                      stroke={theme.palette.background.paper}
-                                    />
+                        dataKey="completions"
+                        label={({ category, completions }) => `${category}: ${completions}`}
+                        labelStyle={{ fontFamily: 'monospace', fontSize: '10px' }}
+                      >
+                        {processCourseCompletionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
                                   ))}
                                 </Pie>
                                 <RechartsTooltip 
-                                  formatter={(value, name, props) => [`${value} courses`, name]}
-                                  content={<CustomTooltip />}
+                        contentStyle={{ 
+                          background: 'rgba(15, 23, 42, 0.9)', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          fontFamily: 'monospace'
+                        }} 
                                 />
                               </PieChart>
                             </ResponsiveContainer>
-                          </Box>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
-                            <Typography color="text.secondary">No category data available</Typography>
+                ) : (
+                  <Box 
+                    sx={{ 
+                      height: 350, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      color: 'text.secondary',
+                      fontFamily: 'monospace'
+                    }}
+                  >
+                    No course completion data available
                           </Box>
                         )}
-                      </Box>
-                    </SectionCard>
+              </ChartContainer>
                   </Grid>
                 </Grid>
-                
-                {/* Bottom Row */}
-                <Grid container spacing={3} sx={{ mb: 0 }}>
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="green">
-                      <CardHeader color="success.main">
-                        <TaskIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Ongoing Quests
-                        </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: 350 }}>
-                        {learningProgress && learningProgress.ongoingQuests && learningProgress.ongoingQuests.length > 0 ? (
-                          <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
-                            <Table stickyHeader>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Quest Title</TableCell>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Difficulty</TableCell>
-                                  <TableCell align="right" sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Progress</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {learningProgress.ongoingQuests.map((quest, index) => (
-                                  <TableRow key={index} hover>
-                                    <TableCell sx={{ py: 2, fontSize: 15 }}>{quest.Title}</TableCell>
-                                    <TableCell sx={{ py: 2 }}>
-                                      <Chip
-                                        label={quest.DifficultyLevel}
-                                        size="medium"
-                                        color={
-                                          quest.DifficultyLevel === 'Easy' ? 'success' :
-                                          quest.DifficultyLevel === 'Medium' ? 'warning' : 'error'
-                                        }
-                                        sx={{ borderRadius: 8 }}
-                                      />
-                                    </TableCell>
-                                    <TableCell align="right" sx={{ py: 2 }}>
-                                      <Box display="flex" alignItems="center" justifyContent="flex-end">
-                                        <Typography variant="body1" sx={{ mr: 2, fontWeight: 600 }}>
-                                          {quest.CurrentProgress}/{quest.RequiredPoints}
-                                        </Typography>
-                                        <Box sx={{ position: 'relative', width: 100 }}>
-                                          <LinearProgress
-                                            variant="determinate"
-                                            value={(quest.CurrentProgress / quest.RequiredPoints) * 100}
-                                            sx={{ 
-                                              height: 10, 
-                                              borderRadius: 5,
-                                              bgcolor: 'rgba(0, 0, 0, 0.08)'
-                                            }}
-                                            color="success"
-                                          />
-                                        </Box>
-                                      </Box>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" flex={1} p={4}>
-                            <Typography color="text.secondary">No ongoing quests found</Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    </SectionCard>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="orange">
-                      <CardHeader color="info.main">
-                        <TrendingUpIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Completed Courses
-                        </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', height: 350 }}>
-                        {learningProgress && learningProgress.completedCourses && learningProgress.completedCourses.length > 0 ? (
-                          <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
-                            <Table stickyHeader>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Course Title</TableCell>
-                                  <TableCell sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Category</TableCell>
-                                  <TableCell align="right" sx={{ fontWeight: 700, fontSize: 15, py: 2 }}>Completion Date</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {learningProgress.completedCourses.map((course, index) => (
-                                  <TableRow key={index} hover>
-                                    <TableCell sx={{ py: 2, fontSize: 15 }}>{course.Title}</TableCell>
-                                    <TableCell sx={{ py: 2 }}>
-                                      <Chip 
-                                        label={course.Category} 
-                                        size="medium" 
-                                        color="primary" 
-                                        variant="outlined"
-                                        sx={{ borderRadius: 8 }}
-                                      />
-                                    </TableCell>
-                                    <TableCell align="right" sx={{ py: 2, fontSize: 15 }}>
-                                      {new Date(course.CompletionDate).toLocaleDateString()}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" flex={1} p={4}>
-                            <Typography color="text.secondary">No completed courses found</Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    </SectionCard>
-                  </Grid>
-                </Grid>
-              </Box>
-            )}
+        </TabPanel>
 
-            {/* TIME ANALYSIS TAB */}
-            {tabValue === 2 && (
-              <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                width: '100%', 
-                height: '100%',
-                gap: 3
-              }}>
-                {/* Stats Cards Row */}
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={4}>
-                    <StatCard gradientType="blue">
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            bgcolor: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '50%',
-                            width: { xs: 60, md: 70 },
-                            height: { xs: 60, md: 70 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 2,
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                          }}
-                        >
-                          <WatchLaterIcon sx={{ color: 'white', fontSize: { xs: 30, md: 36 } }} />
-                        </Box>
-                        <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '2rem', md: '2.5rem' } }}>
-                          {timeSpent?.totalVideoTime || 0} min
+        <TabPanel value={selectedTab} index={1}>
+          {/* Content Analysis Lab */}
+          <Grid container spacing={3}>
+            {/* Content Metrics Grid */}
+            <Grid item xs={12} sm={6} lg={2}>
+              <DataCard variant="primary">
+                <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                  <SchoolIcon sx={{ fontSize: 40, color: DATA_COLORS.primary, mb: 2 }} />
+                  <MetricValue sx={{ fontSize: '1.8rem' }}>
+                    {metrics.totalCourses}
+                  </MetricValue>
+                  <MetricLabel>Courses</MetricLabel>
+                </CardContent>
+              </DataCard>
+            </Grid>
+
+            <Grid item xs={12} sm={6} lg={2}>
+              <DataCard variant="secondary">
+                <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                  <VideoIcon sx={{ fontSize: 40, color: DATA_COLORS.secondary, mb: 2 }} />
+                  <MetricValue sx={{ fontSize: '1.8rem', color: DATA_COLORS.secondary }}>
+                    {metrics.totalVideos}
+                  </MetricValue>
+                  <MetricLabel>Videos</MetricLabel>
+                </CardContent>
+              </DataCard>
+            </Grid>
+
+            <Grid item xs={12} sm={6} lg={2}>
+              <DataCard variant="accent">
+                <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                  <TaskIcon sx={{ fontSize: 40, color: DATA_COLORS.accent, mb: 2 }} />
+                  <MetricValue sx={{ fontSize: '1.8rem', color: DATA_COLORS.accent }}>
+                    {metrics.totalQuests}
+                  </MetricValue>
+                  <MetricLabel>Quests</MetricLabel>
+                </CardContent>
+              </DataCard>
+            </Grid>
+
+            <Grid item xs={12} sm={6} lg={2}>
+              <DataCard>
+                <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                  <StatsIcon sx={{ fontSize: 40, color: DATA_COLORS.warning, mb: 2 }} />
+                  <MetricValue sx={{ fontSize: '1.8rem', color: DATA_COLORS.warning }}>
+                    {metrics.totalQuizzes}
+                  </MetricValue>
+                  <MetricLabel>Quizzes</MetricLabel>
+                </CardContent>
+              </DataCard>
+            </Grid>
+
+            <Grid item xs={12} sm={6} lg={2}>
+              <DataCard>
+                <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                  <NFTIcon sx={{ fontSize: 40, color: DATA_COLORS.info, mb: 2 }} />
+                  <MetricValue sx={{ fontSize: '1.8rem', color: DATA_COLORS.info }}>
+                    {metrics.totalNFTs}
+                  </MetricValue>
+                  <MetricLabel>NFTs</MetricLabel>
+                </CardContent>
+              </DataCard>
+            </Grid>
+
+            <Grid item xs={12} sm={6} lg={2}>
+              <DataCard>
+                <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                  <PeopleIcon sx={{ fontSize: 40, color: DATA_COLORS.neutral, mb: 2 }} />
+                  <MetricValue sx={{ fontSize: '1.8rem', color: DATA_COLORS.neutral }}>
+                    {metrics.activeSubscriptions}
+                  </MetricValue>
+                  <MetricLabel>Subscriptions</MetricLabel>
+                </CardContent>
+              </DataCard>
+            </Grid>
+
+            {/* Popular Content Data Table */}
+            <Grid item xs={12}>
+              <DataCard>
+                <CardContent sx={{ p: 3 }}>
+                  <Box display="flex" alignItems="center" gap={2} mb={3}>
+                    <AssessmentIcon sx={{ color: DATA_COLORS.primary }} />
+                    <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                      POPULAR CONTENT ANALYSIS
                         </Typography>
-                        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, mt: 1 }}>
-                          Total Video Time
-                        </Typography>
-                      </CardContent>
-                    </StatCard>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={4}>
-                    <StatCard gradientType="purple">
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            bgcolor: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '50%',
-                            width: { xs: 60, md: 70 },
-                            height: { xs: 60, md: 70 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 2,
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                          }}
-                        >
-                          <TimeIcon sx={{ color: 'white', fontSize: { xs: 30, md: 36 } }} />
-                        </Box>
-                        <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '2rem', md: '2.5rem' } }}>
-                          {timeSpent?.lastSessionTime || 0} min
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, mt: 1 }}>
-                          Last Session Time
-                        </Typography>
-                      </CardContent>
-                    </StatCard>
-                  </Grid>
-                  
-                  <Grid item xs={12} sm={4}>
-                    <StatCard gradientType="green">
-                      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                        <Box
-                          sx={{
-                            bgcolor: 'rgba(255, 255, 255, 0.2)',
-                            borderRadius: '50%',
-                            width: { xs: 60, md: 70 },
-                            height: { xs: 60, md: 70 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            mb: 2,
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                          }}
-                        >
-                          <CalendarIcon sx={{ color: 'white', fontSize: { xs: 30, md: 36 } }} />
-                        </Box>
-                        <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'white', fontSize: { xs: '2rem', md: '2.5rem' } }}>
-                          {timeSpent && timeSpent.dailyTimeSpent
-                            ? Object.values(timeSpent.dailyTimeSpent).reduce((sum, curr) => sum + curr, 0)
-                            : 0
-                          } min
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500, mt: 1 }}>
-                          Time (Last 30 Days)
-                        </Typography>
-                      </CardContent>
-                    </StatCard>
+                  </Box>
+                  <TableContainer>
+                    <Table>
+                              <TableHead>
+                                <TableRow>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700 }}>RANK</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700 }}>CONTENT TITLE</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700 }}>ENROLLMENTS</TableCell>
+                          <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700 }}>STATUS</TableCell>
+                                </TableRow>
+                              </TableHead>
+                              <TableBody>
+                        {(data?.learningProgress?.popularCourses || []).length > 0 ? (
+                          (data?.learningProgress?.popularCourses || []).map((course, index) => (
+                            <TableRow key={course.courseId} hover>
+                              <TableCell>
+                                <Badge 
+                                  badgeContent={index + 1} 
+                                  color="primary" 
+                                  sx={{ '& .MuiBadge-badge': { fontFamily: 'monospace' } }}
+                                >
+                                  <NumberOneIcon style={{ visibility: 'hidden', width: 20 }} />
+                                </Badge>
+                              </TableCell>
+                              <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
+                                {course.title}
+                              </TableCell>
+                              <TableCell sx={{ fontFamily: 'monospace' }}>
+                                      <Chip
+                                  label={`${course.enrollments} users`}
+                                  color="primary"
+                                  size="small"
+                                  sx={{ fontFamily: 'monospace' }}
+                                      />
+                                    </TableCell>
+                              <TableCell>
+                                <Chip 
+                                  label="ACTIVE"
+                                            color="success"
+                                  size="small"
+                                  sx={{ fontFamily: 'monospace' }}
+                                          />
+                                    </TableCell>
+                                  </TableRow>
+                          ))
+                        ) : (
+                                <TableRow>
+                            <TableCell 
+                              colSpan={4} 
+                              sx={{ 
+                                textAlign: 'center', 
+                                py: 4,
+                                color: 'text.secondary',
+                                fontFamily: 'monospace'
+                              }}
+                            >
+                              No popular course data available
+                                    </TableCell>
+                                  </TableRow>
+                        )}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                </CardContent>
+              </DataCard>
                   </Grid>
                 </Grid>
-                
-                {/* Daily Time Spent Graph */}
-                <SectionCard gradientType="blue">
-                  <CardHeader color="primary.main">
-                    <TimelineIcon sx={{ mr: 1 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                      Daily Time Spent (Minutes)
-                    </Typography>
-                  </CardHeader>
-                  <Box sx={{ p: 2, flex: 1, display: 'flex', overflow: 'hidden', height: 400 }}>
-                    {formatDailyTimeData.length > 0 ? (
-                      <Box sx={{ width: '100%', height: '100%' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={formatDailyTimeData}
-                            margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} strokeOpacity={0.5} />
-                            <XAxis 
-                              dataKey="date" 
-                              tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} 
-                              tickLine={{ stroke: theme.palette.divider }}
-                              axisLine={{ stroke: theme.palette.divider }}
-                              dy={10}
-                            />
-                            <YAxis 
-                              tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                              tickLine={{ stroke: theme.palette.divider }}
-                              axisLine={{ stroke: theme.palette.divider }}
-                              label={{ 
-                                value: 'Minutes', 
-                                angle: -90, 
-                                position: 'insideLeft', 
-                                fill: theme.palette.text.secondary,
-                                fontSize: 12,
-                                dx: -10
-                              }}
-                            />
-                            <RechartsTooltip 
-                              content={<CustomTooltip />}
-                              formatter={(value) => [`${value} min`, 'Time Spent']}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="minutes" 
-                              name="Minutes" 
-                              stroke={theme.palette.primary.main} 
-                              fill={theme.palette.primary.main}
-                              activeDot={{ 
-                                r: 8, 
-                                fill: theme.palette.primary.main, 
-                                stroke: theme.palette.background.paper, 
-                                strokeWidth: 2 
-                              }} 
-                              strokeWidth={3}
-                              dot={{ 
-                                r: 4, 
-                                fill: theme.palette.primary.main, 
-                                stroke: theme.palette.background.paper, 
-                                strokeWidth: 1
-                              }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </Box>
-                    ) : (
-                      <Box display="flex" justifyContent="center" alignItems="center" width="100%" p={4}>
-                        <Typography color="text.secondary">No daily time data available</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </SectionCard>
-                
-                {/* Usage Statistics */}
+        </TabPanel>
+
+        <TabPanel value={selectedTab} index={2}>
+          {/* Activity Tracking Lab */}
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="purple">
-                      <CardHeader color="secondary.main">
-                        <TrendingUpIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Peak Usage Days
-                        </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', height: 350, p: 2 }}>
-                        {formatDailyTimeData.length > 0 ? (
-                          <Box sx={{ width: '100%', height: '100%' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart
-                                data={formatDailyTimeData.sort((a, b) => b.minutes - a.minutes).slice(0, 7)}
-                                margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} strokeOpacity={0.5} />
-                                <XAxis 
-                                  dataKey="date" 
-                                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} 
-                                  tickLine={{ stroke: theme.palette.divider }}
-                                  axisLine={{ stroke: theme.palette.divider }}
-                                  dy={10}
-                                />
-                                <YAxis 
-                                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                                  tickLine={{ stroke: theme.palette.divider }}
-                                  axisLine={{ stroke: theme.palette.divider }}
-                                  label={{ 
-                                    value: 'Minutes', 
-                                    angle: -90, 
-                                    position: 'insideLeft', 
-                                    fill: theme.palette.text.secondary,
-                                    fontSize: 12,
-                                    dx: -10
-                                  }}
-                                />
-                                <RechartsTooltip 
-                                  content={<CustomTooltip />}
-                                  formatter={(value) => [`${value} min`, 'Time Spent']}
+            {/* Activity Metrics */}
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  mx: 'auto', 
+                            mb: 2,
+                  background: DATA_COLORS.gradients.primary
+                }}>
+                  <EqualizerIcon />
+                </DataAvatar>
+                <MetricValue>
+                  {metrics.todayActivities}
+                </MetricValue>
+                <MetricLabel>Today's Activities</MetricLabel>
+              </DataMetric>
+                  </Grid>
+                  
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  mx: 'auto', 
+                            mb: 2,
+                  background: DATA_COLORS.gradients.accent
+                }}>
+                  <PeopleIcon />
+                </DataAvatar>
+                <MetricValue sx={{ color: DATA_COLORS.accent }}>
+                  {data?.activitySummary?.todayUniqueUsers || 0}
+                </MetricValue>
+                <MetricLabel>Active Users Today</MetricLabel>
+              </DataMetric>
+                  </Grid>
+                  
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  mx: 'auto', 
+                            mb: 2,
+                  background: DATA_COLORS.gradients.secondary
+                }}>
+                  <TimelineIcon />
+                </DataAvatar>
+                <MetricValue sx={{ color: DATA_COLORS.secondary }}>
+                  {data?.activitySummary?.totalLast7Days || 0}
+                </MetricValue>
+                <MetricLabel>7-Day Total</MetricLabel>
+              </DataMetric>
+                  </Grid>
+
+            <Grid item xs={12} sm={6} lg={3}>
+              <DataMetric>
+                <DataAvatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  mx: 'auto', 
+                  mb: 2,
+                  background: DATA_COLORS.gradients.data
+                }}>
+                  <TrendingUpIcon />
+                </DataAvatar>
+                <MetricValue sx={{ color: DATA_COLORS.info }}>
+                  {data?.activitySummary?.uniqueUsersLast7Days || 0}
+                </MetricValue>
+                <MetricLabel>Weekly Active Users</MetricLabel>
+              </DataMetric>
+                </Grid>
+                
+            {/* Daily Activity Tracking */}
+            <Grid item xs={12} lg={8}>
+              <ChartContainer>
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <ShowChartIcon sx={{ color: DATA_COLORS.primary }} />
+                  <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                    DAILY ACTIVITY PATTERN
+                    </Typography>
+                  <Chip label="14-DAY TRACKING" size="small" variant="outlined" sx={{ fontFamily: 'monospace' }} />
+                </Box>
+                {processDailyActivityData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={processDailyActivityData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={alpha(DATA_COLORS.neutral, 0.3)} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} style={{ fontFamily: 'monospace', fontSize: '12px' }} />
+                      <YAxis axisLine={false} tickLine={false} style={{ fontFamily: 'monospace', fontSize: '12px' }} />
+                            <RechartsTooltip 
+                        contentStyle={{ 
+                          background: 'rgba(15, 23, 42, 0.9)', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          fontFamily: 'monospace'
+                        }} 
                                 />
                                 <Bar 
-                                  dataKey="minutes" 
-                                  name="Minutes" 
-                                  fill={theme.palette.secondary.main}
-                                  radius={[6, 6, 0, 0]}
-                                  barSize={30}
+                        dataKey="activities" 
+                        fill={DATA_COLORS.primary}
+                        radius={[4, 4, 0, 0]}
                                 />
                               </BarChart>
                             </ResponsiveContainer>
-                          </Box>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" width="100%" p={4}>
-                            <Typography color="text.secondary">No peak usage data available</Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    </SectionCard>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="green">
-                      <CardHeader color="success.main">
-                        <StatsIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Usage Statistics
-                        </Typography>
-                      </CardHeader>
-                      <Box sx={{ p: 3, flex: 1, display: 'flex', height: 350 }}>
-                        {formatDailyTimeData.length > 0 ? (
-                          <Grid container spacing={3} sx={{ alignItems: 'center', height: '100%' }}>
-                            <Grid item xs={12} sm={6}>
-                              <Paper sx={{ 
-                                p: 3, 
-                                bgcolor: 'rgba(63, 81, 181, 0.08)', 
-                                borderRadius: 4,
-                                boxShadow: '0 4px 12px rgba(63, 81, 181, 0.1)',
-                                height: '100%',
-                                textAlign: 'center',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center'
-                              }}>
-                                <Typography variant="body1" color="text.secondary">Average Daily Usage</Typography>
-                                <Typography variant="h4" color="primary.main" sx={{ fontWeight: 'bold', mt: 1 }}>
-                                  {Math.round(formatDailyTimeData.reduce((sum, item) => sum + item.minutes, 0) / formatDailyTimeData.length)} min
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Paper sx={{ 
-                                p: 3, 
-                                bgcolor: 'rgba(76, 175, 80, 0.08)', 
-                                borderRadius: 4,
-                                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.1)',
-                                height: '100%',
-                                textAlign: 'center',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center'
-                              }}>
-                                <Typography variant="body1" color="text.secondary">Maximum Daily Usage</Typography>
-                                <Typography variant="h4" color="success.main" sx={{ fontWeight: 'bold', mt: 1 }}>
-                                  {Math.max(...formatDailyTimeData.map(item => item.minutes))} min
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Paper sx={{ 
-                                p: 3, 
-                                bgcolor: 'rgba(171, 71, 188, 0.08)', 
-                                borderRadius: 4,
-                                boxShadow: '0 4px 12px rgba(171, 71, 188, 0.1)',
-                                height: '100%',
-                                textAlign: 'center',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center'
-                              }}>
-                                <Typography variant="body1" color="text.secondary">Days with Activity</Typography>
-                                <Typography variant="h4" color="secondary.main" sx={{ fontWeight: 'bold', mt: 1 }}>
-                                  {formatDailyTimeData.filter(item => item.minutes > 0).length} days
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Paper sx={{ 
-                                p: 3, 
-                                bgcolor: 'rgba(211, 47, 47, 0.08)', 
-                                borderRadius: 4,
-                                boxShadow: '0 4px 12px rgba(211, 47, 47, 0.1)',
-                                height: '100%',
-                                textAlign: 'center',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center'
-                              }}>
-                                <Typography variant="body1" color="text.secondary">Days without Activity</Typography>
-                                <Typography variant="h4" color="error.main" sx={{ fontWeight: 'bold', mt: 1 }}>
-                                  {formatDailyTimeData.filter(item => item.minutes === 0).length} days
-                                </Typography>
-                              </Paper>
-                            </Grid>
-                          </Grid>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" width="100%" p={4}>
-                            <Typography color="text.secondary">No usage statistics available</Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    </SectionCard>
-                  </Grid>
-                </Grid>
-              </Box>
-            )}
-
-            {/* ACTIVITY ANALYSIS TAB */}
-            {tabValue === 3 && (
+                ) : (
               <Box 
                 sx={{ 
+                      height: 350, 
                   display: 'flex', 
-                  flexDirection: 'column', 
-                  width: '100%', 
-                  height: '100%',
-                  gap: 3
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                    Activity Overview for Last {activityDays} days
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mr: 2, fontSize: 15 }}>
-                      Select period:
-                    </Typography>
-                    <FormControl variant="outlined" size="small" sx={{ width: 150 }}>
-                      <InputLabel id="time-period-label">Time Period</InputLabel>
-                      <Select
-                        labelId="time-period-label"
-                        id="time-period-select"
-                        value={activityDays}
-                        onChange={handleActivityDaysChange}
-                        label="Time Period"
-                      >
-                        <MenuItem value={7}>Last 7 Days</MenuItem>
-                        <MenuItem value={14}>Last 14 Days</MenuItem>
-                        <MenuItem value={30}>Last 30 Days</MenuItem>
-                        <MenuItem value={60}>Last 60 Days</MenuItem>
-                        <MenuItem value={90}>Last 90 Days</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </Box>
-                
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="blue">
-                      <CardHeader color="primary.main">
-                        <StatsIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Activity by Type
-                        </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', height: 350, p: 2 }}>
-                        {formatActivityTypesData.length > 0 ? (
-                          <Box sx={{ width: '100%', height: '100%' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart
-                                data={formatActivityTypesData}
-                                layout="vertical"
-                                margin={{ top: 10, right: 30, left: 100, bottom: 20 }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} strokeOpacity={0.5} />
-                                <XAxis 
-                                  type="number"
-                                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} 
-                                  tickLine={{ stroke: theme.palette.divider }}
-                                  axisLine={{ stroke: theme.palette.divider }}
-                                />
-                                <YAxis 
-                                  dataKey="name"
-                                  type="category"
-                                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                                  tickLine={{ stroke: theme.palette.divider }}
-                                  axisLine={{ stroke: theme.palette.divider }}
-                                  width={100}
-                                />
-                                <RechartsTooltip 
-                                  content={<CustomTooltip />}
-                                  formatter={(value, name, props) => [`${value} activities`, props.payload.name]}
-                                />
-                                <Bar 
-                                  dataKey="value" 
-                                  name="Count" 
-                                  fill={theme.palette.primary.main}
-                                  radius={[0, 6, 6, 0]}
-                                  barSize={20}
-                                >
-                                  {formatActivityTypesData.map((entry, index) => (
-                                    <Cell 
-                                      key={`cell-${index}`} 
-                                      fill={COLORS[index % COLORS.length]} 
-                                    />
-                                  ))}
-                                </Bar>
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </Box>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" width="100%" p={4}>
-                            <Typography color="text.secondary">No activity type data available</Typography>
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      color: 'text.secondary',
+                      fontFamily: 'monospace'
+                    }}
+                  >
+                    No daily activity data available for the last 14 days
                           </Box>
                         )}
-                      </Box>
-                    </SectionCard>
+              </ChartContainer>
                   </Grid>
                   
-                  <Grid item xs={12} md={6}>
-                    <SectionCard gradientType="purple">
-                      <CardHeader color="secondary.main">
-                        <WatchLaterIcon sx={{ mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                          Activity by Hour of Day
+            {/* Activity Types Breakdown */}
+            <Grid item xs={12} lg={4}>
+              <ChartContainer>
+                <Box display="flex" alignItems="center" gap={2} mb={3}>
+                  <PieChartIcon sx={{ color: DATA_COLORS.secondary }} />
+                  <Typography variant="h6" fontWeight={700} sx={{ fontFamily: 'monospace' }}>
+                    ACTIVITY TYPES
                         </Typography>
-                      </CardHeader>
-                      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', height: 350, p: 2 }}>
-                        {activitySummary && activitySummary.hourlyActivity && Object.keys(activitySummary.hourlyActivity).length > 0 ? (
-                          <Box sx={{ width: '100%', height: '100%' }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart
-                                data={Object.entries(activitySummary.hourlyActivity).map(([hour, count]) => ({
-                                  hour: parseInt(hour),
-                                  count
-                                })).sort((a, b) => a.hour - b.hour)}
-                                margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} strokeOpacity={0.5} />
-                                <XAxis 
-                                  dataKey="hour" 
-                                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} 
-                                  tickLine={{ stroke: theme.palette.divider }}
-                                  axisLine={{ stroke: theme.palette.divider }}
-                                  label={{ 
-                                    value: 'Hour of Day', 
-                                    position: 'insideBottom', 
-                                    offset: -10, 
-                                    fill: theme.palette.text.secondary,
-                                    fontSize: 12
-                                  }}
-                                />
-                                <YAxis 
-                                  tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                                  tickLine={{ stroke: theme.palette.divider }}
-                                  axisLine={{ stroke: theme.palette.divider }}
-                                  label={{ 
-                                    value: 'Count', 
-                                    angle: -90, 
-                                    position: 'insideLeft', 
-                                    fill: theme.palette.text.secondary,
-                                    fontSize: 12,
-                                    dx: -10
-                                  }}
-                                />
-                                <RechartsTooltip 
-                                  content={<CustomTooltip />}
-                                  formatter={(value) => [`${value} activities`, 'Count']}
-                                />
-                                <Bar 
-                                  dataKey="count" 
-                                  name="Activities" 
-                                  fill={theme.palette.secondary.main}
-                                  radius={[6, 6, 0, 0]}
-                                  barSize={20}
-                                />
-                              </BarChart>
+                </Box>
+                {processActivityData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie
+                        data={processActivityData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        innerRadius={40}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, value }) => `${name}: ${value}`}
+                        labelStyle={{ fontFamily: 'monospace', fontSize: '9px' }}
+                      >
+                        {processActivityData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip 
+                        contentStyle={{ 
+                          background: 'rgba(15, 23, 42, 0.9)', 
+                          border: 'none', 
+                          borderRadius: '8px',
+                          fontFamily: 'monospace'
+                        }} 
+                      />
+                    </PieChart>
                             </ResponsiveContainer>
-                          </Box>
-                        ) : (
-                          <Box display="flex" justifyContent="center" alignItems="center" width="100%" p={4}>
-                            <Typography color="text.secondary">No hourly activity data available</Typography>
+                ) : (
+                  <Box 
+                    sx={{ 
+                      height: 350, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      color: 'text.secondary',
+                      fontFamily: 'monospace'
+                    }}
+                  >
+                    No activity type data available
                           </Box>
                         )}
-                      </Box>
-                    </SectionCard>
+              </ChartContainer>
                   </Grid>
                 </Grid>
-                
-                <SectionCard gradientType="green">
-                  <CardHeader color="success.main">
-                    <CalendarIcon sx={{ mr: 1 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                      Daily Activity Count
-                    </Typography>
-                  </CardHeader>
-                  <Box sx={{ p: 2, flex: 1, display: 'flex', height: 400 }}>
-                    {activitySummary && activitySummary.dailyActivities && Object.keys(activitySummary.dailyActivities).length > 0 ? (
-                      <Box sx={{ width: '100%', height: '100%' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={Object.entries(activitySummary.dailyActivities).map(([date, count]) => ({
-                              date,
-                              count
-                            })).sort((a, b) => new Date(a.date) - new Date(b.date))}
-                            margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} strokeOpacity={0.5} />
-                            <XAxis 
-                              dataKey="date" 
-                              tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} 
-                              tickLine={{ stroke: theme.palette.divider }}
-                              axisLine={{ stroke: theme.palette.divider }}
-                              dy={10}
-                            />
-                            <YAxis 
-                              tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
-                              tickLine={{ stroke: theme.palette.divider }}
-                              axisLine={{ stroke: theme.palette.divider }}
-                              label={{ 
-                                value: 'Activity Count', 
-                                angle: -90, 
-                                position: 'insideLeft', 
-                                fill: theme.palette.text.secondary,
-                                fontSize: 12,
-                                dx: -10
-                              }}
-                            />
-                            <RechartsTooltip 
-                              content={<CustomTooltip />}
-                              formatter={(value) => [`${value} activities`, 'Count']}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="count" 
-                              name="Activities" 
-                              stroke={theme.palette.success.main} 
-                              fill={theme.palette.success.main}
-                              activeDot={{ 
-                                r: 8, 
-                                fill: theme.palette.success.main, 
-                                stroke: theme.palette.background.paper, 
-                                strokeWidth: 2 
-                              }} 
-                              strokeWidth={3}
-                              dot={{ 
-                                r: 4, 
-                                fill: theme.palette.success.main, 
-                                stroke: theme.palette.background.paper, 
-                                strokeWidth: 1
-                              }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </Box>
-                    ) : (
-                      <Box display="flex" justifyContent="center" alignItems="center" width="100%" p={4}>
-                        <Typography color="text.secondary">No daily activity data available</Typography>
-                      </Box>
-                    )}
-                  </Box>
-                </SectionCard>
-              </Box>
-            )}
-          </Container>
-        </Box>
-      </Box>
-    </MainLayout>
-  );
-}
+        </TabPanel>
 
-// LinearProgress bileşeni
-function LinearProgress({ variant, value, sx, color = 'primary' }) {
-  const theme = useTheme();
-  const getColor = () => {
-    if (color === 'primary') return theme.palette.primary.main;
-    if (color === 'secondary') return theme.palette.secondary.main;
-    if (color === 'success') return theme.palette.success.main;
-    if (color === 'warning') return theme.palette.warning.main;
-    if (color === 'error') return theme.palette.error.main;
-    return theme.palette.primary.main;
-  };
-  
-  return (
-    <Box sx={{ width: '100%', ...sx }}>
-      <Box
-        sx={{
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.1)',
-          borderRadius: 1,
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-      >
-        <Box
-          sx={{
-            width: `${value}%`,
-            height: '100%',
-            background: `linear-gradient(90deg, ${getColor()} 0%, ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.8)'} 100%)`,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            borderRadius: 1,
-            transition: 'width 0.4s ease-in-out',
-            boxShadow: '0 0 4px rgba(0, 0, 0, 0.2)'
-          }}
-        />
-      </Box>
-    </Box>
+        <TabPanel value={selectedTab} index={3}>
+          {/* Performance Data Lab */}
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <DataCard variant="primary">
+                <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                  <MonitorIcon sx={{ fontSize: 64, color: DATA_COLORS.primary, mb: 2 }} />
+                  <Typography variant="h4" fontWeight={700} mb={2} sx={{ fontFamily: 'monospace' }}>
+                    SYSTEM PERFORMANCE METRICS
+                    </Typography>
+                  <Typography color="text.secondary" mb={3} sx={{ fontFamily: 'monospace' }}>
+                    Real-time system analysis and performance indicators
+                  </Typography>
+                  <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
+                    <Chip 
+                      label={`VIDEO PROCESSING TIME: ${(data?.timeSpent?.totalVideoTime || 0).toFixed(1)} MIN`} 
+                      sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+                    />
+                    <Chip 
+                      label={`LAST SYNC: ${data?.timestamp ? new Date(data.timestamp).toLocaleString() : 'N/A'}`} 
+                      color="secondary"
+                      sx={{ fontFamily: 'monospace', fontWeight: 600 }}
+                    />
+                  </Stack>
+                </CardContent>
+              </DataCard>
+            </Grid>
+          </Grid>
+        </TabPanel>
+          </Container>
+    </>
   );
 }

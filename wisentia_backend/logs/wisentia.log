@@ -30767,3 +30767,1014 @@ INFO 2025-05-27 13:20:35,718 basehttp 52728 57300 "GET /api/admin/content/?type=
 INFO 2025-05-27 13:21:28,562 basehttp 52728 53780 "POST /api/admin/quizzes/create/ HTTP/1.1" 201 75
 INFO 2025-05-27 13:21:32,487 basehttp 52728 53780 "GET /api/ai/admin/pending-content/ HTTP/1.1" 200 6116
 INFO 2025-05-27 13:22:05,234 basehttp 52728 58828 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+INFO 2025-06-01 21:09:03,713 autoreload 23288 29468 Watching for file changes with StatReloader
+INFO 2025-06-01 21:09:35,115 basehttp 23288 18536 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-06-01 21:09:35,487 basehttp 23288 10492 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-06-01 21:09:42,466 basehttp 23288 11124 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-01 21:09:58,839 basehttp 23288 7300 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-01 21:10:16,987 basehttp 23288 18720 "GET /api/admin/system-health/ HTTP/1.1" 200 445
+INFO 2025-06-01 21:20:44,246 basehttp 23288 29476 "GET /api/admin/system-health/ HTTP/1.1" 200 445
+INFO 2025-06-01 21:23:43,334 basehttp 23288 8520 "GET /api/admin/cache-stats/ HTTP/1.1" 200 138
+INFO 2025-06-01 21:23:45,391 basehttp 23288 21572 "GET /api/admin/system-health/ HTTP/1.1" 200 445
+INFO 2025-06-01 21:25:20,789 autoreload 23288 29468 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:25:22,970 autoreload 24432 29100 Watching for file changes with StatReloader
+INFO 2025-06-01 21:27:33,734 basehttp 24432 19244 "GET /api/admin/cache-stats/ HTTP/1.1" 200 138
+ERROR 2025-06-01 21:27:33,858 middleware 24432 19780 API Error: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+ERROR 2025-06-01 21:27:33,859 middleware 24432 19780 Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py", line 988, in system_health
+    cursor.execute("""
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+ERROR 2025-06-01 21:27:33,860 log 24432 19780 Internal Server Error: /api/admin/system-health/
+ERROR 2025-06-01 21:27:33,861 basehttp 24432 19780 "GET /api/admin/system-health/ HTTP/1.1" 500 5019
+ERROR 2025-06-01 21:28:25,578 middleware 24432 25792 API Error: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+ERROR 2025-06-01 21:28:25,581 middleware 24432 25792 Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py", line 988, in system_health
+    cursor.execute("""
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+ERROR 2025-06-01 21:28:25,583 log 24432 25792 Internal Server Error: /api/admin/system-health/
+ERROR 2025-06-01 21:28:25,583 basehttp 24432 25792 "GET /api/admin/system-health/ HTTP/1.1" 500 5019
+INFO 2025-06-01 21:28:25,588 basehttp 24432 6900 "GET /api/admin/cache-stats/ HTTP/1.1" 200 138
+INFO 2025-06-01 21:30:03,013 basehttp 24432 1716 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+ERROR 2025-06-01 21:30:03,019 middleware 24432 25356 API Error: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+ERROR 2025-06-01 21:30:03,019 middleware 24432 25356 Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py", line 988, in system_health
+    cursor.execute("""
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+ERROR 2025-06-01 21:30:03,021 log 24432 25356 Internal Server Error: /api/admin/system-health/
+ERROR 2025-06-01 21:30:03,022 basehttp 24432 25356 "GET /api/admin/system-health/ HTTP/1.1" 500 5019
+ERROR 2025-06-01 21:30:10,093 middleware 24432 25144 API Error: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+ERROR 2025-06-01 21:30:10,094 middleware 24432 25144 Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py", line 988, in system_health
+    cursor.execute("""
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+ERROR 2025-06-01 21:30:10,095 log 24432 25144 Internal Server Error: /api/admin/system-health/
+ERROR 2025-06-01 21:30:10,098 basehttp 24432 25144 "GET /api/admin/system-health/ HTTP/1.1" 500 5019
+INFO 2025-06-01 21:30:10,104 basehttp 24432 26024 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:30:27,677 autoreload 24432 29100 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:30:29,463 autoreload 20548 27976 Watching for file changes with StatReloader
+INFO 2025-06-01 21:30:40,029 autoreload 20548 27976 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:30:41,426 autoreload 5304 17612 Watching for file changes with StatReloader
+INFO 2025-06-01 21:30:55,747 autoreload 5304 17612 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:30:57,376 autoreload 9752 5948 Watching for file changes with StatReloader
+INFO 2025-06-01 21:31:08,924 autoreload 9752 5948 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:31:10,839 autoreload 18812 4476 Watching for file changes with StatReloader
+INFO 2025-06-01 21:31:20,665 autoreload 18812 4476 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:31:22,086 autoreload 7548 26036 Watching for file changes with StatReloader
+INFO 2025-06-01 21:31:33,904 autoreload 7548 26036 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:31:35,662 autoreload 6164 28408 Watching for file changes with StatReloader
+INFO 2025-06-01 21:31:45,927 autoreload 6164 28408 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:31:47,328 autoreload 28232 13572 Watching for file changes with StatReloader
+INFO 2025-06-01 21:32:07,832 basehttp 28232 13664 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+ERROR 2025-06-01 21:32:07,870 middleware 28232 3292 API Error: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+ERROR 2025-06-01 21:32:07,870 middleware 28232 3292 Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py", line 1011, in system_health
+    cursor.execute("""
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 102, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 67, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 80, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 84, in _execute
+    with self.db.wrap_database_errors:
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\db\backends\utils.py", line 87, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\mssql\base.py", line 677, in execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.DataError: ('22003', '[22003] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The datediff function resulted in an overflow. The number of dateparts separating two date/time instances is too large. Try to use datediff with a less precise datepart. (535) (SQLExecDirectW)')
+
+ERROR 2025-06-01 21:32:07,873 log 28232 3292 Internal Server Error: /api/admin/system-health/
+ERROR 2025-06-01 21:32:07,874 basehttp 28232 3292 "GET /api/admin/system-health/ HTTP/1.1" 500 5020
+INFO 2025-06-01 21:34:01,575 autoreload 28232 13572 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:34:03,416 autoreload 13816 16172 Watching for file changes with StatReloader
+INFO 2025-06-01 21:35:21,918 basehttp 13816 25176 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:35:24,044 basehttp 13816 26564 "GET /api/admin/system-health/ HTTP/1.1" 200 1239
+INFO 2025-06-01 21:35:33,905 autoreload 13816 16172 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:35:35,449 autoreload 23260 5300 Watching for file changes with StatReloader
+INFO 2025-06-01 21:36:05,029 basehttp 23260 17852 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:36:07,175 basehttp 23260 5976 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:36:13,687 basehttp 23260 10776 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:36:15,747 basehttp 23260 13616 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:40:04,448 basehttp 23260 21640 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:40:06,522 basehttp 23260 16368 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:40:47,368 basehttp 23260 9336 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:40:49,420 basehttp 23260 29572 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:43:05,687 basehttp 23260 29648 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:43:07,728 basehttp 23260 13140 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:44:04,472 basehttp 23260 26708 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:44:06,516 basehttp 23260 13176 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:46:27,894 basehttp 23260 8768 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:46:29,955 basehttp 23260 16152 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:47:12,011 basehttp 23260 13368 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:47:14,046 basehttp 23260 4328 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:47:24,787 basehttp 23260 24196 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:47:26,844 basehttp 23260 19404 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:48:44,039 basehttp 23260 16188 "GET /api/admin/cache-stats/ HTTP/1.1" 200 139
+INFO 2025-06-01 21:48:46,127 basehttp 23260 28608 "GET /api/admin/system-health/ HTTP/1.1" 200 1342
+INFO 2025-06-01 21:49:29,869 basehttp 23260 15208 "GET /api/analytics/user-stats/ HTTP/1.1" 200 130
+INFO 2025-06-01 21:49:29,870 basehttp 23260 7048 "GET /api/analytics/learning-progress/ HTTP/1.1" 200 2194
+INFO 2025-06-01 21:49:29,873 basehttp 23260 21244 "GET /api/analytics/user-activity-summary/?days=30 HTTP/1.1" 200 580
+INFO 2025-06-01 21:49:29,882 basehttp 23260 16920 "GET /api/analytics/time-spent/ HTTP/1.1" 200 62
+INFO 2025-06-01 21:55:00,870 basehttp 23260 14092 "GET /api/analytics/user-stats/ HTTP/1.1" 200 130
+INFO 2025-06-01 21:55:00,871 basehttp 23260 5152 "GET /api/analytics/time-spent/ HTTP/1.1" 200 62
+INFO 2025-06-01 21:55:00,871 basehttp 23260 4392 "GET /api/analytics/learning-progress/ HTTP/1.1" 200 2194
+INFO 2025-06-01 21:55:00,873 basehttp 23260 1888 "GET /api/analytics/user-activity-summary/?days=30 HTTP/1.1" 200 580
+INFO 2025-06-01 21:59:26,003 autoreload 23260 5300 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 21:59:27,857 autoreload 12412 5040 Watching for file changes with StatReloader
+INFO 2025-06-01 21:59:47,336 autoreload 12412 5040 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-06-01 21:59:49,213 autoreload 24352 24060 Watching for file changes with StatReloader
+INFO 2025-06-01 22:05:05,909 basehttp 24352 13144 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-01 22:09:15,157 basehttp 24352 4648 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-01 22:09:16,803 basehttp 24352 4648 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-01 22:10:37,654 basehttp 24352 17984 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-01 22:10:51,478 basehttp 24352 13088 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-01 22:12:13,917 basehttp 24352 18800 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-01 22:27:41,605 autoreload 24352 24060 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-01 22:27:42,941 autoreload 29716 26256 Watching for file changes with StatReloader
+INFO 2025-06-01 22:27:52,762 autoreload 29716 26256 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-06-01 22:27:54,020 autoreload 31816 23876 Watching for file changes with StatReloader
+INFO 2025-06-01 22:29:11,824 autoreload 31816 23876 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\settings.py changed, reloading.
+INFO 2025-06-01 22:29:13,025 autoreload 31128 5404 Watching for file changes with StatReloader
+INFO 2025-06-01 22:29:23,069 autoreload 31128 5404 C:\WISENTIA_Q\wisentia\wisentia_backend\wisentia_backend\urls.py changed, reloading.
+INFO 2025-06-01 22:29:24,310 autoreload 24420 14016 Watching for file changes with StatReloader
+INFO 2025-06-01 22:32:55,420 autoreload 17016 32660 Watching for file changes with StatReloader
+INFO 2025-06-02 00:27:23,294 basehttp 17016 34412 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-02 00:31:23,485 basehttp 17016 32796 "GET /api/admin/analytics/ HTTP/1.1" 200 2224
+INFO 2025-06-02 00:33:00,560 autoreload 17016 32660 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 00:33:02,076 autoreload 28528 29304 Watching for file changes with StatReloader
+INFO 2025-06-02 00:33:52,781 basehttp 28528 32676 "GET /api/admin/analytics/ HTTP/1.1" 200 1774
+INFO 2025-06-02 00:34:42,131 basehttp 28528 3840 "GET /api/admin/analytics/ HTTP/1.1" 200 1774
+INFO 2025-06-02 00:35:25,490 autoreload 28528 29304 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 00:35:26,868 autoreload 33396 33908 Watching for file changes with StatReloader
+ERROR 2025-06-02 00:35:47,084 log 33396 22796 Internal Server Error: /api/admin/analytics/
+ERROR 2025-06-02 00:35:47,085 basehttp 33396 22796 "GET /api/admin/analytics/ HTTP/1.1" 500 103
+ERROR 2025-06-02 00:37:22,128 log 33396 9336 Internal Server Error: /api/admin/analytics/
+ERROR 2025-06-02 00:37:22,130 basehttp 33396 9336 "GET /api/admin/analytics/ HTTP/1.1" 500 102
+INFO 2025-06-02 00:38:10,687 autoreload 33396 33908 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 00:38:12,036 autoreload 3796 21868 Watching for file changes with StatReloader
+INFO 2025-06-02 00:38:39,708 basehttp 3796 30452 "GET /api/admin/analytics/ HTTP/1.1" 200 382
+INFO 2025-06-02 00:39:41,928 basehttp 3796 33164 "GET /api/admin/analytics/ HTTP/1.1" 200 382
+INFO 2025-06-02 00:41:12,589 basehttp 3796 32288 "GET /api/admin/analytics/ HTTP/1.1" 200 382
+INFO 2025-06-02 00:43:22,711 basehttp 3796 22216 "GET /api/admin/analytics/ HTTP/1.1" 200 382
+INFO 2025-06-02 00:44:17,047 autoreload 3796 21868 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 00:44:18,464 autoreload 17276 21388 Watching for file changes with StatReloader
+INFO 2025-06-02 00:44:32,262 basehttp 17276 34152 "GET /api/admin/analytics/ HTTP/1.1" 200 690
+INFO 2025-06-02 00:46:21,398 basehttp 17276 29900 "GET /api/admin/analytics/ HTTP/1.1" 200 690
+INFO 2025-06-02 00:47:37,159 basehttp 17276 24872 "GET /api/admin/analytics/ HTTP/1.1" 200 690
+INFO 2025-06-02 00:47:51,664 autoreload 17276 21388 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 00:47:53,031 autoreload 29664 20660 Watching for file changes with StatReloader
+INFO 2025-06-02 00:49:16,270 basehttp 29664 408 "GET /api/admin/analytics/ HTTP/1.1" 200 1004
+INFO 2025-06-02 00:53:06,620 basehttp 29664 34340 "GET /api/admin/analytics/ HTTP/1.1" 200 1004
+INFO 2025-06-02 00:54:42,614 basehttp 29664 16228 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:02:24,419 basehttp 29664 33476 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:02:29,052 basehttp 29664 33476 "GET /api/nfts/available/ HTTP/1.1" 200 7427
+INFO 2025-06-02 01:02:29,525 basehttp 29664 33476 "GET /api/nfts/user/ HTTP/1.1" 200 2392
+INFO 2025-06-02 01:02:30,541 basehttp 29664 17148 "GET /media/uploads/nft_images/198e11c13085471a83da46a6836a1718.jpg HTTP/1.1" 200 35748
+INFO 2025-06-02 01:02:30,553 basehttp 29664 17148 "GET /media/uploads/nft_images/b6f1974e91614578b2b9e908c3417821.jpg HTTP/1.1" 200 48710
+INFO 2025-06-02 01:02:30,559 basehttp 29664 17148 "GET /media/uploads/nft_images/3c5bef8d2534456cb1d589cf18d890b4.jpg HTTP/1.1" 200 35748
+INFO 2025-06-02 01:02:30,568 basehttp 29664 17148 "GET /media/uploads/nft_images/dceec991f7bc415da959285bd3158a97.png HTTP/1.1" 200 235792
+INFO 2025-06-02 01:02:30,579 basehttp 29664 14888 "GET /media/uploads/nft_images/d5936932aa3c4e62a825c05e02054a4e.jpg HTTP/1.1" 200 31941
+INFO 2025-06-02 01:02:30,586 basehttp 29664 12188 "GET /media/uploads/nft_images/4d3a00fea0414a5b99617275429fdef5.jpg HTTP/1.1" 200 44243
+INFO 2025-06-02 01:02:30,590 basehttp 29664 14536 "GET /media/uploads/nft_images/181c5428d8264ef98ecfeb97355959d2.jpg HTTP/1.1" 200 121044
+INFO 2025-06-02 01:02:30,605 basehttp 29664 2488 "GET /media/uploads/nft_images/9b369fb62ac049c2923511baf81e7380.png HTTP/1.1" 200 772619
+INFO 2025-06-02 01:02:30,616 basehttp 29664 13332 "GET /media/uploads/nft_images/21baa3ce1c1643fcb2717ee8efcc6b15.png HTTP/1.1" 200 1169407
+INFO 2025-06-02 01:02:30,623 basehttp 29664 17148 "GET /media/uploads/nft_images/8dbd3bd99bbe4bce8b038651cc3f228f.png HTTP/1.1" 200 2043662
+INFO 2025-06-02 01:02:30,628 basehttp 29664 14888 "GET /media/uploads/nft_images/f70b6b8ae9db4763ab2b2972b99d7eb8.png HTTP/1.1" 200 1536321
+INFO 2025-06-02 01:02:30,635 basehttp 29664 14536 "GET /media/uploads/nft_images/test-1747278340583.png HTTP/1.1" 200 2043662
+INFO 2025-06-02 01:02:30,637 basehttp 29664 12188 "GET /media/uploads/nft_images/f5cecf95fff74b1189090f72a54fd4d5.png HTTP/1.1" 200 1999153
+INFO 2025-06-02 01:03:01,591 basehttp 29664 12032 "GET /api/nfts/available/ HTTP/1.1" 200 7427
+INFO 2025-06-02 01:03:01,678 basehttp 29664 12032 "GET /api/nfts/user/ HTTP/1.1" 200 2392
+INFO 2025-06-02 01:03:42,634 basehttp 29664 33620 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:04:04,328 basehttp 29664 34688 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:04:55,020 basehttp 29664 22692 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:05:16,746 basehttp 29664 34544 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:05:32,261 basehttp 29664 28288 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:11:05,742 basehttp 29664 27084 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:17:51,020 basehttp 29664 4924 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:21:52,073 basehttp 29664 2308 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:22:45,395 basehttp 29664 6124 "GET /api/nfts/available/ HTTP/1.1" 200 7427
+INFO 2025-06-02 01:22:45,830 basehttp 29664 6124 "GET /api/nfts/user/ HTTP/1.1" 200 2392
+INFO 2025-06-02 01:23:14,456 basehttp 29664 28536 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:27:18,432 basehttp 29664 29572 "GET /api/admin/analytics/ HTTP/1.1" 200 1004
+INFO 2025-06-02 01:27:21,165 basehttp 29664 29572 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 01:27:36,916 basehttp 29664 21716 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:47:48,085 basehttp 29664 8172 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:48:09,148 basehttp 29664 2760 "GET /api/admin/users/?page=1&pageSize=25 HTTP/1.1" 200 5406
+INFO 2025-06-02 01:48:39,566 basehttp 29664 30388 "GET /api/admin/users/?page=1&pageSize=25&search=k HTTP/1.1" 200 1687
+INFO 2025-06-02 01:48:39,969 basehttp 29664 30388 "GET /api/admin/users/?page=1&pageSize=25 HTTP/1.1" 200 5406
+INFO 2025-06-02 01:48:40,253 basehttp 29664 30388 "GET /api/admin/users/?page=1&pageSize=25&search=kk HTTP/1.1" 200 65
+INFO 2025-06-02 01:48:40,706 basehttp 29664 30388 "GET /api/admin/users/?page=1&pageSize=25&search=k HTTP/1.1" 200 1687
+INFO 2025-06-02 01:48:44,246 basehttp 29664 30388 "GET /api/admin/users/?page=1&pageSize=25&search=kkk HTTP/1.1" 200 65
+INFO 2025-06-02 01:48:44,710 basehttp 29664 30388 "GET /api/admin/users/?page=1&pageSize=25&search=kk HTTP/1.1" 200 65
+INFO 2025-06-02 01:48:49,416 basehttp 29664 30388 "GET /api/admin/users/?page=1&pageSize=25&search=kk HTTP/1.1" 200 65
+INFO 2025-06-02 01:48:49,447 basehttp 29664 24172 "GET /api/admin/users/?page=1&pageSize=25&search=kkk HTTP/1.1" 200 65
+INFO 2025-06-02 01:49:00,672 basehttp 29664 32740 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:50:28,285 basehttp 29664 16228 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:51:24,179 basehttp 29664 30480 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 01:51:32,668 basehttp 29664 23228 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:52:10,548 basehttp 29664 29204 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:52:12,096 basehttp 29664 29204 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:52:12,865 basehttp 29664 29204 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:52:15,967 basehttp 29664 29204 "GET /api/admin/users/?page=1&pageSize=10 HTTP/1.1" 200 3071
+INFO 2025-06-02 01:58:04,324 basehttp 29664 20024 "GET /api/admin/users/?page=1&pageSize=1000 HTTP/1.1" 200 5408
+INFO 2025-06-02 01:58:37,939 basehttp 29664 12240 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 01:58:40,411 basehttp 29664 12240 "GET /api/admin/users/?page=1&pageSize=1000 HTTP/1.1" 200 5408
+INFO 2025-06-02 02:00:01,345 basehttp 29664 33144 "GET /api/admin/users/?page=1&pageSize=1000 HTTP/1.1" 200 5408
+INFO 2025-06-02 02:00:13,732 basehttp 29664 6820 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:06:04,325 basehttp 29664 12176 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:06:04,702 basehttp 29664 12176 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:06:05,488 basehttp 29664 12176 "GET /api/nfts/available/ HTTP/1.1" 200 7427
+INFO 2025-06-02 02:06:05,858 basehttp 29664 12176 "GET /api/nfts/user/ HTTP/1.1" 200 2392
+INFO 2025-06-02 02:06:18,109 basehttp 29664 19244 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+WARNING 2025-06-02 02:07:03,095 log 29664 24916 Bad Request: /api/admin/users/44/update/
+WARNING 2025-06-02 02:07:03,096 basehttp 29664 24916 "PUT /api/admin/users/44/update/ HTTP/1.1" 400 31
+INFO 2025-06-02 02:09:17,504 autoreload 29664 20660 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:09:19,010 autoreload 24048 32184 Watching for file changes with StatReloader
+INFO 2025-06-02 02:09:52,758 autoreload 24048 32184 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:09:54,205 autoreload 31688 7792 Watching for file changes with StatReloader
+INFO 2025-06-02 02:10:15,694 autoreload 31688 7792 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-06-02 02:10:17,110 autoreload 13292 30412 Watching for file changes with StatReloader
+INFO 2025-06-02 02:10:56,028 basehttp 13292 31068 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:12:01,721 autoreload 13292 30412 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:12:03,342 autoreload 13884 32152 Watching for file changes with StatReloader
+INFO 2025-06-02 02:12:41,765 basehttp 13884 18628 "GET /api/nfts/available/ HTTP/1.1" 200 7427
+INFO 2025-06-02 02:12:41,777 basehttp 13884 12536 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:12:42,310 basehttp 13884 18628 "GET /api/nfts/user/ HTTP/1.1" 200 2392
+INFO 2025-06-02 02:13:09,715 basehttp 13884 13400 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:13:19,983 basehttp 13884 12192 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:14:02,835 basehttp 13884 21500 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:14:48,834 basehttp 13884 17180 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:14:51,866 basehttp 13884 17180 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+WARNING 2025-06-02 02:14:52,395 log 13884 17180 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:14:52,395 basehttp 13884 17180 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+WARNING 2025-06-02 02:14:52,483 log 13884 17180 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:14:52,484 basehttp 13884 17180 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:14:56,080 basehttp 13884 17180 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+WARNING 2025-06-02 02:14:57,358 log 13884 17180 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:14:57,359 basehttp 13884 17180 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:14:57,360 basehttp 13884 8632 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+WARNING 2025-06-02 02:14:57,450 log 13884 17180 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:14:57,450 basehttp 13884 17180 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:14:58,902 basehttp 13884 17180 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+WARNING 2025-06-02 02:14:59,610 log 13884 17180 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:14:59,611 basehttp 13884 17180 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:14:59,629 basehttp 13884 8632 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+WARNING 2025-06-02 02:14:59,723 log 13884 17180 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:14:59,723 basehttp 13884 17180 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:15:00,159 basehttp 13884 17180 "GET /api/admin/users/44/ HTTP/1.1" 200 611
+INFO 2025-06-02 02:15:07,780 basehttp 13884 13980 "PUT /api/admin/users/44/update/ HTTP/1.1" 200 283
+WARNING 2025-06-02 02:15:33,655 log 13884 12632 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:15:33,656 basehttp 13884 12632 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:15:33,716 basehttp 13884 29668 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+WARNING 2025-06-02 02:15:33,822 log 13884 12632 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:15:33,824 basehttp 13884 12632 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:18:32,298 basehttp 13884 16020 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+INFO 2025-06-02 02:34:39,706 basehttp 13884 32308 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+WARNING 2025-06-02 02:34:49,083 log 13884 33340 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:34:49,084 basehttp 13884 33340 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:35:47,645 basehttp 13884 32600 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+INFO 2025-06-02 02:35:48,410 basehttp 13884 32600 "GET /api/nfts/available/ HTTP/1.1" 200 7427
+INFO 2025-06-02 02:35:48,853 basehttp 13884 32600 "GET /api/nfts/user/ HTTP/1.1" 200 2392
+INFO 2025-06-02 02:36:10,035 basehttp 13884 24940 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+INFO 2025-06-02 02:36:31,865 basehttp 13884 30148 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+INFO 2025-06-02 02:36:59,416 basehttp 13884 15652 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+INFO 2025-06-02 02:37:17,005 basehttp 13884 22732 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+INFO 2025-06-02 02:37:34,707 basehttp 13884 30788 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+WARNING 2025-06-02 02:37:37,032 log 13884 30788 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:37:37,033 basehttp 13884 30788 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:37:40,554 basehttp 13884 30788 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+WARNING 2025-06-02 02:37:42,196 log 13884 30788 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:37:42,197 basehttp 13884 30788 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:37:55,236 basehttp 13884 22556 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+INFO 2025-06-02 02:38:11,043 basehttp 13884 29936 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+WARNING 2025-06-02 02:38:23,182 log 13884 16172 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:38:23,183 basehttp 13884 16172 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:38:44,353 basehttp 13884 12884 "GET /api/admin/users/44/ HTTP/1.1" 200 610
+WARNING 2025-06-02 02:38:45,511 log 13884 12884 Not Found: /api/admin/users/44/activity/
+WARNING 2025-06-02 02:38:45,512 basehttp 13884 12884 "GET /api/admin/users/44/activity/?page=1&pageSize=10 HTTP/1.1" 404 10434
+INFO 2025-06-02 02:40:58,381 autoreload 13884 32152 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\urls.py changed, reloading.
+INFO 2025-06-02 02:41:00,486 autoreload 2144 31456 Watching for file changes with StatReloader
+INFO 2025-06-02 02:46:21,653 autoreload 2144 31456 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:46:23,105 autoreload 4704 4772 Watching for file changes with StatReloader
+INFO 2025-06-02 02:47:18,967 autoreload 4704 4772 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:47:20,478 autoreload 9180 5772 Watching for file changes with StatReloader
+INFO 2025-06-02 02:48:05,096 autoreload 9180 5772 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:48:06,430 autoreload 33008 3744 Watching for file changes with StatReloader
+INFO 2025-06-02 02:48:59,929 autoreload 33008 3744 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:49:01,304 autoreload 32584 17152 Watching for file changes with StatReloader
+INFO 2025-06-02 02:51:07,779 autoreload 32584 17152 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:51:09,140 autoreload 3296 34248 Watching for file changes with StatReloader
+INFO 2025-06-02 02:51:18,894 autoreload 3296 34248 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 02:51:20,872 autoreload 13024 29084 Watching for file changes with StatReloader
+INFO 2025-06-02 02:51:34,116 basehttp 13024 14568 "GET /api/admin/users/?page=1&pageSize=1000 HTTP/1.1" 200 5407
+INFO 2025-06-02 02:51:56,544 basehttp 13024 28100 "GET /api/admin/users/41/ HTTP/1.1" 200 1440
+INFO 2025-06-02 02:51:59,941 basehttp 13024 28100 "GET /api/admin/users/41/activity/?page=1&pageSize=10 HTTP/1.1" 200 162
+INFO 2025-06-02 02:54:26,265 basehttp 13024 30652 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:05:08,888 basehttp 13024 18588 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-06-02 03:05:09,225 basehttp 13024 21360 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-06-02 03:07:31,434 basehttp 13024 21360 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-06-02 03:07:33,561 basehttp 13024 11360 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:08:23,318 basehttp 13024 22740 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:08:30,953 basehttp 13024 28424 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:08:47,698 basehttp 13024 34276 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:09:05,554 basehttp 13024 6264 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:11:43,215 basehttp 13024 2440 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:12:33,013 basehttp 13024 30840 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:12:59,215 basehttp 13024 15904 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:13:30,362 basehttp 13024 8852 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:14:51,848 basehttp 13024 26220 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:15:05,814 basehttp 13024 6400 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:15:53,048 basehttp 13024 11312 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:19:23,848 basehttp 13024 25220 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:23:13,141 basehttp 13024 33732 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:23:53,023 basehttp 13024 34140 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:23:55,203 basehttp 13024 34140 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:24:09,414 basehttp 13024 14580 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:24:22,642 basehttp 13024 31524 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:25:29,522 basehttp 13024 29920 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-02 03:25:32,913 basehttp 13024 29920 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-02 03:25:39,351 basehttp 13024 30188 "GET /api/admin/analytics/ HTTP/1.1" 200 1004
+INFO 2025-06-02 03:25:45,980 basehttp 13024 17264 "GET /api/admin/cache-stats/ HTTP/1.1" 200 140
+ERROR 2025-06-02 03:25:46,028 middleware 13024 19920 API Error: type object 'datetime.timezone' has no attribute 'now'
+ERROR 2025-06-02 03:25:46,028 middleware 13024 19920 Traceback (most recent call last):
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\decorators\csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\django\views\generic\base.py", line 104, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bkaya\AppData\Local\Programs\Python\Python312\Lib\site-packages\rest_framework\decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py", line 1214, in system_health
+    'timestamp': timezone.now(),
+                 ^^^^^^^^^^^^
+AttributeError: type object 'datetime.timezone' has no attribute 'now'
+
+ERROR 2025-06-02 03:25:46,029 log 13024 19920 Internal Server Error: /api/admin/system-health/
+ERROR 2025-06-02 03:25:46,029 basehttp 13024 19920 "GET /api/admin/system-health/ HTTP/1.1" 500 2226
+INFO 2025-06-02 03:27:39,772 autoreload 13024 29084 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:27:41,326 autoreload 22320 22460 Watching for file changes with StatReloader
+INFO 2025-06-02 03:28:39,099 basehttp 22320 33432 "GET /api/admin/cache-stats/ HTTP/1.1" 200 140
+INFO 2025-06-02 03:28:39,102 basehttp 22320 32968 "GET /api/admin/system-health/ HTTP/1.1" 200 598
+INFO 2025-06-02 03:28:53,220 basehttp 22320 10160 "GET /api/admin/system-health/ HTTP/1.1" 200 598
+INFO 2025-06-02 03:28:53,230 basehttp 22320 13880 "GET /api/admin/cache-stats/ HTTP/1.1" 200 140
+INFO 2025-06-02 03:29:11,117 autoreload 22320 22460 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:29:12,565 autoreload 32248 20700 Watching for file changes with StatReloader
+INFO 2025-06-02 03:33:36,785 autoreload 32248 20700 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:33:38,720 autoreload 34768 27184 Watching for file changes with StatReloader
+INFO 2025-06-02 03:34:21,383 autoreload 34768 27184 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:34:23,272 autoreload 26280 22848 Watching for file changes with StatReloader
+INFO 2025-06-02 03:34:41,290 basehttp 26280 13452 "GET /api/admin/cache-stats/ HTTP/1.1" 200 645
+INFO 2025-06-02 03:34:41,340 basehttp 26280 26612 "GET /api/admin/system-health/ HTTP/1.1" 200 1291
+INFO 2025-06-02 03:37:58,978 autoreload 26280 22848 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:38:00,763 autoreload 1976 12952 Watching for file changes with StatReloader
+INFO 2025-06-02 03:39:56,629 basehttp 1976 492 "GET /api/admin/cache-stats/ HTTP/1.1" 200 645
+INFO 2025-06-02 03:39:56,922 basehttp 1976 4876 "GET /api/admin/system-health/ HTTP/1.1" 200 3973
+INFO 2025-06-02 03:40:10,519 autoreload 1976 12952 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:40:12,673 autoreload 24956 32592 Watching for file changes with StatReloader
+INFO 2025-06-02 03:40:23,188 basehttp 24956 24468 "GET /api/admin/cache-stats/ HTTP/1.1" 200 645
+INFO 2025-06-02 03:40:23,375 basehttp 24956 23756 "GET /api/admin/system-health/ HTTP/1.1" 200 3973
+INFO 2025-06-02 03:41:59,465 autoreload 24956 32592 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:42:01,126 autoreload 33320 5236 Watching for file changes with StatReloader
+INFO 2025-06-02 03:42:34,766 autoreload 33320 5236 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:42:36,862 autoreload 6160 31100 Watching for file changes with StatReloader
+INFO 2025-06-02 03:42:44,474 basehttp 6160 10704 "GET /api/admin/cache-stats/ HTTP/1.1" 200 645
+INFO 2025-06-02 03:42:44,577 basehttp 6160 31652 "GET /api/admin/system-health/ HTTP/1.1" 200 2357
+INFO 2025-06-02 03:44:05,399 autoreload 6160 31100 C:\WISENTIA_Q\wisentia\wisentia_backend\admin_panel\views.py changed, reloading.
+INFO 2025-06-02 03:44:07,187 autoreload 3400 20156 Watching for file changes with StatReloader
+INFO 2025-06-02 03:45:10,543 basehttp 3400 30508 "GET /api/admin/cache-stats/ HTTP/1.1" 200 645
+INFO 2025-06-02 03:45:10,651 basehttp 3400 20328 "GET /api/admin/system-health/ HTTP/1.1" 200 3715
+INFO 2025-06-02 03:45:38,683 basehttp 3400 16724 "GET /api/admin/cache-stats/ HTTP/1.1" 200 645
+INFO 2025-06-02 03:45:38,766 basehttp 3400 33484 "GET /api/admin/system-health/ HTTP/1.1" 200 3715
+INFO 2025-06-03 01:44:57,205 autoreload 26808 24080 Watching for file changes with StatReloader
+INFO 2025-06-03 01:47:10,317 basehttp 26808 25784 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-06-03 01:47:10,676 basehttp 26808 37644 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-06-03 01:47:15,677 basehttp 26808 40904 "GET /api/admin/dashboard/ HTTP/1.1" 200 4399
+INFO 2025-06-03 01:47:45,202 basehttp 26808 28640 "GET /api/admin/content/?type=courses&page=1&pageSize=20&search=&category=&difficulty=&status= HTTP/1.1" 200 4436
+WARNING 2025-06-03 01:54:32,080 log 26808 31408 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:54:32,083 log 26808 38992 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:54:32,085 log 26808 24596 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:54:32,087 basehttp 26808 38992 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 01:54:32,087 basehttp 26808 31408 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 01:54:32,087 basehttp 26808 24596 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 01:54:32,156 basehttp 26808 38992 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 01:54:32,156 basehttp 26808 25080 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 01:54:32,157 basehttp 26808 39012 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 01:56:56,348 basehttp 26808 27472 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+WARNING 2025-06-03 01:57:03,771 log 26808 7584 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:57:03,774 log 26808 27284 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:57:03,775 basehttp 26808 27284 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 01:57:03,776 basehttp 26808 7584 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 01:57:03,840 log 26808 27284 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:57:03,841 basehttp 26808 27284 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 01:57:03,849 basehttp 26808 29416 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 01:57:03,850 basehttp 26808 38288 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 01:57:03,858 basehttp 26808 7584 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 01:57:12,448 basehttp 26808 30620 "GET /api/courses/32/?t=1748905030988 HTTP/1.1" 200 816
+INFO 2025-06-03 01:57:13,877 basehttp 26808 37960 "GET /api/courses/32/progress HTTP/1.1" 301 0
+INFO 2025-06-03 01:57:13,879 basehttp 26808 30620 "GET /api/courses/enrollment/status/32/ HTTP/1.1" 200 240
+INFO 2025-06-03 01:57:13,899 basehttp 26808 1660 "GET /api/quizzes/course/32/?_=1748905033858 HTTP/1.1" 200 847
+INFO 2025-06-03 01:57:13,929 basehttp 26808 40940 "GET /api/courses/32/progress/ HTTP/1.1" 200 176
+WARNING 2025-06-03 01:57:16,627 log 26808 30620 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:57:16,627 basehttp 26808 30620 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 01:57:16,631 log 26808 35320 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:57:16,633 basehttp 26808 35320 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 01:57:16,641 basehttp 26808 1660 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 01:57:16,649 basehttp 26808 30620 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 01:57:17,124 log 26808 30620 Not Found: /api/admin/courses/
+WARNING 2025-06-03 01:57:17,125 basehttp 26808 30620 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 01:57:17,137 basehttp 26808 35320 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:03:26,774 log 26808 16540 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:03:26,776 log 26808 30528 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:03:26,779 log 26808 38252 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:03:26,780 basehttp 26808 16540 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:03:26,780 basehttp 26808 30528 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:03:26,780 basehttp 26808 38252 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:03:26,837 basehttp 26808 5304 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:03:26,842 basehttp 26808 7904 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:03:26,842 basehttp 26808 16540 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:04:22,786 log 26808 33596 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:04:22,788 log 26808 7144 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:04:22,790 basehttp 26808 33596 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:04:22,790 basehttp 26808 7144 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:04:22,849 basehttp 26808 33596 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:04:22,849 basehttp 26808 8440 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:06:40,452 log 26808 26408 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:06:40,455 log 26808 31216 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:06:40,455 basehttp 26808 26408 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:06:40,456 basehttp 26808 31216 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:06:40,520 log 26808 31216 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:06:40,521 basehttp 26808 31216 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:06:40,523 basehttp 26808 26408 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:06:40,523 basehttp 26808 39084 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:06:40,541 basehttp 26808 30036 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:08:11,349 log 26808 31564 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:08:11,350 basehttp 26808 31564 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:08:11,354 log 26808 40864 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:08:11,355 basehttp 26808 40864 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:08:11,401 log 26808 40864 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:08:11,402 basehttp 26808 40864 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:08:11,412 basehttp 26808 32720 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:08:11,412 basehttp 26808 31564 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:08:11,420 basehttp 26808 25920 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:09:32,959 log 26808 30728 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:09:32,961 log 26808 27532 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:09:32,962 basehttp 26808 30728 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:09:32,962 basehttp 26808 27532 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:09:33,010 log 26808 27532 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:09:33,011 basehttp 26808 27532 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:09:33,040 basehttp 26808 26292 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:09:33,041 basehttp 26808 39496 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:09:33,045 basehttp 26808 30728 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:09:52,211 log 26808 38716 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:09:52,213 log 26808 18320 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:09:52,214 basehttp 26808 38716 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:09:52,214 basehttp 26808 18320 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:09:52,274 log 26808 18320 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:09:52,275 basehttp 26808 18320 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:09:52,279 basehttp 26808 27584 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:09:52,283 basehttp 26808 38716 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:09:52,297 basehttp 26808 40900 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:10:09,377 log 26808 12728 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:10:09,380 log 26808 12920 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:10:09,381 basehttp 26808 12728 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:10:09,381 basehttp 26808 12920 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:10:09,434 basehttp 26808 39572 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:10:09,434 basehttp 26808 12920 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:10:09,831 log 26808 12920 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:10:09,832 basehttp 26808 12920 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:10:09,840 basehttp 26808 12728 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:11:24,100 log 26808 8084 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:11:24,102 basehttp 26808 8084 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:11:24,104 log 26808 15288 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:11:24,105 basehttp 26808 15288 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:11:24,155 log 26808 15288 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:11:24,155 basehttp 26808 15288 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:11:24,167 basehttp 26808 25048 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:11:24,169 basehttp 26808 8084 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:11:24,174 basehttp 26808 27844 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:12:40,828 log 26808 37776 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:12:40,832 log 26808 15624 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:12:40,832 basehttp 26808 37776 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:12:40,833 basehttp 26808 15624 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:12:40,877 log 26808 15624 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:12:40,878 basehttp 26808 15624 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:12:40,898 basehttp 26808 34700 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:12:40,898 basehttp 26808 37776 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:12:40,907 basehttp 26808 432 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:13:44,579 log 26808 36348 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:13:44,581 log 26808 18920 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:13:44,582 basehttp 26808 36348 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:13:44,586 log 26808 1144 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:13:44,586 basehttp 26808 18920 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:13:44,588 basehttp 26808 1144 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:13:44,635 basehttp 26808 36348 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:13:44,638 basehttp 26808 5352 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:13:44,639 basehttp 26808 35292 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:14:02,402 log 26808 40056 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:14:02,402 basehttp 26808 40056 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:14:02,426 log 26808 33100 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:14:02,427 basehttp 26808 33100 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:14:02,428 basehttp 26808 39764 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:14:02,436 basehttp 26808 40056 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:14:02,884 log 26808 40056 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:14:02,885 basehttp 26808 40056 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:14:02,895 basehttp 26808 33100 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:14:05,882 basehttp 26808 40056 "GET /api/courses/32/?t=1748906044660 HTTP/1.1" 200 816
+INFO 2025-06-03 02:14:07,010 basehttp 26808 40056 "GET /api/courses/32/progress HTTP/1.1" 301 0
+INFO 2025-06-03 02:14:07,053 basehttp 26808 33100 "GET /api/courses/enrollment/status/32/ HTTP/1.1" 200 240
+INFO 2025-06-03 02:14:07,067 basehttp 26808 39764 "GET /api/quizzes/course/32/?_=1748906047039 HTTP/1.1" 200 847
+INFO 2025-06-03 02:14:07,093 basehttp 26808 20716 "GET /api/courses/32/progress/ HTTP/1.1" 200 176
+WARNING 2025-06-03 02:14:08,193 log 26808 27408 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:14:08,194 basehttp 26808 27408 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:14:08,211 log 26808 33100 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:14:08,211 basehttp 26808 33100 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:14:08,213 basehttp 26808 39764 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:14:08,222 basehttp 26808 27408 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:14:08,690 log 26808 27408 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:14:08,692 basehttp 26808 27408 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:14:08,701 basehttp 26808 33100 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:14:10,908 basehttp 26808 27408 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:17:47,914 basehttp 26808 16000 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:18:16,518 basehttp 26808 31256 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:19:10,637 basehttp 26808 25932 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:19:12,761 basehttp 26808 25932 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+WARNING 2025-06-03 02:19:28,166 log 26808 27276 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:19:28,170 log 26808 29496 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:19:28,171 basehttp 26808 27276 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:19:28,171 basehttp 26808 29496 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:19:28,208 log 26808 29496 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:19:28,209 basehttp 26808 29496 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:19:28,222 basehttp 26808 27276 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:19:28,226 basehttp 26808 5152 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:19:28,227 basehttp 26808 39172 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:19:31,462 basehttp 26808 27276 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:21:38,451 basehttp 26808 17808 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+WARNING 2025-06-03 02:21:40,121 log 26808 17808 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:21:40,122 basehttp 26808 17808 "GET /api/admin/courses/?page=1&page_size=20&course_id=32 HTTP/1.1" 404 10859
+INFO 2025-06-03 02:21:40,164 basehttp 26808 28640 "GET /api/courses/?page=1&page_size=20&course_id=32 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:22:21,847 basehttp 26808 3756 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:22:21,860 basehttp 26808 3756 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 300
+INFO 2025-06-03 02:22:55,252 basehttp 26808 26780 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:22:55,261 basehttp 26808 26780 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 300
+INFO 2025-06-03 02:23:13,760 basehttp 26808 38668 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:23:13,772 basehttp 26808 38668 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 300
+INFO 2025-06-03 02:24:11,013 basehttp 26808 35604 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:24:11,026 basehttp 26808 35604 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 300
+INFO 2025-06-03 02:26:15,423 basehttp 26808 39316 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:26:15,436 basehttp 26808 39316 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 300
+INFO 2025-06-03 02:26:53,243 autoreload 26808 24080 C:\WISENTIA_Q\wisentia\wisentia_backend\courses\views.py changed, reloading.
+INFO 2025-06-03 02:26:54,944 autoreload 22660 35308 Watching for file changes with StatReloader
+INFO 2025-06-03 02:27:07,571 autoreload 22660 35308 C:\WISENTIA_Q\wisentia\wisentia_backend\courses\views.py changed, reloading.
+INFO 2025-06-03 02:27:09,068 autoreload 38768 18452 Watching for file changes with StatReloader
+INFO 2025-06-03 02:27:24,140 basehttp 38768 40688 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:27:24,154 basehttp 38768 40688 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:30:31,041 basehttp 38768 40368 "PUT /api/admin/courses/update/32/ HTTP/1.1" 200 498
+INFO 2025-06-03 02:30:32,143 basehttp 38768 40368 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:30:32,155 basehttp 38768 40368 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:30:39,660 basehttp 38768 40936 "PUT /api/admin/courses/update/32/ HTTP/1.1" 200 499
+INFO 2025-06-03 02:30:40,747 basehttp 38768 40936 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 706
+INFO 2025-06-03 02:30:40,757 basehttp 38768 40936 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 332
+WARNING 2025-06-03 02:30:46,618 log 38768 37160 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:30:46,623 log 38768 40768 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:30:46,624 basehttp 38768 37160 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:30:46,626 log 38768 28084 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:30:46,626 basehttp 38768 40768 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:30:46,628 basehttp 38768 28084 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:30:46,692 basehttp 38768 34280 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7495
+INFO 2025-06-03 02:30:46,692 basehttp 38768 37160 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7495
+INFO 2025-06-03 02:30:46,713 basehttp 38768 40768 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7495
+WARNING 2025-06-03 02:31:16,339 log 38768 11560 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:16,340 basehttp 38768 11560 "GET /api/admin/courses/?page=1&page_size=10&category=Programming HTTP/1.1" 404 10867
+INFO 2025-06-03 02:31:16,396 basehttp 38768 40132 "GET /api/courses/?page=1&page_size=10&category=Programming HTTP/1.1" 200 1651
+WARNING 2025-06-03 02:31:18,323 log 38768 11560 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:18,324 basehttp 38768 11560 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:31:18,344 basehttp 38768 40132 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7495
+WARNING 2025-06-03 02:31:25,522 log 38768 39376 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:25,525 log 38768 26516 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:25,528 log 38768 3508 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:25,529 basehttp 38768 26516 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:31:25,529 basehttp 38768 39376 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:31:25,529 basehttp 38768 3508 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:31:25,547 basehttp 38768 14180 "GET /api/courses/32/?t=1748907082052 HTTP/1.1" 200 817
+INFO 2025-06-03 02:31:25,547 basehttp 38768 39376 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7495
+INFO 2025-06-03 02:31:25,572 basehttp 38768 14404 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7495
+INFO 2025-06-03 02:31:25,574 basehttp 38768 16156 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7495
+INFO 2025-06-03 02:31:26,481 basehttp 38768 39376 "GET /api/courses/enrollment/status/32/ HTTP/1.1" 200 240
+INFO 2025-06-03 02:31:28,564 basehttp 38768 39376 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 706
+INFO 2025-06-03 02:31:28,578 basehttp 38768 39376 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 332
+INFO 2025-06-03 02:31:36,246 basehttp 38768 27652 "PUT /api/admin/courses/update/32/ HTTP/1.1" 200 498
+INFO 2025-06-03 02:31:37,348 basehttp 38768 27652 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:31:37,359 basehttp 38768 27652 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:31:40,251 basehttp 38768 27652 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:31:40,264 basehttp 38768 27652 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+WARNING 2025-06-03 02:31:40,381 log 38768 27652 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:40,382 basehttp 38768 27652 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:31:40,388 log 38768 31336 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:40,389 basehttp 38768 31336 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:31:40,402 basehttp 38768 27652 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:31:40,404 basehttp 38768 37236 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:31:40,836 log 38768 27652 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:31:40,837 basehttp 38768 27652 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:31:40,849 basehttp 38768 31336 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:31:57,178 basehttp 38768 34436 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:31:57,189 basehttp 38768 34436 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:32:28,940 basehttp 38768 32372 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:32:28,952 basehttp 38768 32372 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:32:44,255 basehttp 38768 12924 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:32:44,265 basehttp 38768 12924 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:33:17,274 basehttp 38768 14404 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:33:17,289 basehttp 38768 14404 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:35:45,560 basehttp 38768 9384 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:35:45,572 basehttp 38768 9384 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-03 02:37:38,175 basehttp 38768 34576 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 02:37:38,188 basehttp 38768 34576 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+WARNING 2025-06-03 02:38:01,175 log 38768 9012 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:01,178 log 38768 40132 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:01,180 log 38768 28056 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:01,181 basehttp 38768 9012 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:38:01,182 basehttp 38768 28056 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:38:01,182 basehttp 38768 40132 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:38:01,233 basehttp 38768 27408 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:38:01,233 basehttp 38768 9012 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:38:01,235 basehttp 38768 13188 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:38:06,410 basehttp 38768 3132 "GET /api/courses/26/?t=1748907484740 HTTP/1.1" 200 1018
+INFO 2025-06-03 02:38:07,658 basehttp 38768 3132 "GET /api/courses/26/progress HTTP/1.1" 301 0
+INFO 2025-06-03 02:38:07,725 basehttp 38768 8068 "GET /api/courses/enrollment/status/26/ HTTP/1.1" 200 37
+INFO 2025-06-03 02:38:07,737 basehttp 38768 17552 "GET /api/quizzes/course/26/?_=1748907487685 HTTP/1.1" 200 1783
+INFO 2025-06-03 02:38:07,761 basehttp 38768 30904 "GET /api/courses/26/progress/ HTTP/1.1" 200 153
+WARNING 2025-06-03 02:38:09,201 log 38768 37824 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:09,204 log 38768 8068 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:09,205 basehttp 38768 37824 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:38:09,205 basehttp 38768 8068 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:38:09,218 basehttp 38768 17552 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:38:09,221 basehttp 38768 37824 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:38:09,667 log 38768 37824 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:09,668 basehttp 38768 37824 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:38:09,676 basehttp 38768 8068 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:38:13,778 basehttp 38768 37824 "GET /api/admin/content/?content_type=courses&course_id=26 HTTP/1.1" 200 1020
+INFO 2025-06-03 02:38:13,788 basehttp 38768 37824 "GET /api/courses/videos/?course_id=26 HTTP/1.1" 200 837
+WARNING 2025-06-03 02:38:33,770 log 38768 30284 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:33,773 log 38768 36040 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:33,774 basehttp 38768 30284 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:38:33,774 basehttp 38768 36040 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:38:33,833 basehttp 38768 30892 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:38:33,834 basehttp 38768 31900 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 02:38:34,225 log 38768 36040 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:38:34,226 basehttp 38768 36040 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:38:34,235 basehttp 38768 30284 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:38:59,103 basehttp 38768 28084 "GET /api/admin/cache-stats/ HTTP/1.1" 200 645
+INFO 2025-06-03 02:38:59,189 basehttp 38768 23876 "GET /api/admin/system-health/ HTTP/1.1" 200 3715
+INFO 2025-06-03 02:39:54,841 basehttp 38768 25792 "GET /api/admin/dashboard/ HTTP/1.1" 200 4364
+WARNING 2025-06-03 02:41:35,634 log 38768 7404 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:41:35,637 log 38768 31304 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:41:35,641 log 38768 28140 Not Found: /api/admin/courses/
+WARNING 2025-06-03 02:41:35,642 basehttp 38768 7404 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:41:35,642 basehttp 38768 31304 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 02:41:35,642 basehttp 38768 28140 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 02:41:35,703 basehttp 38768 30140 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:41:35,704 basehttp 38768 7404 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:41:35,707 basehttp 38768 17248 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 02:41:46,887 basehttp 38768 32908 "GET /api/courses/32/?t=1748907705806 HTTP/1.1" 200 816
+INFO 2025-06-03 02:41:48,127 basehttp 38768 32908 "GET /api/courses/32/progress HTTP/1.1" 301 0
+INFO 2025-06-03 02:41:48,202 basehttp 38768 17372 "GET /api/quizzes/course/32/?_=1748907708156 HTTP/1.1" 200 847
+INFO 2025-06-03 02:41:48,217 basehttp 38768 31556 "GET /api/courses/enrollment/status/32/ HTTP/1.1" 200 240
+INFO 2025-06-03 02:41:48,235 basehttp 38768 39824 "GET /api/courses/32/progress/ HTTP/1.1" 200 176
+INFO 2025-06-03 02:45:30,339 basehttp 38768 25212 "OPTIONS /api/auth/logout/ HTTP/1.1" 200 0
+INFO 2025-06-03 02:45:30,665 basehttp 38768 31256 "POST /api/auth/logout/ HTTP/1.1" 200 36
+INFO 2025-06-03 03:07:09,284 basehttp 38768 35972 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 03:07:50,856 basehttp 38768 31852 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 03:08:22,848 basehttp 38768 17796 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 03:08:39,089 basehttp 38768 32816 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 03:08:49,023 basehttp 38768 35988 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 03:09:19,421 basehttp 38768 31100 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 03:09:26,198 basehttp 38768 14148 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 03:09:36,568 basehttp 38768 2120 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-06-03 03:09:38,157 basehttp 38768 30816 "GET /api/admin/dashboard/ HTTP/1.1" 200 4364
+INFO 2025-06-03 03:09:44,773 basehttp 38768 40396 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+WARNING 2025-06-03 03:09:48,336 log 38768 40396 Not Found: /api/courses/undefined/
+WARNING 2025-06-03 03:09:48,338 basehttp 38768 40396 "GET /api/courses/undefined/?t=1748909387553 HTTP/1.1" 404 7876
+INFO 2025-06-03 03:09:51,348 basehttp 38768 40396 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-03 14:19:30,879 basehttp 38768 43688 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-06-03 14:19:31,231 basehttp 38768 7276 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-06-03 14:19:32,576 basehttp 38768 6976 "GET /api/admin/dashboard/ HTTP/1.1" 200 4364
+INFO 2025-06-03 14:19:57,294 basehttp 38768 46716 "GET /api/admin/users/?page=1&pageSize=1000 HTTP/1.1" 200 5407
+INFO 2025-06-03 14:20:10,775 basehttp 38768 45468 "GET /api/admin/subscriptions/ HTTP/1.1" 200 3933
+INFO 2025-06-03 14:20:45,277 basehttp 38768 27592 "GET /api/admin/analytics/ HTTP/1.1" 200 989
+INFO 2025-06-03 14:21:36,685 basehttp 38768 38216 "GET /api/admin/cache-stats/ HTTP/1.1" 200 646
+INFO 2025-06-03 14:21:36,866 basehttp 38768 15288 "GET /api/admin/system-health/ HTTP/1.1" 200 3717
+WARNING 2025-06-03 14:21:55,326 log 38768 46504 Not Found: /api/admin/courses/
+WARNING 2025-06-03 14:21:55,328 basehttp 38768 46504 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 14:21:55,335 log 38768 19880 Not Found: /api/admin/courses/
+WARNING 2025-06-03 14:21:55,339 log 38768 43264 Not Found: /api/admin/courses/
+WARNING 2025-06-03 14:21:55,341 basehttp 38768 19880 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 14:21:55,341 basehttp 38768 43264 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 14:21:55,400 basehttp 38768 19880 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 14:21:55,402 basehttp 38768 46504 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 14:21:55,402 basehttp 38768 11360 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 14:22:16,376 log 38768 29768 Not Found: /api/admin/courses/
+WARNING 2025-06-03 14:22:16,380 log 38768 12212 Not Found: /api/admin/courses/
+WARNING 2025-06-03 14:22:16,381 basehttp 38768 29768 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+WARNING 2025-06-03 14:22:16,381 basehttp 38768 12212 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 14:22:16,403 basehttp 38768 29768 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 14:22:16,408 basehttp 38768 40280 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+WARNING 2025-06-03 14:22:16,884 log 38768 29768 Not Found: /api/admin/courses/
+WARNING 2025-06-03 14:22:16,885 basehttp 38768 29768 "GET /api/admin/courses/?page=1&page_size=10 HTTP/1.1" 404 10842
+INFO 2025-06-03 14:22:16,903 basehttp 38768 12212 "GET /api/courses/?page=1&page_size=10 HTTP/1.1" 200 7494
+INFO 2025-06-03 14:22:23,785 basehttp 38768 30676 "GET /api/admin/content/?content_type=courses&course_id=32 HTTP/1.1" 200 705
+INFO 2025-06-03 14:22:23,800 basehttp 38768 30676 "GET /api/courses/videos/?course_id=32 HTTP/1.1" 200 331
+INFO 2025-06-04 01:39:53,681 basehttp 38768 39904 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:40:32,403 basehttp 38768 48088 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:41:05,718 basehttp 38768 36380 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:41:50,368 basehttp 38768 12732 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:42:13,108 basehttp 38768 26532 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:42:43,571 basehttp 38768 35736 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:43:02,757 basehttp 38768 48792 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:47:07,799 basehttp 38768 33412 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+WARNING 2025-06-04 01:48:24,329 log 38768 15276 Forbidden: /api/courses/25/
+WARNING 2025-06-04 01:48:24,330 basehttp 38768 15276 "GET /api/courses/25/?t=1748990903645 HTTP/1.1" 403 52
+INFO 2025-06-04 01:49:13,078 basehttp 38768 47716 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-06-04 01:49:13,409 basehttp 38768 23852 "POST /api/auth/login/ HTTP/1.1" 200 528
+INFO 2025-06-04 01:49:17,617 basehttp 38768 37980 "GET /api/admin/dashboard/ HTTP/1.1" 200 4364
+INFO 2025-06-04 01:49:24,275 basehttp 38768 46440 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:49:27,097 basehttp 38768 46440 "GET /api/courses/23/?t=1748990966913 HTTP/1.1" 200 1054
+INFO 2025-06-04 01:49:28,590 basehttp 38768 46440 "GET /api/courses/23/progress HTTP/1.1" 301 0
+INFO 2025-06-04 01:49:28,639 basehttp 38768 26532 "GET /api/courses/enrollment/status/23/ HTTP/1.1" 200 37
+INFO 2025-06-04 01:49:28,647 basehttp 38768 48020 "GET /api/quizzes/course/23/?_=1748990968598 HTTP/1.1" 200 1157
+INFO 2025-06-04 01:49:28,674 basehttp 38768 27888 "GET /api/courses/23/progress/ HTTP/1.1" 200 153
+INFO 2025-06-04 01:49:32,167 basehttp 38768 37008 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:49:38,571 basehttp 38768 38852 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:49:41,807 basehttp 38768 38852 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 01:50:08,428 basehttp 38768 43248 "GET /api/courses/30/?t=1748991008243 HTTP/1.1" 200 674
+INFO 2025-06-04 01:50:08,781 basehttp 38768 43248 "GET /api/quizzes/course/30/?_=1748991008751 HTTP/1.1" 200 647
+INFO 2025-06-04 01:50:08,807 basehttp 38768 47288 "GET /api/courses/30/progress HTTP/1.1" 301 0
+INFO 2025-06-04 01:50:08,859 basehttp 38768 43248 "GET /api/courses/enrollment/status/30/ HTTP/1.1" 200 37
+INFO 2025-06-04 01:50:08,889 basehttp 38768 35184 "GET /api/courses/30/progress/ HTTP/1.1" 200 153
+INFO 2025-06-04 22:33:24,732 basehttp 38768 40336 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 22:34:06,849 basehttp 38768 38460 "GET /api/courses/?page=1 HTTP/1.1" 200 7494

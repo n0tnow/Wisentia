@@ -7,7 +7,7 @@ export async function GET() {
     const headersList = headers();
     const token = headersList.get('authorization')?.split(' ')[1] || '';
     
-    const response = await fetch(`${API_URL}/analytics/user-stats/`, {
+    const response = await fetch(`${API_URL}/admin/user-analytics/stats/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

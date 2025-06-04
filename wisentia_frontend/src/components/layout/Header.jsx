@@ -44,6 +44,31 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link'; // NextLink yerine Link kullanılmalı
 
+// Quantum Education Theme Colors
+const QUANTUM_COLORS = {
+  primary: '#6366F1',     // Indigo - Bilgi ve teknoloji
+  secondary: '#8B5CF6',   // Purple - Yaratıcılık ve öğrenme
+  accent: '#06B6D4',      // Cyan - Taze ve modern
+  success: '#10B981',     // Emerald - Başarı ve ilerleme
+  warning: '#F59E0B',     // Amber - Dikkat ve önem
+  error: '#EF4444',       // Red - Uyarı
+  neon: '#00D4FF',        // Neon Blue - Enerji
+  plasma: '#FF006E',      // Magenta - Dinamizm
+  education: '#7C3AED',   // Deep Purple - Eğitim
+  gradients: {
+    primary: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #06B6D4 100%)',
+    education: 'linear-gradient(135deg, #7C3AED 0%, #6366F1 25%, #8B5CF6 50%, #06B6D4 75%, #10B981 100%)',
+    hero: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 25%, #6366F1 50%, #8B5CF6 75%, #06B6D4 100%)',
+    neon: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 50%, #FF006E 100%)',
+    learning: 'linear-gradient(45deg, #10B981 0%, #06B6D4 25%, #6366F1 50%, #8B5CF6 75%, #7C3AED 100%)'
+  },
+  shadows: {
+    neon: '0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(6, 182, 212, 0.2)',
+    education: '0 0 30px rgba(124, 58, 237, 0.5), 0 0 60px rgba(99, 102, 241, 0.3)',
+    glow: '0 0 15px rgba(6, 182, 212, 0.4), 0 0 30px rgba(139, 92, 246, 0.3)'
+  }
+};
+
 export default function Header({ isLandingPage = false }) {
   const router = useRouter();
   const { isDarkMode, toggleTheme } = useCustomTheme();
@@ -311,9 +336,11 @@ export default function Header({ isLandingPage = false }) {
       sx={{
         '& .MuiDrawer-paper': { 
           width: 280,
-          background: `linear-gradient(145deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          background: QUANTUM_COLORS.gradients.education,
           color: 'white',
-          boxSizing: 'border-box' 
+          boxSizing: 'border-box',
+          backdropFilter: 'blur(20px)',
+          boxShadow: QUANTUM_COLORS.shadows.education,
         },
       }}
     >
@@ -532,17 +559,32 @@ export default function Header({ isLandingPage = false }) {
           zIndex: (theme) => theme.zIndex.drawer + 1,
           transition: 'all 0.3s ease-in-out',
           transform: visible ? 'translateY(0)' : 'translateY(-100%)',
-          backdropFilter: 'blur(10px)',
-          background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          backdropFilter: 'blur(20px)',
+          background: QUANTUM_COLORS.gradients.education,
           borderBottom: scrolled 
-            ? `1px solid ${alpha(theme.palette.primary.main, 0.1)}` 
+            ? `1px solid ${alpha(QUANTUM_COLORS.neon, 0.3)}` 
             : 'none',
           boxShadow: scrolled 
-            ? `0 4px 20px ${alpha(theme.palette.primary.main, 0.15)}` 
-            : 'none',
+            ? QUANTUM_COLORS.shadows.education
+            : QUANTUM_COLORS.shadows.glow,
           '& .MuiToolbar-root': {
-            // This ensures text is readable in both dark and light modes
-            color: isDarkMode ? '#fff' : '#fff', 
+            color: '#fff',
+          },
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              radial-gradient(circle at 20% 80%, rgba(124, 58, 237, 0.4) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.4) 0%, transparent 50%),
+              radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.3) 0%, transparent 50%)
+            `,
+            animation: 'quantumPulse 6s ease-in-out infinite alternate',
+            pointerEvents: 'none',
+            zIndex: 0,
           },
           '&::after': {
             content: '""',
@@ -551,8 +593,18 @@ export default function Header({ isLandingPage = false }) {
             left: 0,
             width: '100%',
             height: 15,
-            background: `linear-gradient(to bottom, ${alpha(theme.palette.primary.main, 0.2)}, transparent)`,
+            background: `linear-gradient(to bottom, ${alpha(QUANTUM_COLORS.education, 0.3)}, transparent)`,
             pointerEvents: 'none'
+          },
+          '@keyframes quantumPulse': {
+            '0%': {
+              opacity: 0.6,
+              transform: 'scale(1)',
+            },
+            '100%': {
+              opacity: 1,
+              transform: 'scale(1.02)',
+            },
           }
         }}
       >
@@ -560,12 +612,14 @@ export default function Header({ isLandingPage = false }) {
           <Toolbar disableGutters sx={{ position: 'relative' }}>
             <StarSparkles />
             
-            {/* Logo - clean, pure text with self-contained animation */}
+            {/* Logo - Bold & Quantum Education Theme - Responsive */}
             <Box
               sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
-                mr: 3
+                mr: { xs: 1, sm: 2, md: 3 },
+                position: 'relative',
+                zIndex: 1
               }}
             >
               <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -573,31 +627,66 @@ export default function Header({ isLandingPage = false }) {
                   variant="h5" 
                   component="div" 
                   sx={{ 
+                    fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif',
                     fontWeight: 800,
-                    letterSpacing: 1.5,
+                    letterSpacing: { xs: 1, md: 1.5 },
+                    fontSize: { xs: '1.3rem', sm: '1.5rem', md: '1.7rem' },
+                    background: 'linear-gradient(135deg, #FFFFFF 0%, #00D4FF 50%, #FFFFFF 100%)',
+                    backgroundSize: '200% 100%',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.4s ease',
                     position: 'relative',
-                    color: '#FFFFFF', // Solid white for best visibility in both themes
-                    transition: 'all 0.3s ease',
+                    animation: 'logoShimmer 3s ease-in-out infinite',
                     '&:hover': {
-                      transform: 'translateY(-2px)',
+                      background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 25%, #06B6D4 50%, #10B981 75%, #00D4FF 100%)',
+                      backgroundSize: '300% 100%',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      transform: 'translateY(-2px) scale(1.02)',
+                      animation: 'logoQuantumFlow 1.5s ease-in-out infinite',
+                      textShadow: '0 0 20px rgba(6, 182, 212, 0.4)',
                     },
                     '&::after': {
                       content: '""',
                       position: 'absolute',
-                      width: '100%',
-                      height: '100%',
-                      top: 0,
-                      left: 0,
-                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-                      backgroundSize: '200% 100%', 
-                      opacity: 0,
-                      transform: 'translateX(-100%)',
-                      transition: 'all 0.6s ease',
-                      pointerEvents: 'none',
+                      width: '0',
+                      height: '3px',
+                      bottom: -5,
+                      left: '50%',
+                      background: 'linear-gradient(90deg, #6366F1, #8B5CF6, #06B6D4, #10B981)',
+                      transition: 'all 0.4s ease',
+                      transform: 'translateX(-50%)',
+                      borderRadius: '2px',
+                      boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)',
                     },
                     '&:hover::after': {
-                      opacity: 1,
-                      transform: 'translateX(100%)',
+                      width: '100%',
+                    },
+                    '@keyframes logoShimmer': {
+                      '0%': {
+                        backgroundPosition: '0% 50%',
+                      },
+                      '50%': {
+                        backgroundPosition: '100% 50%',
+                      },
+                      '100%': {
+                        backgroundPosition: '0% 50%',
+                      },
+                    },
+                    '@keyframes logoQuantumFlow': {
+                      '0%': {
+                        backgroundPosition: '0% 50%',
+                      },
+                      '50%': {
+                        backgroundPosition: '100% 50%',
+                      },
+                      '100%': {
+                        backgroundPosition: '200% 50%',
+                      },
                     },
                   }}
                 >
@@ -606,125 +695,227 @@ export default function Header({ isLandingPage = false }) {
               </Link>
             </Box>
             
-            {/* Mobile menu icon */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-end' }}>
+            {/* Mobile menu icon - Better responsive positioning */}
+            <Box sx={{ 
+              flexGrow: 1, 
+              display: { xs: 'flex', md: 'none' }, 
+              justifyContent: 'flex-end',
+              alignItems: 'center'
+            }}>
               <IconButton
                 size="large"
-                edge="start"
+                edge="end"
                 color="inherit"
                 aria-label="menu"
                 onClick={handleMobileDrawerToggle}
+                sx={{
+                  mr: { xs: 0, sm: 1 },
+                  width: { xs: 44, sm: 48 },
+                  height: { xs: 44, sm: 48 },
+                  borderRadius: '14px',
+                  background: `linear-gradient(45deg, ${alpha(QUANTUM_COLORS.primary, 0.2)}, ${alpha(QUANTUM_COLORS.accent, 0.2)})`,
+                  border: `1px solid ${alpha(QUANTUM_COLORS.neon, 0.3)}`,
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    background: `linear-gradient(45deg, ${alpha(QUANTUM_COLORS.neon, 0.3)}, ${alpha(QUANTUM_COLORS.primary, 0.3)})`,
+                    transform: 'scale(1.05)',
+                    boxShadow: `0 4px 15px ${alpha(QUANTUM_COLORS.neon, 0.3)}`,
+                  }
+                }}
               >
-                <MenuIcon />
+                <MenuIcon sx={{ fontSize: { xs: '1.3rem', sm: '1.5rem' } }} />
               </IconButton>
             </Box>
             
-            {/* Desktop Navigation - centered */}
+            {/* Desktop Navigation - Enhanced responsive design */}
             <Box 
               sx={{ 
                 flexGrow: 1, 
                 display: { xs: 'none', md: 'flex' }, 
-                justifyContent: 'center'
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 1,
+                px: { md: 1, lg: 2 }
               }}
             >
-              {navItems.map((item) => (
+              {navItems.map((item, index) => (
                 <Button
                   key={item.path}
                   onClick={() => router.push(item.path)}
                   sx={{
-                    mx: 1.5, // Increased spacing for better centering
-                    py: 0.75,
-                    px: 2,
+                    mx: { md: 1, lg: 1.5 },
+                    py: 1,
+                    px: { md: 2, lg: 3 },
                     color: '#fff',
-                    fontSize: '0.95rem',
+                    fontSize: { md: '0.9rem', lg: '0.95rem' },
                     position: 'relative',
                     overflow: 'hidden',
-                    fontWeight: 500,
+                    fontWeight: 600,
+                    borderRadius: '20px',
+                    background: 'transparent',
+                    border: 'none',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    textTransform: 'none',
                     '&:hover': {
-                      backgroundColor: 'transparent',
+                      background: `linear-gradient(45deg, ${alpha(QUANTUM_COLORS.primary, 0.8)}, ${alpha(QUANTUM_COLORS.secondary, 0.8)})`,
+                      transform: 'translateY(-3px) scale(1.05)',
+                      boxShadow: `0 8px 25px ${alpha(QUANTUM_COLORS.neon, 0.4)}`,
+                      border: `1px solid ${QUANTUM_COLORS.neon}`,
+                      backdropFilter: 'blur(10px)',
+                      '& .nav-icon': {
+                        transform: 'rotate(10deg) scale(1.2)',
+                        color: QUANTUM_COLORS.neon,
+                      },
+                      '&::before': {
+                        opacity: 1,
+                        transform: 'translateX(100%)',
+                      }
+                    },
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent)',
+                      transform: 'translateX(-100%)',
+                      transition: 'all 0.6s ease',
+                      opacity: 0,
                     },
                     '&::after': {
                       content: '""',
                       position: 'absolute',
+                      bottom: -2,
+                      left: '50%',
                       width: '0',
-                      height: '2px',
-                      bottom: '0',
-                      left: '0',
-                      backgroundColor: '#fff',
-                      transition: 'width 0.3s ease-in-out',
+                      height: '3px',
+                      background: `linear-gradient(90deg, ${QUANTUM_COLORS.neon}, ${QUANTUM_COLORS.accent})`,
+                      transform: 'translateX(-50%)',
+                      borderRadius: '2px',
+                      transition: 'width 0.4s ease',
                     },
                     '&:hover::after': {
-                      width: '100%',
+                      width: '80%',
                     },
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', position: 'relative', zIndex: 1 }}>
                     <Box 
+                      className="nav-icon"
                       sx={{ 
-                        mr: 0.5, 
-                        display: 'flex', 
-                        color: '#fff'
+                        mr: { md: 0.5, lg: 1 }, 
+                        display: { md: 'flex' },
+                        transition: 'all 0.3s ease',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
                       }}
                     >
                       {item.icon}
                     </Box>
-                    {item.text}
+                    <Box sx={{ display: { md: 'none', lg: 'block' } }}>
+                      {item.text}
+                    </Box>
                   </Box>
                 </Button>
               ))}
             </Box>
             
-            {/* Actions (Theme Switch & Auth) */}
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {/* Theme Toggle Button - New and Cleaner */}
+            {/* Actions (Theme Switch & Auth) - Enhanced responsive design */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              position: 'relative', 
+              zIndex: 1,
+              gap: { xs: 0.5, sm: 1, md: 1.5 }
+            }}>
+              {/* Theme Toggle Button - Responsive sizing */}
               <IconButton
                 onClick={toggleTheme}
                 aria-label={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
                 sx={{
-                  width: 36,
-                  height: 36,
+                  width: { xs: 40, sm: 44 },
+                  height: { xs: 40, sm: 44 },
                   p: 0.5,
-                  backgroundColor: 'rgba(255,255,255,0.15)',
-                  borderRadius: '12px',
-                  transition: 'all 0.3s ease',
+                  background: `linear-gradient(45deg, ${alpha(QUANTUM_COLORS.accent, 0.8)}, ${alpha(QUANTUM_COLORS.secondary, 0.8)})`,
+                  borderRadius: '14px',
+                  border: `2px solid ${alpha(QUANTUM_COLORS.neon, 0.3)}`,
+                  boxShadow: QUANTUM_COLORS.shadows.glow,
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                   '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.25)',
+                    background: `linear-gradient(45deg, ${QUANTUM_COLORS.neon}, ${QUANTUM_COLORS.primary})`,
+                    transform: 'translateY(-2px) rotate(10deg) scale(1.1)',
+                    boxShadow: QUANTUM_COLORS.shadows.neon,
+                    border: `2px solid ${QUANTUM_COLORS.neon}`,
                   }
                 }}
               >
                 {isDarkMode ? (
-                  <LightModeIcon sx={{ color: '#FFFFFF' }} />
+                  <LightModeIcon sx={{ 
+                    color: '#FFFFFF',
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  }} />
                 ) : (
-                  <DarkModeIcon sx={{ color: '#FFFFFF' }} />
+                  <DarkModeIcon sx={{ 
+                    color: '#FFFFFF',
+                    fontSize: { xs: '1.2rem', sm: '1.4rem' }, 
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                  }} />
                 )}
               </IconButton>
               
-              {/* Notifications - only visible when authenticated */}
-              {userIsAuthenticated && !isMobile && (
-                <Box sx={{ ml: 1 }}>
-                  <Tooltip title="Notifications">
+              {/* Notifications - Responsive visibility */}
+              {userIsAuthenticated && (
+                <Box sx={{ 
+                  display: { xs: 'none', sm: 'block' },
+                  ml: { sm: 1, md: 2 }
+                }}>
+                  <Tooltip title="Learning Notifications" arrow>
                     <IconButton 
                       color="inherit" 
                       onClick={handleNotificationClick}
                       sx={{ 
-                        borderRadius: 2,
-                        transition: 'all 0.3s ease',
-                        backgroundColor: 'rgba(255,255,255,0.15)',
+                        width: { sm: 40, md: 44 },
+                        height: { sm: 40, md: 44 },
+                        borderRadius: '14px',
+                        transition: 'all 0.4s ease',
+                        background: `linear-gradient(45deg, ${alpha(QUANTUM_COLORS.warning, 0.7)}, ${alpha(QUANTUM_COLORS.error, 0.7)})`,
+                        border: `2px solid ${alpha(QUANTUM_COLORS.warning, 0.3)}`,
+                        boxShadow: `0 4px 15px ${alpha(QUANTUM_COLORS.warning, 0.3)}`,
                         '&:hover': {
-                          backgroundColor: 'rgba(255,255,255,0.25)',
+                          background: `linear-gradient(45deg, ${QUANTUM_COLORS.warning}, ${QUANTUM_COLORS.plasma})`,
+                          transform: 'translateY(-2px) scale(1.1)',
+                          boxShadow: `0 8px 25px ${alpha(QUANTUM_COLORS.warning, 0.5)}`,
+                          border: `2px solid ${QUANTUM_COLORS.warning}`,
                         }
                       }}
                     >
-                      <Badge badgeContent={3} color="error">
-                        <NotificationsIcon sx={{ color: '#fff' }} />
+                      <Badge 
+                        badgeContent={3} 
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            background: `linear-gradient(45deg, ${QUANTUM_COLORS.plasma}, ${QUANTUM_COLORS.error})`,
+                            color: 'white',
+                            fontWeight: 'bold',
+                            fontSize: { sm: '0.7rem', md: '0.75rem' },
+                            boxShadow: `0 2px 8px ${alpha(QUANTUM_COLORS.plasma, 0.5)}`
+                          }
+                        }}
+                      >
+                        <NotificationsIcon sx={{ 
+                          color: '#fff',
+                          fontSize: { sm: '1.2rem', md: '1.4rem' },
+                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+                        }} />
                       </Badge>
                     </IconButton>
                   </Tooltip>
                 </Box>
               )}
               
-              {/* User Account or Auth Buttons */}
-              <Box sx={{ ml: 1 }}>
+              {/* User Account or Auth Buttons - Responsive design */}
+              <Box sx={{ ml: { xs: 0.5, sm: 1 } }}>
                 {userIsAuthenticated ? (
                   <>
                     <IconButton
@@ -734,9 +925,9 @@ export default function Header({ isLandingPage = false }) {
                       aria-haspopup="true"
                       onClick={handleMenu}
                       sx={{ 
-                        ml: 1,
+                        ml: { xs: 0.5, sm: 1 },
                         border: '2px solid rgba(255,255,255,0.3)',
-                        padding: '4px',
+                        padding: { xs: '3px', sm: '4px' },
                         transition: 'all 0.3s ease',
                         '&:hover': {
                           borderColor: 'rgba(255,255,255,0.8)',
@@ -747,8 +938,8 @@ export default function Header({ isLandingPage = false }) {
                         alt={user?.username} 
                         src={user?.profileImage} 
                         sx={{ 
-                          width: 32, 
-                          height: 32,
+                          width: { xs: 28, sm: 32 }, 
+                          height: { xs: 28, sm: 32 },
                           background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                         }}
                       />
@@ -841,30 +1032,50 @@ export default function Header({ isLandingPage = false }) {
                     </Menu>
                   </>
                 ) : (
-                  <Box sx={{ display: 'flex' }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: { xs: 0.5, sm: 1 },
+                    flexDirection: { xs: 'row' },
+                    alignItems: 'center'
+                  }}>
                     <Button 
                       component={Link}
                       href="/login"
-                      color="inherit" 
                       sx={{ 
-                        ml: 1,
                         color: '#fff',
-                        fontWeight: 500,
+                        fontWeight: 600,
+                        fontSize: { xs: '0.85rem', sm: '0.9rem', md: '0.95rem' },
                         position: 'relative',
                         overflow: 'hidden',
-                        transition: 'all 0.3s ease-in-out',
+                        borderRadius: '20px',
+                        px: { xs: 2, sm: 2.5, md: 3 },
+                        py: { xs: 0.8, sm: 1 },
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(10px)',
+                        border: `2px solid ${alpha(QUANTUM_COLORS.accent, 0.3)}`,
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                        textTransform: 'none',
+                        minWidth: { xs: 'auto', sm: 'auto' },
+                        '&:hover': {
+                          background: `linear-gradient(45deg, ${alpha(QUANTUM_COLORS.accent, 0.8)}, ${alpha(QUANTUM_COLORS.primary, 0.8)})`,
+                          transform: 'translateY(-2px) scale(1.05)',
+                          boxShadow: `0 8px 25px ${alpha(QUANTUM_COLORS.accent, 0.4)}`,
+                          border: `2px solid ${QUANTUM_COLORS.accent}`,
+                        },
                         '&::after': {
                           content: '""',
                           position: 'absolute',
+                          bottom: -2,
+                          left: '50%',
                           width: '0',
-                          height: '2px',
-                          bottom: '0',
-                          left: '0',
-                          backgroundColor: '#fff',
-                          transition: 'width 0.3s ease-in-out',
+                          height: '3px',
+                          background: `linear-gradient(90deg, ${QUANTUM_COLORS.accent}, ${QUANTUM_COLORS.neon})`,
+                          transform: 'translateX(-50%)',
+                          borderRadius: '2px',
+                          transition: 'width 0.4s ease',
                         },
                         '&:hover::after': {
-                          width: '100%',
+                          width: '80%',
                         },
                       }}
                     >
@@ -873,28 +1084,58 @@ export default function Header({ isLandingPage = false }) {
                     <Button 
                       component={Link}
                       href="/register"
-                      variant="contained" 
                       sx={{ 
-                        ml: 1,
-                        borderRadius: '10px',
-                        px: 2,
-                        py: 0.8,
+                        borderRadius: '20px',
+                        px: { xs: 2, sm: 2.5, md: 3 },
+                        py: { xs: 0.8, sm: 1 },
                         position: 'relative',
                         overflow: 'hidden',
-                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        background: `linear-gradient(45deg, ${QUANTUM_COLORS.success}, ${QUANTUM_COLORS.accent})`,
                         color: '#fff',
-                        fontWeight: 500,
-                        border: '1px solid rgba(255,255,255,0.3)',
-                        transition: 'all 0.3s ease',
+                        fontWeight: 600,
+                        fontSize: { xs: '0.85rem', sm: '0.9rem', md: '0.95rem' },
+                        border: `2px solid ${alpha(QUANTUM_COLORS.success, 0.5)}`,
+                        boxShadow: `0 4px 15px ${alpha(QUANTUM_COLORS.success, 0.3)}`,
+                        textTransform: 'none',
+                        minWidth: { xs: 'auto', sm: 'auto' },
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                         '&:hover': {
-                          backgroundColor: 'rgba(255,255,255,0.3)',
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
+                          background: `linear-gradient(45deg, ${QUANTUM_COLORS.neon}, ${QUANTUM_COLORS.plasma})`,
+                          transform: 'translateY(-3px) scale(1.08)',
+                          boxShadow: `0 12px 30px ${alpha(QUANTUM_COLORS.neon, 0.5)}`,
+                          border: `2px solid ${QUANTUM_COLORS.neon}`,
+                        },
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                          transform: 'translateX(-100%)',
+                          transition: 'all 0.6s ease',
+                          opacity: 0,
+                        },
+                        '&:hover::before': {
+                          opacity: 1,
+                          transform: 'translateX(100%)',
                         }
                       }}
                     >
                       <ButtonStars />
-                      Sign Up
+                      <Box sx={{ 
+                        position: 'relative', 
+                        zIndex: 1, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: { xs: 0.3, sm: 0.5 }
+                      }}>
+                        <SchoolIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />
+                        <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                          Register
+                        </Box>
+                      </Box>
                     </Button>
                   </Box>
                 )}

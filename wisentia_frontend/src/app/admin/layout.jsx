@@ -1,19 +1,64 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import { CssBaseline, ThemeProvider, Box, CircularProgress } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import { useAuth } from '@/contexts/AuthContext';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+
+// Auth wrapper component to handle auth context safely
+function AuthWrapper({ children, onAuthReady }) {
+  const [authReady, setAuthReady] = useState(false);
+  
+  try {
+    const { user, isAuthenticated, isLoading: isAuthLoading, authChecked } = useAuth();
+    
+    useEffect(() => {
+      if (authChecked && !isAuthLoading && !authReady) {
+        setAuthReady(true);
+        onAuthReady({ user, isAuthenticated });
+      }
+    }, [authChecked, isAuthLoading, user, isAuthenticated, authReady]);
+    
+    if (!authReady) {
+      return (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          height="100vh"
+          width="100vw"
+        >
+          <CircularProgress size={60} />
+        </Box>
+      );
+    }
+    
+    return children;
+  } catch (error) {
+    console.error('Auth context error in admin layout:', error);
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+        width="100vw"
+      >
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+}
 
 export default function AdminLayout({ children }) {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [authData, setAuthData] = useState({ user: null, isAuthenticated: false });
   const router = useRouter();
-  const { isAuthenticated, user, isLoading } = useAuth();
-
+  
   // Dark mode teması oluştur
   const theme = createTheme({
     palette: {
@@ -51,6 +96,11 @@ export default function AdminLayout({ children }) {
     }
   };
 
+  // Auth ready handler
+  const handleAuthReady = useCallback(({ user, isAuthenticated }) => {
+    setAuthData({ user, isAuthenticated, isAuthLoading: false });
+  }, []);
+
   // Client-side işlemleri useEffect içinde yap
   useEffect(() => {
     setMounted(true);
@@ -73,11 +123,12 @@ export default function AdminLayout({ children }) {
 
   // Yetkilendirme kontrolü
   useEffect(() => {
-    if (mounted && !isLoading) {
+    if (mounted && authData.user !== null) {
       try {
         // Kullanıcının admin rolüne sahip olup olmadığını kontrol et
-        const userObj = user || JSON.parse(localStorage.getItem('user') || '{}');
-        if (!isAuthenticated() || userObj.role !== 'admin') {
+        const userObj = authData.user || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : {});
+        if (!authData.isAuthenticated || userObj.role !== 'admin') {
+          console.log('Admin yetkilendirme başarısız, yönlendiriliyor...');
           router.push('/login?redirect=/admin/dashboard');
         } else {
           setLoading(false);
@@ -87,28 +138,44 @@ export default function AdminLayout({ children }) {
         router.push('/login');
       }
     }
-  }, [isLoading, isAuthenticated, user, router, mounted]);
+  }, [authData.user, authData.isAuthenticated, router, mounted]);
 
   // Hydration: İlk render için basitleştirilmiş çıktı
   if (!mounted) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div className="loader-container">
-          <div className="loader"></div>
-        </div>
+        <AuthWrapper onAuthReady={handleAuthReady}>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100vh"
+            width="100vw"
+          >
+            <CircularProgress size={60} />
+          </Box>
+        </AuthWrapper>
       </ThemeProvider>
     );
   }
 
   // Yükleniyor durumu
-  if (loading || isLoading) {
+  if (loading) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div className="loader-container">
-          <div className="loader"></div>
-        </div>
+        <AuthWrapper onAuthReady={handleAuthReady}>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100vh"
+            width="100vw"
+          >
+            <CircularProgress size={60} />
+          </Box>
+        </AuthWrapper>
       </ThemeProvider>
     );
   }
@@ -117,83 +184,85 @@ export default function AdminLayout({ children }) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AdminSidebar darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
-        <div className="admin-content-wrapper">
-          {children}
-        </div>
-      </AdminSidebar>
-      
-      {/* Global stiller */}
-      <style jsx global>{`
-        body {
-          margin: 0;
-          padding: 0;
-          background-color: ${darkMode ? '#111827' : '#f5f7fa'};
-        }
+      <AuthWrapper onAuthReady={handleAuthReady}>
+        <AdminSidebar darkMode={darkMode} toggleDarkMode={toggleDarkMode}>
+          <div className="admin-content-wrapper">
+            {children}
+          </div>
+        </AdminSidebar>
         
-        .loader-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          height: 100vh;
-          width: 100vw;
-          background-color: ${darkMode ? '#111827' : '#f5f7fa'};
-          position: fixed;
-          top: 0;
-          left: 0;
-          z-index: 9999;
-        }
-        
-        .loader {
-          border: 4px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
-          border-radius: 50%;
-          border-top: 4px solid #3f51b5;
-          width: 40px;
-          height: 40px;
-          animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
+        {/* Global stiller */}
+        <style jsx global>{`
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: ${darkMode ? '#111827' : '#f5f7fa'};
+          }
+          
+          .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            background-color: ${darkMode ? '#111827' : '#f5f7fa'};
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+          }
+          
+          .loader {
+            border: 4px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'};
+            border-radius: 50%;
+            border-top: 4px solid #3f51b5;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+          }
+          
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
 
-        /* Admin içerik alanı düzenlemesi */
-        .admin-content-wrapper {
-          height: 100%;
-          width: 100%;
-          overflow-y: auto;
-          overflow-x: hidden;
-          position: relative;
-        }
+          /* Admin içerik alanı düzenlemesi */
+          .admin-content-wrapper {
+            height: 100%;
+            width: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+          }
 
-        /* Kaydırma çubuğu stili */
-        ::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
+          /* Kaydırma çubuğu stili */
+          ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+          }
 
-        ::-webkit-scrollbar-track {
-          background: ${darkMode ? '#1a202c' : '#f1f1f1'};
-          border-radius: 4px;
-        }
+          ::-webkit-scrollbar-track {
+            background: ${darkMode ? '#374151' : '#f1f1f1'};
+            border-radius: 4px;
+          }
 
-        ::-webkit-scrollbar-thumb {
-          background: ${darkMode ? '#4a5568' : '#888'};
-          border-radius: 4px;
-          transition: background 0.3s ease;
-        }
+          ::-webkit-scrollbar-thumb {
+            background: ${darkMode ? '#6b7280' : '#c1c1c1'};
+            border-radius: 4px;
+            transition: background 0.3s ease;
+          }
 
-        ::-webkit-scrollbar-thumb:hover {
-          background: ${darkMode ? '#718096' : '#555'};
-        }
+          ::-webkit-scrollbar-thumb:hover {
+            background: ${darkMode ? '#9ca3af' : '#a8a8a8'};
+          }
 
-        /* Diğer tarayıcılar için kaydırma çubuğu stili */
-        * {
-          scrollbar-width: thin;
-          scrollbar-color: ${darkMode ? '#4a5568 #1a202c' : '#888 #f1f1f1'};
-        }
-      `}</style>
+          /* Firefox için */
+          * {
+            scrollbar-width: thin;
+            scrollbar-color: ${darkMode ? '#6b7280 #374151' : '#c1c1c1 #f1f1f1'};
+          }
+        `}</style>
+      </AuthWrapper>
     </ThemeProvider>
   );
 }

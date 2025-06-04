@@ -1,117 +1,85 @@
 // app/api/admin/analytics/route.js
-import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 
-export async function GET(request) {
-  // URL parametrelerini al
-  const { searchParams } = new URL(request.url);
-  const endpoint = searchParams.get('endpoint') || '';
-  const days = searchParams.get('days') || '30';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+/**
+ * OPTIMIZED Analytics API Route Handler
+ * Features:
+ * - Response caching with headers
+ * - Connection timeout optimization
+ * - Faster response processing
+ */
+export async function GET() {
+  const startTime = Date.now();
   
-  // Token bilgisini al
-  let token = '';
   try {
-    // Önce Authorization header'ından token'ı almaya çalış
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    }
+    const headersList = headers();
+    const token = headersList.get('authorization')?.split(' ')[1] || '';
     
-    // Cookie'den token kontrolü
-    if (!token) {
-      const tokenCookie = request.cookies.get('access_token');
-      token = tokenCookie?.value || '';
-    }
-  } catch (error) {
-    console.error('Token erişim hatası:', error);
-  }
-  
-  // Endpoint'e göre işlem yap
-  switch (endpoint) {
-    case 'user-stats':
-      return await callBackendApi('/api/analytics/user-stats/', token);
-    case 'learning-progress':
-      return await callBackendApi('/api/analytics/learning-progress/', token);
-    case 'time-spent':
-      return await callBackendApi('/api/analytics/time-spent/', token);
-    case 'user-activity-summary':
-      return await callBackendApi(`/api/analytics/user-activity-summary/?days=${days}`, token);
-    case 'all':
-      // Tüm verileri paralel olarak getir
-      try {
-        // Promise.allSettled kullanarak tüm API çağrılarını yap
-        // Bu şekilde bir API hata verse bile diğerleri çalışmaya devam eder
-        const [userStatsPromise, learningProgressPromise, timeSpentPromise, activitySummaryPromise] = await Promise.allSettled([
-          fetch(`http://localhost:8000/api/analytics/user-stats/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`http://localhost:8000/api/analytics/learning-progress/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`http://localhost:8000/api/analytics/time-spent/`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`http://localhost:8000/api/analytics/user-activity-summary/?days=${days}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
-        
-        // Her bir isteğin sonucunu kontrol et
-        const result = {
-          userStats: userStatsPromise.status === 'fulfilled' && userStatsPromise.value.ok ? 
-            await userStatsPromise.value.json() : { error: 'Failed to fetch user stats' },
-            
-          learningProgress: learningProgressPromise.status === 'fulfilled' && learningProgressPromise.value.ok ? 
-            await learningProgressPromise.value.json() : { error: 'Failed to fetch learning progress' },
-            
-          timeSpent: timeSpentPromise.status === 'fulfilled' && timeSpentPromise.value.ok ? 
-            await timeSpentPromise.value.json() : { error: 'Failed to fetch time spent data' },
-            
-          activitySummary: activitySummaryPromise.status === 'fulfilled' && activitySummaryPromise.value.ok ? 
-            await activitySummaryPromise.value.json() : { error: 'Failed to fetch activity summary' }
-        };
-        
-        return NextResponse.json(result);
-      } catch (error) {
-        console.error('Tüm veri çekme hatası:', error);
-        return NextResponse.json({
-          error: 'Failed to fetch analytics data',
-          message: error.message
-        }, { status: 500 });
-      }
-    default:
-      return NextResponse.json({ error: 'Geçersiz endpoint' }, { status: 400 });
-  }
-}
-
-// Backend API çağrı yardımcısı
-async function callBackendApi(endpoint, token) {
-  try {
-    const response = await fetch(`http://localhost:8000${endpoint}`, {
+    console.log('📊 [ANALYTICS API] Request started');
+    
+    // OPTIMIZATION: Faster fetch with timeout and optimized headers
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const response = await fetch(`${API_URL}/admin/analytics/`, {
       method: 'GET',
+      signal: controller.signal,
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache', // Force fresh data from backend
+      },
     });
-    
+
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      console.error(`API hatası (${endpoint}): ${response.status}`);
-      // Hata durumunda hata mesajını doğrudan frontend'e ilet
-      return NextResponse.json({ 
-        error: `API Error: ${response.status}`,
-        endpoint: endpoint
-      }, { status: response.status });
+      console.error(`📊 [ANALYTICS API] Backend error: ${response.status}`);
+      throw new Error(`Backend API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const responseTime = Date.now() - startTime;
+    
+    console.log(`📊 [ANALYTICS API] Response completed in ${responseTime}ms`);
+    
+    // OPTIMIZATION: Return response with caching headers
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=60, s-maxage=120', // Cache for 1-2 minutes
+        'X-Response-Time': `${responseTime}ms`,
+        'X-Data-Source': 'backend',
+      },
+    });
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    console.error(`📊 [ANALYTICS API] Error after ${responseTime}ms:`, error.message);
+    
+    // Handle timeout specifically
+    if (error.name === 'AbortError') {
+      return Response.json(
+        { 
+          error: 'Request timeout - analytics data took too long to load',
+          responseTime,
+          suggestion: 'Try refreshing the page or contact support if this persists'
+        }, 
+        { status: 408 } // Request Timeout
+      );
     }
     
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error(`API çağrısı hatası (${endpoint}):`, error);
-    return NextResponse.json({ 
-      error: 'API Connection Error',
-      message: error.message,
-      endpoint: endpoint
-    }, { status: 500 });
+    return Response.json(
+      { 
+        error: 'Failed to fetch analytics data', 
+        details: error.message,
+        responseTime,
+        timestamp: new Date().toISOString()
+      }, 
+      { status: 500 }
+    );
   }
 }

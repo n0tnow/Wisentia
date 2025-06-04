@@ -7,7 +7,7 @@ export async function GET() {
     const headersList = headers();
     const token = headersList.get('authorization')?.split(' ')[1] || '';
     
-    const response = await fetch(`${API_URL}/analytics/learning-progress/`, {
+    const response = await fetch(`${API_URL}/admin/user-analytics/time-spent/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -22,9 +22,9 @@ export async function GET() {
     const data = await response.json();
     return Response.json(data);
   } catch (error) {
-    console.error('Error fetching learning progress:', error);
+    console.error('Error fetching time spent data:', error);
     return Response.json(
-      { error: 'Failed to fetch learning progress data' }, 
+      { error: 'Failed to fetch time spent data' }, 
       { status: 500 }
     );
   }

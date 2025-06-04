@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'files',
     'search',
     'notifications',
-    'analytics',
     'admin_panel',
     'subscriptions',
     'drf_yasg',

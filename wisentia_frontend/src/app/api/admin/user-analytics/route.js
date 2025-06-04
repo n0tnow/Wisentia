@@ -1,4 +1,3 @@
-// API route to fetch analytics data from the backend
 import { headers } from 'next/headers';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -28,7 +27,7 @@ const fetchFromBackend = async (endpoint, token) => {
 };
 
 /**
- * Route handler for GET /api/analytics/user-stats
+ * Route handler for GET /api/admin/user-analytics
  */
 export async function GET(request) {
   try {
@@ -42,14 +41,14 @@ export async function GET(request) {
     // Map frontend routes to backend routes
     let backendEndpoint;
     
-    if (pathname.includes('/user-stats')) {
-      backendEndpoint = '/analytics/user-stats/';
+    if (pathname.includes('/stats')) {
+      backendEndpoint = '/admin/user-analytics/stats/';
     } else if (pathname.includes('/learning-progress')) {
-      backendEndpoint = '/analytics/learning-progress/';
+      backendEndpoint = '/admin/user-analytics/learning-progress/';
     } else if (pathname.includes('/time-spent')) {
-      backendEndpoint = '/analytics/time-spent/'; 
+      backendEndpoint = '/admin/user-analytics/time-spent/'; 
     } else if (pathname.includes('/activity-summary')) {
-      backendEndpoint = '/analytics/user-activity-summary/';
+      backendEndpoint = '/admin/user-analytics/activity-summary/';
     } else {
       return Response.json({ error: 'Invalid endpoint' }, { status: 400 });
     }
@@ -57,9 +56,9 @@ export async function GET(request) {
     const data = await fetchFromBackend(backendEndpoint, token);
     return Response.json(data);
   } catch (error) {
-    console.error('Error in analytics API route:', error);
+    console.error('Error in user analytics API route:', error);
     return Response.json(
-      { error: 'Failed to fetch analytics data' }, 
+      { error: 'Failed to fetch user analytics data' }, 
       { status: 500 }
     );
   }

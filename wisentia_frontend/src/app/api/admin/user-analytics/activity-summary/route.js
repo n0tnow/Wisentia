@@ -7,7 +7,7 @@ export async function GET() {
     const headersList = headers();
     const token = headersList.get('authorization')?.split(' ')[1] || '';
     
-    const response = await fetch(`${API_URL}/analytics/time-spent/`, {
+    const response = await fetch(`${API_URL}/admin/user-analytics/activity-summary/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -22,9 +22,9 @@ export async function GET() {
     const data = await response.json();
     return Response.json(data);
   } catch (error) {
-    console.error('Error fetching time spent data:', error);
+    console.error('Error fetching activity summary:', error);
     return Response.json(
-      { error: 'Failed to fetch time spent data' }, 
+      { error: 'Failed to fetch activity summary' }, 
       { status: 500 }
     );
   }

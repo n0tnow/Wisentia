@@ -1701,6 +1701,7 @@ def get_course_categories(request):
                     'VideoID': openapi.Schema(type=openapi.TYPE_INTEGER),
                     'Title': openapi.Schema(type=openapi.TYPE_STRING),
                     'Description': openapi.Schema(type=openapi.TYPE_STRING),
+                    'YouTubeVideoID': openapi.Schema(type=openapi.TYPE_STRING),
                     'Duration': openapi.Schema(type=openapi.TYPE_INTEGER),
                     'OrderInCourse': openapi.Schema(type=openapi.TYPE_INTEGER),
                     'CourseID': openapi.Schema(type=openapi.TYPE_INTEGER),
@@ -1722,7 +1723,7 @@ def list_videos(request):
     try:
         with connection.cursor() as cursor:
             query = """
-                SELECT cv.VideoID, cv.Title, cv.Description, cv.Duration, cv.OrderInCourse,
+                SELECT cv.VideoID, cv.Title, cv.Description, cv.YouTubeVideoID, cv.Duration, cv.OrderInCourse,
                        cv.CourseID, c.Title as CourseTitle, c.Category as CourseCategory
                 FROM CourseVideos cv
                 INNER JOIN Courses c ON cv.CourseID = c.CourseID

@@ -2,10 +2,11 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { styled } from '@mui/material/styles';
 import { 
   Container, Typography, Button, TextField, MenuItem, 
   Box, Paper, Grid, IconButton, Divider, Card, CardContent,
-  useTheme, alpha, CircularProgress
+  useTheme, alpha, CircularProgress, Snackbar, Alert, Tooltip, Stack
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -22,6 +23,211 @@ import MainLayout from '@/components/layout/MainLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+
+// Quantum Theme Colors
+const QUANTUM_COLORS = {
+  primary: '#6366F1',
+  secondary: '#8B5CF6',
+  accent: '#06B6D4',
+  info: '#06B6D4',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  neon: '#00D4FF',
+  plasma: '#FF006E',
+  quantum: '#7C3AED',
+  gradients: {
+    primary: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #06B6D4 100%)',
+    secondary: 'linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%)',
+    hero: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 25%, #6366F1 50%, #8B5CF6 75%, #06B6D4 100%)',
+    card: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 50%, rgba(6, 182, 212, 0.05) 100%)',
+    neon: 'linear-gradient(135deg, #00D4FF 0%, #7C3AED 50%, #FF006E 100%)',
+    plasma: 'linear-gradient(45deg, #FF006E 0%, #8B5CF6 50%, #00D4FF 100%)',
+    quantum: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 25%, #6366F1 50%, #8B5CF6 75%, #06B6D4 100%)'
+  },
+  shadows: {
+    neon: '0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(6, 182, 212, 0.2)',
+    plasma: '0 0 20px rgba(255, 0, 110, 0.4), 0 0 40px rgba(139, 92, 246, 0.3)',
+    quantum: '0 0 30px rgba(99, 102, 241, 0.5), 0 0 60px rgba(139, 92, 246, 0.3), 0 0 90px rgba(6, 182, 212, 0.2)'
+  }
+};
+
+// Quantum Styled Components
+const QuantumContainer = styled(Container)(({ theme }) => ({
+  minHeight: '100vh',
+  paddingTop: theme.spacing(2),
+  paddingBottom: theme.spacing(4),
+  background: theme.palette.mode === 'dark' 
+    ? 'linear-gradient(135deg, #0F0A1A 0%, #1E1B4B 25%, #1A1B3A 50%, #0F172A 100%)'
+    : 'linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 25%, #CBD5E1 50%, #94A3B8 100%)',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)',
+    pointerEvents: 'none',
+    zIndex: 0,
+  },
+  '& > *': {
+    position: 'relative',
+    zIndex: 1,
+  }
+}));
+
+const QuantumGlassCard = styled(Card)(({ theme, variant = 'default' }) => ({
+  background: variant === 'primary' 
+    ? QUANTUM_COLORS.gradients.card
+    : theme.palette.mode === 'dark'
+      ? 'rgba(30, 27, 75, 0.3)'
+      : 'rgba(255, 255, 255, 0.1)',
+  backdropFilter: 'blur(20px)',
+  border: variant === 'primary' 
+    ? `1px solid ${alpha(QUANTUM_COLORS.primary, 0.3)}`
+    : `1px solid ${alpha(QUANTUM_COLORS.accent, 0.2)}`,
+  borderRadius: theme.spacing(3),
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: QUANTUM_COLORS.shadows.neon,
+    border: `1px solid ${alpha(QUANTUM_COLORS.neon, 0.4)}`,
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '3px',
+    background: variant === 'primary' ? QUANTUM_COLORS.gradients.primary : QUANTUM_COLORS.gradients.neon,
+    borderRadius: `${theme.spacing(3)} ${theme.spacing(3)} 0 0`,
+  }
+}));
+
+const QuantumHeaderContainer = styled(Box)(({ theme }) => ({
+  background: QUANTUM_COLORS.gradients.hero,
+  borderRadius: theme.spacing(4),
+  padding: theme.spacing(4),
+  marginBottom: theme.spacing(4),
+  color: 'white',
+  position: 'relative',
+  overflow: 'hidden',
+  boxShadow: QUANTUM_COLORS.shadows.quantum,
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: `
+      radial-gradient(circle at 20% 80%, rgba(255, 0, 110, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(0, 212, 255, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(124, 58, 237, 0.4) 0%, transparent 50%)
+    `,
+    animation: 'quantumPulse 4s ease-in-out infinite alternate',
+    zIndex: 0,
+  },
+  '& > *': {
+    position: 'relative',
+    zIndex: 1,
+  },
+  '@keyframes quantumPulse': {
+    '0%': {
+      opacity: 0.7,
+      transform: 'scale(1)',
+    },
+    '100%': {
+      opacity: 1,
+      transform: 'scale(1.05)',
+    },
+  }
+}));
+
+const QuantumTextField = styled(TextField)(({ theme }) => ({
+  '& .MuiOutlinedInput-root': {
+    borderRadius: theme.spacing(2),
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? 'rgba(30, 27, 75, 0.4)' 
+      : 'rgba(255, 255, 255, 0.8)',
+    backdropFilter: 'blur(15px)',
+    border: `1px solid ${alpha(QUANTUM_COLORS.accent, 0.3)}`,
+    transition: 'all 0.3s ease',
+    position: 'relative',
+    '&:hover': {
+      border: `1px solid ${alpha(QUANTUM_COLORS.neon, 0.5)}`,
+      boxShadow: `0 0 20px ${alpha(QUANTUM_COLORS.neon, 0.2)}`,
+    },
+    '&.Mui-focused': {
+      border: `2px solid ${QUANTUM_COLORS.neon}`,
+      boxShadow: `0 0 30px ${alpha(QUANTUM_COLORS.neon, 0.4)}`,
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? 'rgba(30, 27, 75, 0.6)' 
+        : 'rgba(255, 255, 255, 0.9)',
+    },
+    '& .MuiOutlinedInput-notchedOutline': {
+      border: 'none',
+    }
+  },
+  '& .MuiInputLabel-root': {
+    color: alpha(QUANTUM_COLORS.accent, 0.8),
+    '&.Mui-focused': {
+      color: QUANTUM_COLORS.neon,
+    }
+  }
+}));
+
+const QuantumActionButton = styled(Button)(({ theme, variant: buttonVariant = 'primary', glow = false }) => ({
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(1.5, 3),
+  fontWeight: 600,
+  textTransform: 'none',
+  fontSize: '0.95rem',
+  position: 'relative',
+  overflow: 'hidden',
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  background: buttonVariant === 'primary' ? QUANTUM_COLORS.gradients.primary :
+             buttonVariant === 'secondary' ? QUANTUM_COLORS.gradients.secondary :
+             buttonVariant === 'neon' ? QUANTUM_COLORS.gradients.neon :
+             'transparent',
+  border: glow ? `2px solid ${alpha(QUANTUM_COLORS.neon, 0.6)}` : 'none',
+  boxShadow: glow 
+    ? `0 0 20px ${alpha(QUANTUM_COLORS.neon, 0.4)}`
+    : '0 4px 15px rgba(0, 0, 0, 0.2)',
+  '&:hover': {
+    transform: 'translateY(-3px) scale(1.05)',
+    boxShadow: glow 
+      ? `0 0 30px ${alpha(QUANTUM_COLORS.neon, 0.6)}, 0 10px 30px rgba(0, 0, 0, 0.3)`
+      : '0 8px 25px rgba(0, 0, 0, 0.3)',
+    '&::before': {
+      opacity: 1,
+    }
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent)',
+    transform: 'translateX(-100%)',
+    transition: 'transform 0.6s ease',
+    opacity: 0,
+  },
+  '&:hover::before': {
+    transform: 'translateX(100%)',
+    opacity: 1,
+  }
+}));
 
 export default function CreateCoursePage() {
   const theme = useTheme();
@@ -46,8 +252,17 @@ export default function CreateCoursePage() {
   ]);
   
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   const { user } = useAuth();
   const router = useRouter();
+
+  // Categories for the course
+  const categories = ['Programming', 'Design', 'Marketing', 'Business', 'Science', 'Art'];
+  const difficulties = ['beginner', 'intermediate', 'advanced'];
 
   useEffect(() => {
     // Admin kontrolü
@@ -517,714 +732,387 @@ export default function CreateCoursePage() {
 
   return (
     <MainLayout>
-      <Container maxWidth="lg" sx={{ py: 5 }}>
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
-            mb: 4,
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            pb: 2 
-          }}
-        >
-          <Typography 
-            variant="h4" 
-            component="h1" 
-            fontWeight="700" 
-            color="primary"
-            sx={{ 
-              position: 'relative',
-              '&:after': {
-                content: '""',
-                position: 'absolute',
-                width: '40%',
-                height: '4px',
-                bottom: '-8px',
-                left: 0,
-                backgroundColor: theme.palette.primary.main,
-                borderRadius: '2px'
-              }
-            }}
-          >
-            Create New Course
-          </Typography>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => router.push('/admin/content/courses')} // Düzeltilmiş yönlendirme adresi
-            sx={{ 
-              borderRadius: '8px',
-              px: 2,
-              height: '40px',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateX(-5px)',
-                boxShadow: `0 4px 8px ${alpha(theme.palette.primary.main, 0.2)}`
-              }
-            }}
-          >
-            Back to Courses
-          </Button>
-        </Box>
-        
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
-          {/* Course Details */}
-          <Paper 
-  elevation={3} 
-  sx={{ 
-    mb: 5, 
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-    backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.8) : alpha('#f9f9f9', 0.8),
-    backdropFilter: 'blur(10px)'
-  }}
->
-  <Box sx={{ p: 3 }}>
-    <Typography 
-      variant="h5" 
-      sx={{ 
-        fontWeight: 600, 
-        color: theme.palette.primary.main,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        mb: 3
-      }}
-    >
-      <Box 
-        sx={{ 
-          display: 'inline-flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: alpha(theme.palette.primary.main, 0.1),
-          borderRadius: '50%',
-          p: 1,
-        }}
-      >
-        <SaveIcon fontSize="small" color="primary" />
-      </Box>
-      Course Details
-    </Typography>
-
-    {/* İlk sıra: Title ve Category */}
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'row', 
-      gap: 2,
-      mb: 2
-    }}>
-      {/* Title */}
-      <Box sx={{ flex: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <TitleIcon 
-            sx={{ 
-              color: getInputColor('title'),
-              mr: 1
-            }} 
-            fontSize="small" 
-          />
-          <Typography 
-            variant="body2" 
-            fontWeight={500} 
-            color={getInputColor('title')}
-          >
-            Title*
-          </Typography>
-        </Box>
-        <TextField
-          fullWidth
-          name="title"
-          value={formData.title}
-          onChange={handleInputChange}
-          required
-          variant="outlined"
-          placeholder="Enter the title of your course"
-          InputProps={{
-            sx: { 
-              backgroundColor: alpha(getInputColor('title'), 0.03),
-              borderColor: alpha(getInputColor('title'), 0.2),
-            }
-          }}
-          sx={{
-            ...inputStyle,
-            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: getInputColor('title'),
-            }
-          }}
-        />
-      </Box>
-
-      {/* Category */}
-      <Box sx={{ flex: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <CategoryIcon 
-            sx={{ 
-              color: getInputColor('category'),
-              mr: 1
-            }} 
-            fontSize="small" 
-          />
-          <Typography 
-            variant="body2" 
-            fontWeight={500} 
-            color={getInputColor('category')}
-          >
-            Category*
-          </Typography>
-        </Box>
-        <TextField
-          fullWidth
-          name="category"
-          value={formData.category}
-          onChange={handleInputChange}
-          required
-          variant="outlined"
-          placeholder="E.g. Programming, Design, Marketing"
-          InputProps={{
-            sx: { 
-              backgroundColor: alpha(getInputColor('category'), 0.03),
-              borderColor: alpha(getInputColor('category'), 0.2),
-            }
-          }}
-          sx={{
-            ...inputStyle,
-            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: getInputColor('category'),
-            }
-          }}
-        />
-      </Box>
-    </Box>
-
-    {/* İkinci sıra: Difficulty ve Thumbnail URL */}
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'row', 
-      gap: 2,
-      mb: 2
-    }}>
-      {/* Difficulty */}
-      <Box sx={{ flex: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <SignalCellularAltIcon 
-            sx={{ 
-              color: getInputColor('difficulty'),
-              mr: 1
-            }} 
-            fontSize="small" 
-          />
-          <Typography 
-            variant="body2" 
-            fontWeight={500} 
-            color={getInputColor('difficulty')}
-          >
-            Difficulty*
-          </Typography>
-        </Box>
-        <TextField
-          select
-          fullWidth
-          name="difficulty"
-          value={formData.difficulty}
-          onChange={handleInputChange}
-          required
-          variant="outlined"
-          InputProps={{
-            sx: { 
-              backgroundColor: alpha(getInputColor('difficulty'), 0.03),
-              borderColor: alpha(getInputColor('difficulty'), 0.2),
-            }
-          }}
-          sx={{
-            ...inputStyle,
-            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: getInputColor('difficulty'),
-            }
-          }}
-        >
-          <MenuItem value="beginner">Beginner</MenuItem>
-          <MenuItem value="intermediate">Intermediate</MenuItem>
-          <MenuItem value="advanced">Advanced</MenuItem>
-        </TextField>
-      </Box>
-
-      {/* Thumbnail URL */}
-      <Box sx={{ flex: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <ImageIcon 
-            sx={{ 
-              color: getInputColor('thumbnailUrl'),
-              mr: 1
-            }} 
-            fontSize="small" 
-          />
-          <Typography 
-            variant="body2" 
-            fontWeight={500} 
-            color={getInputColor('thumbnailUrl')}
-          >
-            Thumbnail URL
-          </Typography>
-        </Box>
-        <TextField
-          fullWidth
-          name="thumbnailUrl"
-          value={formData.thumbnailUrl}
-          onChange={handleInputChange}
-          placeholder="https://example.com/image.jpg"
-          variant="outlined"
-          InputProps={{
-            sx: { 
-              backgroundColor: alpha(getInputColor('thumbnailUrl'), 0.03),
-              borderColor: alpha(getInputColor('thumbnailUrl'), 0.2),
-            }
-          }}
-          sx={{
-            ...inputStyle,
-            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: getInputColor('thumbnailUrl'),
-            }
-          }}
-        />
-      </Box>
-    </Box>
-
-    {/* Description - Tam genişlikte */}
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-        <DescriptionIcon 
-          sx={{ 
-            color: getInputColor('description'),
-            mr: 1
-          }} 
-          fontSize="small" 
-        />
-        <Typography 
-          variant="body2" 
-          fontWeight={500} 
-          color={getInputColor('description')}
-        >
-          Description*
-        </Typography>
-      </Box>
-      <TextField
-        fullWidth
-        name="description"
-        value={formData.description}
-        onChange={handleInputChange}
-        required
-        multiline
-        rows={6}
-        variant="outlined"
-        placeholder="Provide a detailed description of what students will learn"
-        InputProps={{
-          sx: { 
-            backgroundColor: alpha(getInputColor('description'), 0.03),
-            borderColor: alpha(getInputColor('description'), 0.2),
-          }
-        }}
-        sx={{
-          ...inputStyle,
-          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-            borderColor: getInputColor('description'),
-          }
-        }}
-      />
-    </Box>
-  </Box>
-</Paper>
-          
-          {/* Course Videos */}
-<Paper 
-  elevation={3} 
-  sx={{ 
-    mb: 5,
-    borderRadius: '12px',
-    overflow: 'hidden',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-    backgroundColor: theme.palette.mode === 'dark' ? alpha(theme.palette.background.paper, 0.8) : alpha('#f9f9f9', 0.8),
-    backdropFilter: 'blur(10px)'
-  }}
->
-  <Box sx={{ 
-    p: 3, 
-    display: 'flex', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-  }}>
-    <Typography 
-      variant="h5" 
-      sx={{ 
-        fontWeight: 600, 
-        color: theme.palette.primary.main,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1
-      }}
-    >
-      <Box 
-        sx={{ 
-          display: 'inline-flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          backgroundColor: alpha(theme.palette.error.main, 0.1),
-          borderRadius: '50%',
-          p: 1,
-        }}
-      >
-        <YouTubeIcon fontSize="small" color="error" />
-      </Box>
-      Course Videos
-    </Typography>
-    <Button
-      variant="contained"
-      color="primary"
-      startIcon={<AddIcon />}
-      onClick={addVideoField}
-      sx={{ 
-        borderRadius: '30px',
-        px: 3,
-        py: 1,
-        fontWeight: 500,
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-        transition: 'all 0.3s ease',
-        backgroundColor: '#4e54c8',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
-          backgroundColor: '#3f45b6',
-        }
-      }}
-    >
-      ADD VIDEO
-    </Button>
-  </Box>
-  
-  {videos.map((video, index) => (
-    <Box 
-      key={index} 
-      sx={{ 
-        px: 3,
-        py: 3,
-        mb: index < videos.length - 1 ? 0 : 0,
-        borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-        transition: 'all 0.3s ease',
-        '&:hover': {
-          backgroundColor: alpha(theme.palette.primary.main, 0.03),
-        }
-      }}
-    >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <YouTubeIcon color="error" sx={{ mr: 1 }} />
-          <Typography variant="subtitle1" fontWeight="600" color="error">
-            Video {index + 1}
-          </Typography>
-        </Box>
-        {videos.length > 1 && (
-          <IconButton 
-            color="error" 
-            onClick={() => removeVideoField(index)}
-            sx={{ 
-              backgroundColor: 'rgba(211, 47, 47, 0.08)',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                backgroundColor: 'rgba(211, 47, 47, 0.15)',
-                transform: 'rotate(90deg)',
-              }
-            }}
-          >
-            <DeleteIcon />
-          </IconButton>
-        )}
-      </Box>
-      
-      {/* İlk sıra: Video Title ve YouTube Video ID */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'row', 
-        gap: 2,
-        mb: 2
-      }}>
-        {/* Video Title */}
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <TitleIcon 
-              sx={{ 
-                color: theme.palette.error.main,
-                mr: 1
-              }} 
-              fontSize="small" 
-            />
-            <Typography 
-              variant="body2" 
-              fontWeight={500} 
-              color={theme.palette.error.main}
-            >
-              Video Title*
-            </Typography>
-          </Box>
-          <TextField
-            fullWidth
-            value={video.title}
-            onChange={(e) => handleVideoChange(index, 'title', e.target.value)}
-            required
-            variant="outlined"
-            placeholder="Enter a descriptive title for this video"
-            InputProps={{
-              sx: { 
-                backgroundColor: alpha(theme.palette.error.main, 0.03),
-                borderColor: alpha(theme.palette.error.main, 0.2),
-              }
-            }}
-            sx={{
-              ...inputStyle,
-              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
-              }
-            }}
-          />
-        </Box>
-
-        {/* YouTube Video ID */}
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <YouTubeIcon 
-              sx={{ 
-                color: theme.palette.error.main,
-                mr: 1
-              }} 
-              fontSize="small" 
-            />
-            <Typography 
-              variant="body2" 
-              fontWeight={500} 
-              color={theme.palette.error.main}
-            >
-              YouTube Video ID*
-            </Typography>
-          </Box>
-          <TextField
-            fullWidth
-            value={video.youtubeVideoId}
-            onChange={(e) => handleVideoChange(index, 'youtubeVideoId', e.target.value)}
-            placeholder="dQw4w9WgXcQ"
-            required
-            variant="outlined"
-            error={Boolean(video.error)}
-            helperText={video.error || "Enter the YouTube ID only (e.g., dQw4w9WgXcQ). Full URLs like https://youtube.com/watch?v=dQw4w9WgXcQ will be automatically extracted."}
-            InputProps={{
-              sx: { 
-                backgroundColor: alpha(theme.palette.error.main, 0.03),
-                borderColor: alpha(theme.palette.error.main, 0.2),
-              }
-            }}
-            sx={{
-              ...inputStyle,
-              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
-              }
-            }}
-          />
-        </Box>
-      </Box>
-
-      {/* İkinci sıra: Duration ve Order in Course */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'row', 
-        gap: 2,
-        mb: 2
-      }}>
-        {/* Duration */}
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <AccessTimeIcon 
-              sx={{ 
-                color: theme.palette.error.main,
-                mr: 1
-              }} 
-              fontSize="small" 
-            />
-            <Typography 
-              variant="body2" 
-              fontWeight={500} 
-              color={theme.palette.error.main}
-              sx={{ display: 'flex', alignItems: 'center' }}
-            >
-              Duration (seconds)
-              {video.loadingDuration && (
-                <CircularProgress size={16} sx={{ ml: 1 }} color="primary" />
-              )}
-            </Typography>
-          </Box>
-          <TextField
-            fullWidth
-            type="number"
-            value={video.duration}
-            onChange={(e) => handleVideoChange(index, 'duration', e.target.value)}
-            placeholder="300"
-            variant="outlined"
-            error={Boolean(video.error)}
-            helperText={
-              video.loadingDuration 
-                ? "Fetching duration from YouTube..." 
-                : video.error 
-                  ? video.error 
-                  : `Video duration: ${formatDuration(video.duration)}`
-            }
-            InputProps={{
-              sx: { 
-                backgroundColor: alpha(theme.palette.error.main, 0.03),
-                borderColor: alpha(theme.palette.error.main, 0.2),
-              },
-              readOnly: video.loadingDuration // Yükleme esnasında düzenlemeyi devre dışı bırak
-            }}
-            sx={{
-              ...inputStyle,
-              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
-              }
-            }}
-          />
-        </Box>
-
-        {/* Order in Course */}
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <FormatListNumberedIcon 
-              sx={{ 
-                color: theme.palette.error.main,
-                mr: 1
-              }} 
-              fontSize="small" 
-            />
-            <Typography 
-              variant="body2" 
-              fontWeight={500} 
-              color={theme.palette.error.main}
-            >
-              Order in Course
-            </Typography>
-          </Box>
-          <TextField
-            fullWidth
-            type="number"
-            value={video.orderInCourse}
-            InputProps={{
-              readOnly: true,
-              sx: { 
-                backgroundColor: alpha(theme.palette.error.main, 0.03),
-                borderColor: alpha(theme.palette.error.main, 0.2),
-              }
-            }}
-            variant="outlined"
-            helperText="Position of this video in the course sequence"
-            sx={{
-              ...inputStyle,
-              '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: theme.palette.error.main,
-              }
-            }}
-          />
-        </Box>
-      </Box>
-
-      {/* Video Description */}
-      <Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <DescriptionIcon 
-            sx={{ 
-              color: theme.palette.error.main,
-              mr: 1
-            }} 
-            fontSize="small" 
-          />
-          <Typography 
-            variant="body2" 
-            fontWeight={500} 
-            color={theme.palette.error.main}
-          >
-            Video Description
-          </Typography>
-        </Box>
-        <TextField
-          fullWidth
-          value={video.description}
-          onChange={(e) => handleVideoChange(index, 'description', e.target.value)}
-          multiline
-          rows={3}
-          variant="outlined"
-          placeholder="Brief description of what this video covers"
-          InputProps={{
-            sx: { 
-              backgroundColor: alpha(theme.palette.error.main, 0.03),
-              borderColor: alpha(theme.palette.error.main, 0.2),
-            }
-          }}
-          sx={{
-            ...inputStyle,
-            '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline': {
-              borderColor: theme.palette.error.main,
-            }
-          }}
-        />
-      </Box>
-    </Box>
-  ))}
-</Paper>
-          
-          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              size="large"
-              disabled={loading}
-              startIcon={<SaveIcon />}
-              sx={{ 
-                px: 4, 
-                py: 1.5, 
-                borderRadius: '8px',
-                fontWeight: 600,
-                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 6px 15px rgba(0, 0, 0, 0.2)',
-                },
-                '&:active': {
-                  transform: 'translateY(1px)',
-                }
-              }}
-            >
-              {loading ? 'Creating...' : 'Create Course'}
-            </Button>
-            <Button
+      <QuantumContainer maxWidth="lg">
+        {/* Header Section */}
+        <QuantumHeaderContainer>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Box display="flex" alignItems="center" gap={2}>
+              <AutoAwesomeIcon sx={{ fontSize: '3rem' }} />
+              <Box>
+                <Typography variant="h3" fontWeight="800" gutterBottom>
+                  Create New Course
+                </Typography>
+                <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                  Design and publish an engaging learning experience
+                </Typography>
+              </Box>
+            </Box>
+            <QuantumActionButton
               variant="outlined"
-              color="error"
-              size="large"
-              startIcon={<CancelIcon />}
-              onClick={() => router.push('/admin/content/courses')} // Düzeltilmiş yönlendirme adresi
-              sx={{ 
-                px: 4, 
-                py: 1.5, 
-                borderRadius: '8px',
-                fontWeight: 500,
-                transition: 'all 0.3s ease',
+              startIcon={<ArrowBackIcon />}
+              onClick={() => router.push('/admin/content/courses')}
+              sx={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                backdropFilter: 'blur(10px)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 '&:hover': {
-                  backgroundColor: alpha(theme.palette.error.main, 0.08),
+                  background: 'rgba(255, 255, 255, 0.3)',
                 }
               }}
             >
-              Cancel
-            </Button>
-          </Box>
+              Back to Courses
+            </QuantumActionButton>
+          </Stack>
+        </QuantumHeaderContainer>
+
+        <Box component="form" onSubmit={handleSubmit}>
+          {/* Course Details Section */}
+          <QuantumGlassCard variant="primary" sx={{ mb: 4 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box display="flex" alignItems="center" gap={2} mb={4}>
+                <Box 
+                  sx={{ 
+                    background: QUANTUM_COLORS.gradients.primary,
+                    borderRadius: '50%',
+                    p: 1.5,
+                  }}
+                >
+                  <TitleIcon sx={{ color: 'white', fontSize: '1.5rem' }} />
+                </Box>
+                <Typography variant="h4" fontWeight="700" sx={{ color: QUANTUM_COLORS.primary }}>
+                  Course Information
+                </Typography>
+              </Box>
+
+              <Grid container spacing={3}>
+                {/* Title */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom sx={{ color: QUANTUM_COLORS.primary }}>
+                    Course Title *
+                  </Typography>
+                  <QuantumTextField
+                    fullWidth
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Enter an engaging course title"
+                    InputProps={{
+                      startAdornment: (
+                        <TitleIcon sx={{ color: QUANTUM_COLORS.primary, mr: 1 }} />
+                      )
+                    }}
+                  />
+                </Grid>
+
+                {/* Category */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom sx={{ color: QUANTUM_COLORS.secondary }}>
+                    Category *
+                  </Typography>
+                  <QuantumTextField
+                    fullWidth
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                    select
+                    placeholder="Select a category"
+                    InputProps={{
+                      startAdornment: (
+                        <CategoryIcon sx={{ color: QUANTUM_COLORS.secondary, mr: 1 }} />
+                      )
+                    }}
+                  >
+                    {categories.map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                  </QuantumTextField>
+                </Grid>
+
+                {/* Difficulty */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom sx={{ color: QUANTUM_COLORS.warning }}>
+                    Difficulty Level *
+                  </Typography>
+                  <QuantumTextField
+                    fullWidth
+                    name="difficulty"
+                    value={formData.difficulty}
+                    onChange={handleInputChange}
+                    required
+                    select
+                    InputProps={{
+                      startAdornment: (
+                        <SignalCellularAltIcon sx={{ color: QUANTUM_COLORS.warning, mr: 1 }} />
+                      )
+                    }}
+                  >
+                    {difficulties.map((difficulty) => (
+                      <MenuItem key={difficulty} value={difficulty}>
+                        {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                      </MenuItem>
+                    ))}
+                  </QuantumTextField>
+                </Grid>
+
+                {/* Thumbnail URL */}
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom sx={{ color: QUANTUM_COLORS.info }}>
+                    Thumbnail URL
+                  </Typography>
+                  <QuantumTextField
+                    fullWidth
+                    name="thumbnailUrl"
+                    value={formData.thumbnailUrl}
+                    onChange={handleInputChange}
+                    placeholder="https://example.com/image.jpg"
+                    InputProps={{
+                      startAdornment: (
+                        <ImageIcon sx={{ color: QUANTUM_COLORS.info, mr: 1 }} />
+                      )
+                    }}
+                  />
+                </Grid>
+
+                {/* Description */}
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ color: QUANTUM_COLORS.primary }}>
+                    Course Description
+                  </Typography>
+                  <QuantumTextField
+                    fullWidth
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    multiline
+                    rows={4}
+                    placeholder="Describe what students will learn in this course..."
+                    InputProps={{
+                      startAdornment: (
+                        <DescriptionIcon sx={{ color: QUANTUM_COLORS.primary, mr: 1, alignSelf: 'flex-start', mt: 1 }} />
+                      )
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </QuantumGlassCard>
+
+          {/* Videos Section */}
+          <QuantumGlassCard variant="primary" sx={{ mb: 4 }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={4}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box 
+                    sx={{ 
+                      background: QUANTUM_COLORS.gradients.secondary,
+                      borderRadius: '50%',
+                      p: 1.5,
+                    }}
+                  >
+                    <PlayCircleIcon sx={{ color: 'white', fontSize: '1.5rem' }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h4" fontWeight="700" sx={{ color: QUANTUM_COLORS.secondary }}>
+                      Course Videos
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: alpha(QUANTUM_COLORS.secondary, 0.7) }}>
+                      Add YouTube videos to your course
+                    </Typography>
+                  </Box>
+                </Box>
+                <QuantumActionButton
+                  variant="secondary"
+                  startIcon={<AddIcon />}
+                  onClick={addVideoField}
+                  glow
+                >
+                  Add Video
+                </QuantumActionButton>
+              </Box>
+
+              <Stack spacing={3}>
+                {videos.map((video, index) => (
+                  <QuantumGlassCard key={index} sx={{ p: 3 }}>
+                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+                      <Typography variant="h6" sx={{ color: QUANTUM_COLORS.accent }}>
+                        Video {index + 1}
+                      </Typography>
+                      {videos.length > 1 && (
+                        <Tooltip title="Remove Video">
+                          <IconButton
+                            onClick={() => removeVideoField(index)}
+                            sx={{ 
+                              color: QUANTUM_COLORS.error,
+                              '&:hover': {
+                                background: alpha(QUANTUM_COLORS.error, 0.1)
+                              }
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </Box>
+
+                    <Grid container spacing={3}>
+                      {/* Video Title */}
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ color: QUANTUM_COLORS.primary }}>
+                          Video Title *
+                        </Typography>
+                        <QuantumTextField
+                          fullWidth
+                          value={video.title}
+                          onChange={(e) => handleVideoChange(index, 'title', e.target.value)}
+                          required
+                          placeholder="Enter video title"
+                          InputProps={{
+                            startAdornment: (
+                              <TitleIcon sx={{ color: QUANTUM_COLORS.primary, mr: 1 }} />
+                            )
+                          }}
+                        />
+                      </Grid>
+
+                      {/* YouTube Video ID */}
+                      <Grid item xs={12} md={6}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ color: QUANTUM_COLORS.error }}>
+                          YouTube Video ID *
+                        </Typography>
+                        <QuantumTextField
+                          fullWidth
+                          value={video.youtubeVideoId}
+                          onChange={(e) => handleVideoChange(index, 'youtubeVideoId', e.target.value)}
+                          required
+                          placeholder="Enter YouTube Video ID or URL"
+                          error={!!video.error}
+                          helperText={video.error}
+                          InputProps={{
+                            startAdornment: (
+                              <YouTubeIcon sx={{ color: QUANTUM_COLORS.error, mr: 1 }} />
+                            ),
+                            endAdornment: video.loadingDuration && (
+                              <CircularProgress size={20} />
+                            )
+                          }}
+                        />
+                      </Grid>
+
+                      {/* Video Description */}
+                      <Grid item xs={12} md={8}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ color: QUANTUM_COLORS.info }}>
+                          Description
+                        </Typography>
+                        <QuantumTextField
+                          fullWidth
+                          value={video.description}
+                          onChange={(e) => handleVideoChange(index, 'description', e.target.value)}
+                          placeholder="Brief description of video content"
+                          multiline
+                          rows={2}
+                          InputProps={{
+                            startAdornment: (
+                              <DescriptionIcon sx={{ color: QUANTUM_COLORS.info, mr: 1, alignSelf: 'flex-start', mt: 1 }} />
+                            )
+                          }}
+                        />
+                      </Grid>
+
+                      {/* Duration & Order */}
+                      <Grid item xs={12} md={4}>
+                        <Stack spacing={2}>
+                          <Box>
+                            <Typography variant="subtitle1" gutterBottom sx={{ color: QUANTUM_COLORS.warning }}>
+                              Duration (seconds)
+                            </Typography>
+                            <QuantumTextField
+                              fullWidth
+                              type="number"
+                              value={video.duration}
+                              onChange={(e) => handleVideoChange(index, 'duration', e.target.value)}
+                              placeholder="Auto-filled"
+                              InputProps={{
+                                startAdornment: (
+                                  <AccessTimeIcon sx={{ color: QUANTUM_COLORS.warning, mr: 1 }} />
+                                )
+                              }}
+                            />
+                          </Box>
+                          <Box>
+                            <Typography variant="subtitle1" gutterBottom sx={{ color: QUANTUM_COLORS.success }}>
+                              Order
+                            </Typography>
+                            <QuantumTextField
+                              fullWidth
+                              type="number"
+                              value={video.orderInCourse}
+                              onChange={(e) => handleVideoChange(index, 'orderInCourse', e.target.value)}
+                              InputProps={{
+                                startAdornment: (
+                                  <FormatListNumberedIcon sx={{ color: QUANTUM_COLORS.success, mr: 1 }} />
+                                )
+                              }}
+                            />
+                          </Box>
+                        </Stack>
+                      </Grid>
+                    </Grid>
+                  </QuantumGlassCard>
+                ))}
+              </Stack>
+            </CardContent>
+          </QuantumGlassCard>
+
+          {/* Action Buttons */}
+          <QuantumGlassCard>
+            <CardContent>
+              <Stack direction="row" justifyContent="flex-end" spacing={2}>
+                <QuantumActionButton
+                  variant="outlined"
+                  startIcon={<CancelIcon />}
+                  onClick={() => router.push('/admin/content/courses')}
+                  disabled={loading}
+                >
+                  Cancel
+                </QuantumActionButton>
+                <QuantumActionButton
+                  type="submit"
+                  variant="primary"
+                  startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                  disabled={loading}
+                  glow
+                >
+                  {loading ? 'Creating Course...' : 'Create Course'}
+                </QuantumActionButton>
+              </Stack>
+            </CardContent>
+          </QuantumGlassCard>
         </Box>
-      </Container>
+
+        {/* Snackbar for notifications */}
+        <Snackbar 
+          open={snackbar.open} 
+          autoHideDuration={6000} 
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert 
+            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+            severity={snackbar.severity}
+            sx={{ 
+              borderRadius: 2,
+              fontWeight: 500
+            }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </QuantumContainer>
     </MainLayout>
   );
 }

@@ -168,66 +168,62 @@ export default function DashboardPage() {
   
   // API call functions
   const fetchUserStats = async (token) => {
-    const response = await fetch('/api/analytics/user-stats', {
-      method: 'GET',
+    const response = await fetch('/api/admin/user-analytics/stats', {
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+      },
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch user stats: ${response.status}`);
     }
-    
+
     return await response.json();
   };
   
   const fetchLearningProgress = async (token) => {
-    const response = await fetch('/api/analytics/learning-progress', {
-      method: 'GET',
+    const response = await fetch('/api/admin/user-analytics/learning-progress', {
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+      },
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch learning progress: ${response.status}`);
     }
-    
+
     return await response.json();
   };
   
   const fetchTimeSpent = async (token) => {
-    const response = await fetch('/api/analytics/time-spent', {
-      method: 'GET',
+    const response = await fetch('/api/admin/user-analytics/time-spent', {
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+      },
     });
-    
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch time spent data: ${response.status}`);
+      throw new Error(`Failed to fetch time spent: ${response.status}`);
     }
-    
+
     return await response.json();
   };
   
   const fetchActivitySummary = async (token) => {
-    const response = await fetch('/api/analytics/activity-summary', {
-      method: 'GET',
+    const response = await fetch('/api/admin/user-analytics/activity-summary', {
       headers: {
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+      },
     });
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch activity summary: ${response.status}`);
     }
-    
+
     return await response.json();
   };
   
