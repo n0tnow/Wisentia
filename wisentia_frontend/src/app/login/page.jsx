@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box, Typography, TextField, Button, Link, InputAdornment, IconButton, Checkbox,
@@ -82,7 +82,8 @@ const StarEffect = dynamic(() => Promise.resolve(() => {
   );
 }), { ssr: false });
 
-export default function LoginPage() {
+// useSearchParams'ı kullanan component'i ayrı bir component olarak oluştur
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -892,5 +893,13 @@ export default function LoginPage() {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

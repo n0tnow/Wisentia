@@ -1,5 +1,9 @@
 // API route to fetch AI user analytics data from the backend
 import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
+
+// Force dynamic route for Vercel deployment - fixes headers() usage error
+export const dynamic = 'force-dynamic';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 

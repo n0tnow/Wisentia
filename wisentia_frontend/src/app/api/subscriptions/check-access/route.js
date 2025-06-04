@@ -1,6 +1,9 @@
 import { headers, cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+// Force dynamic route for Vercel deployment - fixes headers() and cookies() usage error
+export const dynamic = 'force-dynamic';
+
 // Handler for GET requests to check if a user has access to content
 export async function GET(request) {
     // Get token from headers or cookies

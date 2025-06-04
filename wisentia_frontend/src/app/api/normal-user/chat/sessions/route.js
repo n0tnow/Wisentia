@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+// Force dynamic route for Vercel deployment - fixes cookies() usage error
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // Backend URL'sini doğru şekilde belirle - api/ai/ altında

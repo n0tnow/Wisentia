@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Force dynamic route for Vercel deployment - fixes headers() and cookies() usage error
+export const dynamic = 'force-dynamic';
+
 // Mock data to use when backend is unavailable
 const MOCK_NFT_DATA = [
   {

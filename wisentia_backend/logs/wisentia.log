@@ -31778,3 +31778,4 @@ INFO 2025-06-04 01:50:08,859 basehttp 38768 43248 "GET /api/courses/enrollment/s
 INFO 2025-06-04 01:50:08,889 basehttp 38768 35184 "GET /api/courses/30/progress/ HTTP/1.1" 200 153
 INFO 2025-06-04 22:33:24,732 basehttp 38768 40336 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
 INFO 2025-06-04 22:34:06,849 basehttp 38768 38460 "GET /api/courses/?page=1 HTTP/1.1" 200 7494
+INFO 2025-06-04 23:36:47,844 autoreload 29136 24172 Watching for file changes with StatReloader

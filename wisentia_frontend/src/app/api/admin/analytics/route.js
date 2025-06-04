@@ -1,6 +1,9 @@
 // app/api/admin/analytics/route.js
 import { headers } from 'next/headers';
 
+// Force dynamic route for Vercel deployment - fixes headers() usage error
+export const dynamic = 'force-dynamic';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 /**

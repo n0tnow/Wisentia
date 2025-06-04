@@ -1,10 +1,10 @@
 // src/app/search/advanced/page.jsx
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import MainLayout from '@/components/layout/MainLayout';
 
-export default function AdvancedSearchPage() {
+function AdvancedSearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -371,5 +371,13 @@ export default function AdvancedSearchPage() {
         )}
       </div>
     </MainLayout>
+  );
+}
+
+export default function AdvancedSearchPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AdvancedSearchPageContent />
+    </Suspense>
   );
 }

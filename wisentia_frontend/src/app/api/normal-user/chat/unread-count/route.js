@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 
+// Force dynamic route for Vercel deployment - fixes headers() usage error
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // Log the request

@@ -3,6 +3,9 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { MOCK_COURSES, generateMockCourseResponse } from './mock-data';
 
+// Force dynamic route for Vercel deployment - fixes cookies() usage error
+export const dynamic = 'force-dynamic';
+
 // Helper function to get token - updated to be async
 async function getToken(request) {
   try {

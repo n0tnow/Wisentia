@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Force dynamic route for Vercel deployment - fixes cookies() usage error
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   // Get token information
   let token = '';
