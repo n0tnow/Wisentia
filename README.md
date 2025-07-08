@@ -1,6 +1,6 @@
 # 🎓 Wisentia - Modern Learning Management Platform
 
-![Wisentia Logo](wisentia/wisentia_frontend/public/images/nft-placeholder.png)
+![Wisentia Logo](https://github.com/user-attachments/assets/148373c1-5143-44e3-8e5e-2158540e8b1c)
 
 ## 📖 Table of Contents
 
