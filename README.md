@@ -1,4 +1,4 @@
-# 🎓 Wisentia - Modern Learning Management Platform
+# 🎓 Wisentia - Modern Learning Platform
 
 ![Wisentia Logo](https://github.com/user-attachments/assets/148373c1-5143-44e3-8e5e-2158540e8b1c)
 
